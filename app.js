@@ -1,7 +1,7 @@
 'use strict';
 
 const $ = id => document.getElementById(id);
-const APP_VERSION = '1.3.0';
+const APP_VERSION = '1.3.2';
 const DATA_VERSION = 9;
 const VAULT_KEY = 'little_days_bookkeeping_vault_v2';
 const AUTH_KEY = 'little_days_bookkeeping_auth_v2';
@@ -931,9 +931,26 @@ function renderRecurringManager(){
     const meta=r.type==='income'?(r.incomeCategory||'其他收入'):r.type==='investment'?`${r.investmentCategory||'股票／ETF'} · 不列入支出`:`${categoryById(r.categoryId).name} · ${r.subcategory||'其他'} · ${r.payment==='cash'?'現金':'信用卡'}`;
     const range=`${r.startDate} 起${r.endDate?` ～ ${r.endDate}`:' ～ 持續'}${r.cancelFromDate?` · ${r.cancelFromDate} 起已停止`:''}`;
     const icon=r.pendingAmount?'🔔':r.type==='income'?'💰':r.type==='investment'?'📈':'🧾';
-    row.innerHTML=`<div class="section-head"><div><h3>${icon} ${escapeHtml(r.title)}</h3><p>${escapeHtml(recurringSummary(r))} · ${escapeHtml(range)}<br>${escapeHtml(meta)}</p></div><strong>${r.pendingAmount?'待填':money(r.amount)}</strong></div><div class="action-row two-actions"><button data-toggle class="secondary">${r.enabled===false?'啟用':'暫停'}</button><button data-edit class="secondary">編輯</button></div>`;
-    row.querySelector('[data-toggle]').onclick=async()=>{r.enabled=r.enabled===false?true:false;await persistState();renderRecurringManager();renderRecurringCount();}; row.querySelector('[data-edit]').onclick=()=>openRecurringEditor(r.id); box.appendChild(row);
+    row.innerHTML=`<div class="section-head"><div><h3>${icon} ${escapeHtml(r.title)}</h3><p>${escapeHtml(recurringSummary(r))} · ${escapeHtml(range)}<br>${escapeHtml(meta)}</p></div><strong>${r.pendingAmount?'待填':money(r.amount)}</strong></div><div class="action-row"><button data-toggle class="secondary">${r.enabled===false?'啟用':'暫停'}</button><button data-edit class="secondary">編輯</button><button data-delete class="danger">刪除</button></div>`;
+    row.querySelector('[data-toggle]').onclick=async()=>{r.enabled=r.enabled===false?true:false;await persistState();renderRecurringManager();renderRecurringCount();};
+    row.querySelector('[data-edit]').onclick=()=>openRecurringEditor(r.id);
+    row.querySelector('[data-delete]').onclick=()=>deleteRecurringRule(r.id);
+    box.appendChild(row);
   }); renderRecurringCount();
+}
+async function deleteRecurringRule(id){
+  const rule=recurring.find(x=>x.id===id);
+  if(!rule)return;
+  const ok=confirm(`刪除「${rule.title}」這個週期紀錄？
+
+已經建立的歷史收支會保留，只是之後不再自動產生。`);
+  if(!ok)return;
+  recurring=recurring.filter(x=>x.id!==id);
+  await persistState();
+  renderRecurringManager();
+  renderRecurringCount();
+  renderAll();
+  toast('已刪除週期紀錄');
 }
 function setRecurringType(type){
   recurringType=type; $('recurringExpenseTypeBtn').classList.toggle('active',type==='expense'); $('recurringIncomeTypeBtn').classList.toggle('active',type==='income'); $('recurringInvestmentTypeBtn').classList.toggle('active',type==='investment');
@@ -1015,7 +1032,7 @@ async function unlockWithPin(){ const pin=normalizePin($('pinUnlockInput').value
 function updatePinUnlockState(){ const input=$('pinUnlockInput'),btn=$('pinUnlockBtn'); if(!input||!btn)return; const ready=validPin(normalizePin(input.value)); btn.disabled=!ready; btn.setAttribute('aria-disabled',String(!ready)); if(ready&&$('unlockMessage').textContent==='請輸入 6 位數密碼')$('unlockMessage').textContent=''; }
 async function unlockWithFace(){ try{$('unlockMessage').textContent='請完成 Face ID 驗證';await authenticateFaceId();await completeUnlock();}catch(e){console.warn(e);$('unlockMessage').textContent='Face ID 未完成，可改用密碼';} }
 async function completeUnlock(){ unlocked=true; try{await loadVault(); unlockAppUi();}catch(e){console.error(e);unlocked=false;$('unlockMessage').textContent='資料解鎖失敗，請重新整理再試';} }
-function unlockAppUi(){ document.body.classList.remove('locked'); hide($('lockScreen')); $('app').setAttribute('aria-hidden','false'); $('pinUnlockInput').value=''; updatePinUnlockState(); $('unlockMessage').textContent=''; renderCategoryPicker(); renderSubcategories(); renderAll(); refreshSecurityUi(); }
+function unlockAppUi(){ document.body.classList.remove('locked'); hide($('lockScreen')); $('app').setAttribute('aria-hidden','false'); $('pinUnlockInput').value=''; updatePinUnlockState(); $('unlockMessage').textContent=''; renderCategoryPicker(); renderSubcategories(); renderAll(); refreshSecurityUi(); showPostUpdateNotice(); }
 function lockApp(reason='background'){
   if(!unlocked)return; collapseVoiceFab(); stopVoiceSession(); ['editorScreen','calculatorScreen','voiceSheet','voiceDraftScreen','voiceDraftEditScreen','txnMenuScreen','budgetEditorScreen','settingsScreen','securityScreen','quickTemplateManagerScreen','quickTemplateEditorScreen','insightDetailScreen','categoryManagerScreen','categoryEditorScreen','recurringManagerScreen','recurringEditorScreen','recurringDeleteScreen'].forEach(id=>hide($(id))); unlocked=false;vaultLoaded=false;txns=[];budgets={};categories=clone(DEFAULT_CATEGORIES);quickTemplates=clone(DEFAULT_QUICK_TEMPLATES);settings={};recurring=[]; document.body.classList.add('locked'); show($('lockScreen')); show($('unlockPanel')); hide($('setupPanel')); $('app').setAttribute('aria-hidden','true'); updatePinUnlockState(); refreshLockFaceUi();
 }
@@ -1027,7 +1044,33 @@ async function checkForUpdate(){ $('updateStatus').textContent='正在檢查…'
 function compareVersion(a,b){const aa=a.split('.').map(Number),bb=b.split('.').map(Number);for(let i=0;i<Math.max(aa.length,bb.length);i++){if((aa[i]||0)!==(bb[i]||0))return(aa[i]||0)-(bb[i]||0);}return 0;}
 function backupAgeDays(){if(!settings.lastBackupAt)return Infinity;const d=new Date(settings.lastBackupAt);if(Number.isNaN(d.getTime()))return Infinity;return (Date.now()-d.getTime())/86400000;}
 function renderBackupStatus(){const el=$('backupStatusText');if(!el)return;if(!settings.lastBackupAt){el.textContent='尚未建立備份 · 建議更新前先備份';el.className='backup-status warning';return;}const d=new Date(settings.lastBackupAt),age=backupAgeDays();el.textContent=`最近備份：${d.toLocaleDateString('zh-TW')} ${d.toLocaleTimeString('zh-TW',{hour:'2-digit',minute:'2-digit'})}${age>7?' · 已超過 7 天':''}`;el.className=`backup-status ${age>7?'warning':'good'}`;}
-async function updateNow(){ if(backupAgeDays()>3&&!confirm('你最近 3 天內沒有備份。仍要直接更新嗎？\n\n建議先按「取消」，到備份區匯出一次 JSON。'))return; $('updateStatus').textContent='正在更新…';try{const regs=await navigator.serviceWorker?.getRegistrations?.();for(const r of regs||[])await r.update();const keys=await caches.keys();await Promise.all(keys.map(k=>caches.delete(k)));location.reload();}catch{location.reload();} }
+async function updateNow(){
+  if(backupAgeDays()>3&&!confirm('你最近 3 天內沒有備份。仍要直接更新嗎？\n\n建議先按「取消」，到備份區匯出一次 JSON。'))return;
+  $('updateStatus').textContent='正在更新…';
+  try{sessionStorage.setItem('littleDaysUpdateCompleted','1');}catch{}
+  hide($('settingsScreen'));
+  setPage('home');
+  try{
+    const regs=await navigator.serviceWorker?.getRegistrations?.();
+    for(const r of regs||[])await r.update();
+    const keys=await caches.keys();
+    await Promise.all(keys.map(k=>caches.delete(k)));
+    location.reload();
+  }catch{location.reload();}
+}
+function returnHomeFromSettings(){
+  hide($('settingsScreen'));
+  setPage('home');
+}
+function showPostUpdateNotice(){
+  let updated=false;
+  try{updated=sessionStorage.getItem('littleDaysUpdateCompleted')==='1';if(updated)sessionStorage.removeItem('littleDaysUpdateCompleted');}catch{}
+  if(updated){
+    setPage('home');
+    setTimeout(()=>toast(`更新完成 · V${APP_VERSION}`,2600),250);
+  }
+}
+
 async function exportBackup(){ settings.lastBackupAt=new Date().toISOString();await persistState();const data={app:'little-days-bookkeeping',version:APP_VERSION,dataVersion:DATA_VERSION,exportedAt:settings.lastBackupAt,txns,budgets,categories,quickTemplates,settings,recurring};const blob=new Blob([JSON.stringify(data,null,2)],{type:'application/json'}),url=URL.createObjectURL(blob),a=document.createElement('a');a.href=url;a.download=`小日子記帳備份_${dateKey(new Date())}.json`;a.click();setTimeout(()=>URL.revokeObjectURL(url),1000);renderBackupStatus();toast('備份檔已產生，請妥善保存'); }
 async function importBackupFile(file){ try{const data=JSON.parse(await file.text());if(data.app!=='little-days-bookkeeping'||!Array.isArray(data.txns))throw new Error('bad');const mergeOnly=Boolean(data.mergeOnly);if(!confirm(`匯入 ${data.txns.length} 筆紀錄？目前資料會以 ID 合併。${mergeOnly?'\n這是私人一次性資料檔，不會覆蓋其他設定。':''}`))return;const map=new Map(txns.map(t=>[t.id,t]));data.txns.forEach(t=>map.set(t.id||uid(),t));txns=[...map.values()];if(mergeOnly){if(Array.isArray(data.recurring)){const rmap=new Map(recurring.map(r=>[r.id,r]));data.recurring.forEach(r=>rmap.set(r.id||uid(),r));recurring=[...rmap.values()];}settings={...settings,lastRestoreAt:new Date().toISOString()};}else{budgets={...budgets,...(data.budgets||{})};if(Array.isArray(data.categories)&&data.categories.length)categories=data.categories;if(Array.isArray(data.quickTemplates)&&data.quickTemplates.length)quickTemplates=data.quickTemplates;if(Array.isArray(data.recurring))recurring=data.recurring;settings={...settings,...(data.settings||{}),lastRestoreAt:new Date().toISOString()};}normalizeData();await persistState();renderAll();renderBackupStatus();toast(mergeOnly?'私人資料合併完成':'備份還原完成');}catch{toast('這不是有效的記帳備份檔',2600);} }
 
@@ -1040,7 +1083,7 @@ function bindEvents(){
   $('cancelEditBtn').onclick=closeEditor; $('saveTxnBtn').onclick=saveTxn; $('expenseTypeBtn').onclick=()=>setEditType('expense'); $('incomeTypeBtn').onclick=()=>setEditType('income'); $('investmentTypeBtn').onclick=()=>setEditType('investment'); document.querySelectorAll('[data-payment]').forEach(b=>b.onclick=()=>setPayment(b.dataset.payment));
   $('closeTxnMenuBtn').onclick=closeTxnMenu; $('editTxnBtn').onclick=()=>{const t=txns.find(x=>x.id===actionTxnId);if(!t)return;if(t.recurringId)openRecurringEditScope();else{closeTxnMenu();openEditor(t);}}; $('deleteTxnBtn').onclick=deleteTxn; $('deleteOccurrenceBtn').onclick=deleteOccurrenceOnly; $('stopRecurringFromBtn').onclick=stopRecurringFromOccurrence; $('cancelRecurringDeleteBtn').onclick=closeRecurringDelete; $('editOccurrenceOnlyBtn').onclick=editOccurrenceOnly; $('editRecurringFromBtn').onclick=editRecurringFromOccurrence; $('cancelRecurringEditScopeBtn').onclick=closeRecurringEditScope;
   $('editBudgetBtn').onclick=openBudgetEditor; $('cancelBudgetBtn').onclick=()=>hide($('budgetEditorScreen')); $('saveBudgetBtn').onclick=saveBudgetEditor; $('closeInsightDetailBtn').onclick=closeInsightDetail; $('insightDetailAnalysisBtn').onclick=()=>{closeInsightDetail();setPage('analysis');}; $('goAnalysisBtn').onclick=()=>setPage('analysis'); document.querySelectorAll('.summary-action[data-insight]').forEach(b=>b.onclick=()=>{homeInsightMode=b.dataset.insight;renderHome();}); document.querySelectorAll('[data-page]').forEach(b=>b.onclick=()=>setPage(b.dataset.page)); document.querySelectorAll('[data-back-home]').forEach(b=>b.onclick=()=>setPage('home'));
-  $('openSettingsBtn').onclick=()=>{renderBackupStatus();show($('settingsScreen'));}; $('closeSettingsBtn').onclick=()=>hide($('settingsScreen')); $('checkUpdateBtn').onclick=checkForUpdate; $('updateNowBtn').onclick=updateNow; $('exportBtn').onclick=exportBackup; $('importBtn').onclick=()=>$('importFileInput').click(); $('importFileInput').onchange=e=>{const f=e.target.files?.[0];if(f)importBackupFile(f);e.target.value='';};
+  $('openSettingsBtn').onclick=()=>{renderBackupStatus();show($('settingsScreen'));}; $('closeSettingsBtn').onclick=returnHomeFromSettings; $('settingsHomeBtn').onclick=returnHomeFromSettings; $('updateHomeBtn').onclick=returnHomeFromSettings; $('checkUpdateBtn').onclick=checkForUpdate; $('updateNowBtn').onclick=updateNow; $('exportBtn').onclick=exportBackup; $('importBtn').onclick=()=>$('importFileInput').click(); $('importFileInput').onchange=e=>{const f=e.target.files?.[0];if(f)importBackupFile(f);e.target.value='';};
   $('manageQuickTemplatesBtn').onclick=openQuickTemplateManager; $('manageQuickTemplatesHomeBtn').onclick=openQuickTemplateManager; $('closeQuickTemplateManagerBtn').onclick=()=>hide($('quickTemplateManagerScreen')); $('addQuickTemplateBtn').onclick=()=>openQuickTemplateEditor(); $('cancelQuickTemplateEditBtn').onclick=()=>hide($('quickTemplateEditorScreen')); $('saveQuickTemplateBtn').onclick=saveQuickTemplate; $('quickTemplateTypeInput').onchange=syncQuickTemplateTypeFields; $('quickTemplateCategoryInput').onchange=()=>renderQuickTemplateSubcategories();
   $('wipeBtn').onclick=async()=>{if(confirm('確定要清除全部記帳資料、預算與自訂類別？安全密碼與 Face ID 設定會保留。')){txns=[];budgets={};categories=clone(DEFAULT_CATEGORIES);quickTemplates=clone(DEFAULT_QUICK_TEMPLATES);settings={};await persistState();hide($('settingsScreen'));renderAll();toast('已清除');}};
   $('manageCategoriesBtn').onclick=openCategoryManager; $('manageCategoriesInlineBtn').onclick=openCategoryManager; $('closeCategoryManagerBtn').onclick=()=>hide($('categoryManagerScreen')); $('addCategoryBtn').onclick=()=>openCategoryEditor(); $('cancelCategoryEditBtn').onclick=()=>hide($('categoryEditorScreen')); $('saveCategoryBtn').onclick=saveCategory;
