@@ -1,7 +1,7 @@
 'use strict';
 
 const $ = id => document.getElementById(id);
-const APP_VERSION = '1.3.3';
+const APP_VERSION = '1.3.4';
 const DATA_VERSION = 9;
 const VAULT_KEY = 'little_days_bookkeeping_vault_v2';
 const AUTH_KEY = 'little_days_bookkeeping_auth_v2';
@@ -16,12 +16,24 @@ const HISTORICAL_SEED_VERSION = '';
 const HISTORICAL_SEED_TXNS = [];
 const HISTORICAL_SEED_RECURRING = [];
 
+const HISTORICAL_CATEGORY_SPLIT_VERSION = '2026-v2';
+const HISTORICAL_CATEGORY_SPLITS = {
+  "2026-01":[{categoryId:"food",subcategory:"家庭餐飲",amount:6318},{categoryId:"food",subcategory:"上班餐飲",amount:4199},{categoryId:"home",subcategory:"生活雜支",amount:2742},{categoryId:"shopping",subcategory:"個人購物",amount:2659},{categoryId:"leisure",subcategory:"旅遊",amount:1985},{categoryId:"other",subcategory:"其他",amount:1195},{categoryId:"food",subcategory:"個人餐飲",amount:989},{categoryId:"shopping",subcategory:"網購",amount:749},{categoryId:"transport",subcategory:"充電／加油",amount:665},{categoryId:"leisure",subcategory:"娛樂",amount:516},{categoryId:"leisure",subcategory:"訂閱服務",amount:380},{categoryId:"transport",subcategory:"停車",amount:215},{categoryId:"social",subcategory:"其他交際",amount:123},{categoryId:"transport",subcategory:"其他交通",amount:95},{categoryId:"transport",subcategory:"計程車",amount:62},{categoryId:"social",subcategory:"朋友聚餐／請客",amount:58},{categoryId:"health",subcategory:"藥品",amount:23}],
+  "2026-02":[{categoryId:"home",subcategory:"生活雜支",amount:6221},{categoryId:"transport",subcategory:"充電／加油",amount:5000},{categoryId:"leisure",subcategory:"娛樂",amount:4280},{categoryId:"shopping",subcategory:"網購",amount:4160},{categoryId:"food",subcategory:"家庭餐飲",amount:3873},{categoryId:"food",subcategory:"上班餐飲",amount:2161},{categoryId:"other",subcategory:"其他",amount:1433},{categoryId:"shopping",subcategory:"個人購物",amount:80},{categoryId:"leisure",subcategory:"訂閱服務",amount:30}],
+  "2026-03":[{categoryId:"food",subcategory:"家庭餐飲",amount:5590},{categoryId:"food",subcategory:"上班餐飲",amount:3307},{categoryId:"shopping",subcategory:"網購",amount:970},{categoryId:"home",subcategory:"生活雜支",amount:921},{categoryId:"food",subcategory:"個人餐飲",amount:762},{categoryId:"leisure",subcategory:"訂閱服務",amount:495},{categoryId:"social",subcategory:"其他交際",amount:480},{categoryId:"other",subcategory:"其他",amount:165},{categoryId:"transport",subcategory:"停車",amount:135}],
+  "2026-04":[{categoryId:"food",subcategory:"上班餐飲",amount:15538},{categoryId:"home",subcategory:"生活雜支",amount:8001},{categoryId:"food",subcategory:"家庭餐飲",amount:5520},{categoryId:"food",subcategory:"個人餐飲",amount:1563},{categoryId:"shopping",subcategory:"個人購物",amount:775},{categoryId:"leisure",subcategory:"訂閱服務",amount:691},{categoryId:"transport",subcategory:"停車",amount:500},{categoryId:"social",subcategory:"朋友聚餐／請客",amount:290},{categoryId:"other",subcategory:"其他",amount:102},{categoryId:"transport",subcategory:"充電／加油",amount:100}],
+  "2026-05":[{categoryId:"shopping",subcategory:"個人購物",amount:19883},{categoryId:"home",subcategory:"生活雜支",amount:9891},{categoryId:"food",subcategory:"家庭餐飲",amount:7072},{categoryId:"food",subcategory:"上班餐飲",amount:3923},{categoryId:"other",subcategory:"其他",amount:2763},{categoryId:"transport",subcategory:"計程車",amount:857},{categoryId:"transport",subcategory:"停車",amount:703},{categoryId:"leisure",subcategory:"訂閱服務",amount:183},{categoryId:"food",subcategory:"個人餐飲",amount:155}],
+  "2026-06":[{categoryId:"food",subcategory:"家庭餐飲",amount:10708},{categoryId:"shopping",subcategory:"個人購物",amount:6199},{categoryId:"food",subcategory:"上班餐飲",amount:4464},{categoryId:"other",subcategory:"其他",amount:1149},{categoryId:"home",subcategory:"生活雜支",amount:903},{categoryId:"leisure",subcategory:"訂閱服務",amount:730},{categoryId:"food",subcategory:"個人餐飲",amount:483},{categoryId:"transport",subcategory:"停車",amount:305},{categoryId:"social",subcategory:"朋友聚餐／請客",amount:225},{categoryId:"transport",subcategory:"充電／加油",amount:191},{categoryId:"health",subcategory:"藥品",amount:180}],
+  "2026-07":[{categoryId:"food",subcategory:"家庭餐飲",amount:19355},{categoryId:"food",subcategory:"上班餐飲",amount:5292},{categoryId:"food",subcategory:"個人餐飲",amount:3332},{categoryId:"shopping",subcategory:"個人購物",amount:2782},{categoryId:"leisure",subcategory:"旅遊",amount:2337},{categoryId:"leisure",subcategory:"訂閱服務",amount:730},{categoryId:"other",subcategory:"其他",amount:684},{categoryId:"home",subcategory:"生活雜支",amount:652},{categoryId:"transport",subcategory:"停車",amount:451},{categoryId:"transport",subcategory:"其他交通",amount:400},{categoryId:"transport",subcategory:"充電／加油",amount:306}],
+  "2026-08":[{categoryId:"leisure",subcategory:"旅遊",amount:12114},{categoryId:"other",subcategory:"其他",amount:3835},{categoryId:"food",subcategory:"個人餐飲",amount:1807},{categoryId:"food",subcategory:"家庭餐飲",amount:1620},{categoryId:"food",subcategory:"上班餐飲",amount:1473},{categoryId:"shopping",subcategory:"個人購物",amount:605},{categoryId:"home",subcategory:"生活雜支",amount:505},{categoryId:"transport",subcategory:"其他交通",amount:400},{categoryId:"leisure",subcategory:"訂閱服務",amount:59}]
+};
+
 
 const DEFAULT_CATEGORIES = [
   {id:'food',name:'餐飲',icon:'🍽️',hidden:false,subs:['上班餐飲','家庭餐飲','個人餐飲']},
   {id:'social',name:'交際應酬',icon:'🥂',hidden:false,subs:['同事聚餐','朋友聚餐／請客','其他交際']},
   {id:'transport',name:'交通',icon:'🚗',hidden:false,subs:['停車','充電／加油','大眾運輸','計程車','保養／維修','其他交通']},
-  {id:'family',name:'家庭／小孩',icon:'👨‍👩‍👧‍👧',hidden:false,subs:['教育','小孩用品','家庭活動','家庭用品','其他家庭']},
+  {id:'family',name:'家庭',icon:'👨‍👩‍👧‍👧',hidden:false,subs:['孝親費','教育','小孩用品','家庭活動','家庭用品','其他家庭']},
   {id:'shopping',name:'購物',icon:'🛍️',hidden:false,subs:['個人購物','服飾','3C／家電','網購','其他購物']},
   {id:'home',name:'居家生活',icon:'🏠',hidden:false,subs:['生活雜支','水電瓦斯','電話網路','家用品','其他居家']},
   {id:'leisure',name:'娛樂休閒',icon:'🎬',hidden:false,subs:['娛樂','旅遊','運動','訂閱服務','其他休閒']},
@@ -179,7 +191,7 @@ async function loadVault(){
   }else{
     txns=loadLegacyJson(LEGACY_TXN_KEY,[]); budgets=loadLegacyJson(LEGACY_BUDGET_KEY,{}); settings=loadLegacyJson(LEGACY_SETTINGS_KEY,{}); categories=clone(DEFAULT_CATEGORIES); quickTemplates=clone(DEFAULT_QUICK_TEMPLATES); recurring=Array.isArray(settings.recurring)?settings.recurring:[];
   }
-  normalizeData(); applyHistoricalSeed(); normalizeData(); vaultLoaded=true;
+  normalizeData(); applyHistoricalSeed(); normalizeData(); migrateHistoricalCategorySummaries(); normalizeData(); vaultLoaded=true;
   await processRecurringDue(false);
   await persistState();
   localStorage.removeItem(LEGACY_TXN_KEY); localStorage.removeItem(LEGACY_BUDGET_KEY); localStorage.removeItem(LEGACY_SETTINGS_KEY);
@@ -204,14 +216,70 @@ function normalizeData(){
   }
   const foodCat=categories.find(c=>c.id==='food');
   if(foodCat&&!foodCat.subs.includes('個人餐飲'))foodCat.subs.push('個人餐飲');
+  const familyCat=categories.find(c=>c.id==='family');
+  if(familyCat){ if(familyCat.name==='家庭／小孩')familyCat.name='家庭'; if(!familyCat.subs.includes('孝親費'))familyCat.subs.unshift('孝親費'); }
   const fixedCat=categories.find(c=>c.id==='fixed');
   if(fixedCat&&!fixedCat.subs.includes('薪資扣除'))fixedCat.subs.splice(Math.max(0,fixedCat.subs.length-1),0,'薪資扣除');
   const migrated={...budgets};
-  const mapLegacy={'餐飲':'food','交際應酬':'social','交通':'transport','家庭／小孩':'family','購物':'shopping','居家生活':'home','娛樂休閒':'leisure','醫療健康':'health','固定費用':'fixed','其他':'other'};
+  const mapLegacy={'餐飲':'food','交際應酬':'social','交通':'transport','家庭／小孩':'family','家庭':'family','購物':'shopping','居家生活':'home','娛樂休閒':'leisure','醫療健康':'health','固定費用':'fixed','其他':'other'};
   for(const [old,id] of Object.entries(mapLegacy)){ if(migrated[old]!=null&&migrated[`cat:${id}`]==null)migrated[`cat:${id}`]=migrated[old]; }
   if(migrated['餐飲::上班餐飲']!=null&&migrated['sub:food:上班餐飲']==null)migrated['sub:food:上班餐飲']=migrated['餐飲::上班餐飲'];
   if(migrated['餐飲::家庭餐飲']!=null&&migrated['sub:food:家庭餐飲']==null)migrated['sub:food:家庭餐飲']=migrated['餐飲::家庭餐飲'];
   budgets=migrated;
+}
+
+
+function historicalSplitLabel(categoryId,subcategory){
+  if(categoryId==='food')return subcategory;
+  if(categoryId==='transport')return subcategory;
+  if(categoryId==='social')return subcategory;
+  if(categoryId==='leisure')return subcategory;
+  if(categoryId==='shopping')return subcategory;
+  if(categoryId==='home')return '居家生活';
+  if(categoryId==='health')return '醫療健康';
+  return '其他';
+}
+function migrateHistoricalCategorySummaries(){
+  let changed=false;
+  // 孝親費固定歸「家庭 > 孝親費」。歷史總額不變，只改分類。
+  for(const t of txns){
+    if(t?.historicalSummary&&t.type==='expense'&&t.title==='孝親費'){
+      if(t.categoryId!=='family'||t.subcategory!=='孝親費'){ t.categoryId='family'; t.subcategory='孝親費'; changed=true; }
+    }
+  }
+  for(const [ym,baseRows] of Object.entries(HISTORICAL_CATEGORY_SPLITS)){
+    const variable=txns.find(t=>t?.historicalSummary&&t.type==='expense'&&String(t.date||'').startsWith(ym)&&(t.id===`hist-${ym}-variable`||/歷史變動支出彙總/.test(t.title||'')));
+    if(!variable)continue;
+    const target=Math.round(Number(variable.amount)||0);
+    if(target<=0)continue;
+    const rows=baseRows.map(r=>({...r,amount:Math.round(Number(r.amount)||0)}));
+    const expected=rows.reduce((a,r)=>a+r.amount,0);
+    if(expected!==target){
+      const other=rows.find(r=>r.categoryId==='other')||rows[rows.length-1];
+      other.amount+=target-expected;
+    }
+    txns=txns.filter(t=>t!==variable);
+    rows.filter(r=>r.amount!==0).forEach((r,i)=>{
+      const label=historicalSplitLabel(r.categoryId,r.subcategory);
+      txns.push({
+        id:`hist-${ym}-classified-${r.categoryId}-${i+1}`,
+        date:variable.date||`${ym}-28`,
+        type:'expense',
+        title:`歷史分類彙總｜${label}`,
+        amount:r.amount,
+        createdAt:variable.createdAt||new Date().toISOString(),
+        historicalSummary:true,
+        source:'historical-import-2026-v2',
+        categoryId:r.categoryId,
+        subcategory:r.subcategory,
+        payment:variable.payment||'card',
+        note:ym==='2026-01'?'1 月依既有歷史估算方式與 2–8 月分類結構拆分；不納入每日平均與日曆支出':'依已整理的歷史帳單與分類規則拆分；不納入每日平均與日曆支出'
+      });
+    });
+    changed=true;
+  }
+  if(changed)settings={...settings,historicalCategorySplitVersion:HISTORICAL_CATEGORY_SPLIT_VERSION};
+  return changed;
 }
 
 function categoryById(id){ return categories.find(c=>c.id===id)||categories.find(c=>c.id==='other')||{id:'other',name:'其他',icon:'📌',subs:['其他']}; }
@@ -1072,7 +1140,7 @@ function showPostUpdateNotice(){
 }
 
 async function exportBackup(){ settings.lastBackupAt=new Date().toISOString();await persistState();const data={app:'little-days-bookkeeping',version:APP_VERSION,dataVersion:DATA_VERSION,exportedAt:settings.lastBackupAt,txns,budgets,categories,quickTemplates,settings,recurring};const blob=new Blob([JSON.stringify(data,null,2)],{type:'application/json'}),url=URL.createObjectURL(blob),a=document.createElement('a');a.href=url;a.download=`小日子記帳備份_${dateKey(new Date())}.json`;a.click();setTimeout(()=>URL.revokeObjectURL(url),1000);renderBackupStatus();toast('備份檔已產生，請妥善保存'); }
-async function importBackupFile(file){ try{const data=JSON.parse(await file.text());if(data.app!=='little-days-bookkeeping'||!Array.isArray(data.txns))throw new Error('bad');const mergeOnly=Boolean(data.mergeOnly);if(!confirm(`匯入 ${data.txns.length} 筆紀錄？目前資料會以 ID 合併。${mergeOnly?'\n這是私人一次性資料檔，不會覆蓋其他設定。':''}`))return;const map=new Map(txns.map(t=>[t.id,t]));data.txns.forEach(t=>map.set(t.id||uid(),t));txns=[...map.values()];if(mergeOnly){if(Array.isArray(data.recurring)){const rmap=new Map(recurring.map(r=>[r.id,r]));data.recurring.forEach(r=>rmap.set(r.id||uid(),r));recurring=[...rmap.values()];}settings={...settings,lastRestoreAt:new Date().toISOString()};}else{budgets={...budgets,...(data.budgets||{})};if(Array.isArray(data.categories)&&data.categories.length)categories=data.categories;if(Array.isArray(data.quickTemplates)&&data.quickTemplates.length)quickTemplates=data.quickTemplates;if(Array.isArray(data.recurring))recurring=data.recurring;settings={...settings,...(data.settings||{}),lastRestoreAt:new Date().toISOString()};}normalizeData();await persistState();renderAll();renderBackupStatus();toast(mergeOnly?'私人資料合併完成':'備份還原完成');}catch{toast('這不是有效的記帳備份檔',2600);} }
+async function importBackupFile(file){ try{const data=JSON.parse(await file.text());if(data.app!=='little-days-bookkeeping'||!Array.isArray(data.txns))throw new Error('bad');const mergeOnly=Boolean(data.mergeOnly);if(!confirm(`匯入 ${data.txns.length} 筆紀錄？目前資料會以 ID 合併。${mergeOnly?'\n這是私人一次性資料檔，不會覆蓋其他設定。':''}`))return;const map=new Map(txns.map(t=>[t.id,t]));data.txns.forEach(t=>map.set(t.id||uid(),t));txns=[...map.values()];if(mergeOnly){if(Array.isArray(data.recurring)){const rmap=new Map(recurring.map(r=>[r.id,r]));data.recurring.forEach(r=>rmap.set(r.id||uid(),r));recurring=[...rmap.values()];}settings={...settings,lastRestoreAt:new Date().toISOString()};}else{budgets={...budgets,...(data.budgets||{})};if(Array.isArray(data.categories)&&data.categories.length)categories=data.categories;if(Array.isArray(data.quickTemplates)&&data.quickTemplates.length)quickTemplates=data.quickTemplates;if(Array.isArray(data.recurring))recurring=data.recurring;settings={...settings,...(data.settings||{}),lastRestoreAt:new Date().toISOString()};}normalizeData();migrateHistoricalCategorySummaries();normalizeData();await persistState();renderAll();renderBackupStatus();toast(mergeOnly?'私人資料合併完成':'備份還原完成');}catch{toast('這不是有效的記帳備份檔',2600);} }
 
 function bindEvents(){
   $('prevMonthBtn').onclick=()=>{viewMonth=addMonths(viewMonth,-1);selectedDate=dateKey(viewMonth);renderAll();}; $('nextMonthBtn').onclick=()=>{viewMonth=addMonths(viewMonth,1);selectedDate=dateKey(viewMonth);renderAll();};
