@@ -1,0 +1,411 @@
+<!doctype html>
+<html lang="zh-Hant">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover" />
+  <meta name="theme-color" content="#5f7fbc" />
+  <meta name="app-version" content="1.2.1" />
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-status-bar-style" content="default" />
+  <meta name="apple-mobile-web-app-title" content="小日子記帳" />
+  <link rel="apple-touch-icon" href="apple-touch-icon.png?v=1.2.1" />
+  <link rel="manifest" href="manifest.json?v=1.2.1" />
+  <link rel="stylesheet" href="styles.css?v=1.2.1" />
+  <title>小日子記帳</title>
+</head>
+<body class="locked">
+  <section id="lockScreen" class="lock-screen">
+    <div class="lock-brand">
+      <div class="lock-logo">帳</div>
+      <div class="eyebrow">小日子</div>
+      <h1>每日記帳</h1>
+      <p>你的生活支出，只給你自己看。</p>
+    </div>
+
+    <div id="unlockPanel" class="lock-card unlock-card hidden">
+      <div class="unlock-section face-section">
+        <div class="unlock-section-label">建議方式</div>
+        <button id="faceUnlockBtn" class="face-btn hidden">
+          <span class="face-symbol">◉</span>
+          <span><strong>使用 Face ID</strong><small>辨識成功後直接進入記帳</small></span>
+        </button>
+      </div>
+      <div id="faceDivider" class="divider hidden"><span>或使用 App PIN</span></div>
+      <div class="unlock-section pin-section">
+        <label for="pinUnlockInput">6 位數 App PIN</label>
+        <input id="pinUnlockInput" class="pin-input" type="password" inputmode="numeric" pattern="[0-9]*" maxlength="6" autocomplete="off" placeholder="輸入 6 位數 PIN" aria-describedby="pinUnlockHint" />
+        <p id="pinUnlockHint" class="pin-hint">Face ID 無法使用時，再用 PIN 解鎖。</p>
+        <button id="pinUnlockBtn" class="pin-unlock-btn full" disabled>用 PIN 解鎖</button>
+      </div>
+      <p id="unlockMessage" class="lock-message"></p>
+    </div>
+
+    <div id="setupPanel" class="lock-card hidden">
+      <h2>第一次使用</h2>
+      <p class="setup-note">先建立 6 位數密碼。V0.1.0 既有紀錄會在設定完成後自動轉入加密儲存。</p>
+      <label for="setupPinInput">設定 6 位數密碼</label>
+      <input id="setupPinInput" class="pin-input" type="password" inputmode="numeric" pattern="[0-9]*" maxlength="6" autocomplete="off" placeholder="••••••" />
+      <label for="setupPinConfirmInput">再輸入一次</label>
+      <input id="setupPinConfirmInput" class="pin-input" type="password" inputmode="numeric" pattern="[0-9]*" maxlength="6" autocomplete="off" placeholder="••••••" />
+      <label class="check-row"><input id="setupFaceCheck" type="checkbox" checked /> <span>同時啟用 Face ID（建議）</span></label>
+      <button id="finishSetupBtn" class="primary full">完成安全設定</button>
+      <p id="setupMessage" class="lock-message"></p>
+    </div>
+  </section>
+
+  <div id="app" aria-hidden="true">
+    <section id="homeScreen" class="screen">
+      <header class="topbar">
+        <div>
+          <div class="eyebrow">小日子</div>
+          <h1>每日記帳</h1>
+          <p class="version-line">V1.2.1 · 隱私安全版</p>
+        </div>
+        <button id="openSettingsBtn" class="icon-btn" aria-label="設定">⚙️</button>
+      </header>
+
+      <main class="content">
+        <section class="month-switch card-inline">
+          <button id="prevMonthBtn" class="round-btn" aria-label="上個月">‹</button>
+          <button id="monthLabelBtn" class="month-label">2026 年 9 月</button>
+          <button id="nextMonthBtn" class="round-btn" aria-label="下個月">›</button>
+        </section>
+
+        <section class="finance-hero">
+          <div class="finance-hero-top">
+            <div>
+              <span class="finance-hero-label">本月生活淨流入</span>
+              <strong id="homeNetHero">$0</strong>
+              <p id="homeNetHeroMeta">收入－支出</p>
+            </div>
+            <div class="finance-hero-badge" id="homeMonthPulse">本月</div>
+          </div>
+          <div id="homeSparkBars" class="mini-spark-bars" aria-label="近期每日支出趨勢"></div>
+          <div class="finance-hero-chips">
+            <span id="heroExpenseRatio">支出率 --</span>
+            <span id="heroInvestmentRatio">投資 --</span>
+            <span id="heroMonthChange">較上月 --</span>
+          </div>
+        </section>
+
+        <section class="summary-grid home-summary-grid">
+          <button id="monthExpenseCard" class="summary-card summary-action expense-card active" data-insight="expense"><span>本月支出</span><strong id="monthExpense">$0</strong><small>點一下看花費比重</small></button>
+          <button id="monthIncomeCard" class="summary-card summary-action income-card" data-insight="income"><span>本月收入</span><strong id="monthIncome">$0</strong><small>點一下看收入來源</small></button>
+          <button id="monthBalanceCard" class="summary-card summary-action balance-card" data-insight="balance"><span>生活收支</span><strong id="monthBalance">$0</strong><small>點一下看本月淨流入</small></button>
+          <button id="monthInvestmentCard" class="summary-card summary-action investment-card" data-insight="investment"><span>本月投資</span><strong id="monthInvestment">$0</strong><small>點一下看投入標的</small></button>
+        </section>
+
+        <section id="homeReminderPanel" class="reminder-panel hidden">
+          <div class="reminder-head"><div><span class="reminder-kicker">提醒</span><strong id="homeReminderTitle">本月有事情要處理</strong></div><span id="homeReminderCount" class="reminder-count">0</span></div>
+          <div id="homeReminderList" class="reminder-list"></div>
+        </section>
+
+        <section id="homeInsightPanel" class="section-card insight-panel">
+          <div class="section-head"><div><h2 id="homeInsightTitle">本月支出去向</h2><p id="homeInsightSub">點上方卡片切換支出／收入／生活收支／投資</p></div><button id="goAnalysisBtn" class="text-btn strong">完整分析</button></div>
+          <div id="homeHeroStats" class="hero-stat-grid"></div>
+          <div id="homeQuickCards" class="quick-cards-scroll"></div>
+          <div id="homeInsightBars" class="analysis-bars"></div>
+          <div id="homeInsightEmpty" class="empty-mini hidden">這個月還沒有資料。</div>
+        </section>
+
+        <section class="section-card quick-entry-panel">
+          <div class="section-head"><div><h2>快速記一筆</h2><p>常用項目一按就帶入，通常只要補金額</p></div><button id="manageQuickTemplatesHomeBtn" class="text-btn strong">管理</button></div>
+          <div id="quickTemplateStrip" class="quick-template-strip"></div>
+          <div id="quickTemplateEmpty" class="empty-mini hidden">還沒有快速模板，可到設定新增。</div>
+        </section>
+
+        <section class="section-card calendar-card">
+          <div class="section-head"><div><h2>每日金流</h2><p>色點：支出、收入、投資；未來週期會標示預定</p></div></div>
+          <div class="calendar-legend"><span><i class="expense"></i>支出</span><span><i class="income"></i>收入</span><span><i class="investment"></i>投資</span><span><i class="planned"></i>預定</span></div>
+          <div class="weekday-row"><span>日</span><span>一</span><span>二</span><span>三</span><span>四</span><span>五</span><span>六</span></div>
+          <div id="calendarGrid" class="calendar-grid"></div>
+        </section>
+
+        <section class="section-card">
+          <div class="section-head"><div><h2 id="dayListTitle">今天</h2><p id="dayListSub">當日收支明細</p></div><button id="addFromDayBtn" class="text-btn strong">＋ 新增</button></div>
+          <div id="dayList" class="transaction-list"></div>
+          <div id="dayEmpty" class="empty-mini hidden">這天還沒有紀錄。</div>
+        </section>
+      </main>
+
+      <button id="voiceFab" class="voice-fab" aria-label="展開語音記帳" aria-expanded="false"><span class="voice-icon">🎙️</span><span class="voice-label">說一句</span></button>
+
+      <nav class="bottom-nav">
+        <button class="nav-item active" data-page="home"><span>◫</span><b>明細</b></button>
+        <button class="nav-item" data-page="budget"><span>◎</span><b>預算</b></button>
+        <button id="manualAddNav" class="nav-item add-nav"><span>＋</span><b>記一筆</b></button>
+        <button class="nav-item" data-page="analysis"><span>◔</span><b>分析</b></button>
+      </nav>
+    </section>
+
+    <section id="budgetScreen" class="screen hidden">
+      <header class="subbar"><button class="back-btn" data-back-home>‹</button><div><h1>預算</h1><p>控制真正想控制的支出</p></div><span class="subbar-spacer"></span></header>
+      <main class="content sub-content">
+        <section class="section-card budget-hero">
+          <div class="section-head"><div><h2>本月支出預算</h2><p id="budgetMonthLabel"></p></div><button id="editBudgetBtn" class="text-btn strong">設定</button></div>
+          <div class="budget-number-row"><div><span>預算</span><strong id="totalBudgetValue">未設定</strong></div><div><span>已花</span><strong id="budgetSpentValue">$0</strong></div><div><span>剩餘</span><strong id="budgetRemainValue">--</strong></div></div>
+          <div class="progress-track"><div id="totalBudgetProgress" class="progress-fill"></div></div>
+        </section>
+        <section class="section-card"><div class="section-head"><div><h2>用途預算</h2><p>投資不納入預算</p></div></div><div id="budgetCategoryList" class="budget-list"></div></section>
+      </main>
+      <nav class="bottom-nav"><button class="nav-item" data-page="home"><span>◫</span><b>明細</b></button><button class="nav-item active" data-page="budget"><span>◎</span><b>預算</b></button><button class="nav-item add-nav manual-add-clone"><span>＋</span><b>記一筆</b></button><button class="nav-item" data-page="analysis"><span>◔</span><b>分析</b></button></nav>
+    </section>
+
+    <section id="analysisScreen" class="screen hidden">
+      <header class="subbar"><button class="back-btn" data-back-home>‹</button><div><h1>收支分析</h1><p>全年總覽，也能切換單月</p></div><span class="subbar-spacer"></span></header>
+      <main class="content sub-content">
+        <section class="analysis-period-card section-card">
+          <div class="analysis-year-switch"><button id="analysisPrevYearBtn" class="round-btn">‹</button><strong id="analysisYearLabel">2026 年</strong><button id="analysisNextYearBtn" class="round-btn">›</button></div>
+          <div class="analysis-mode-toggle"><button id="analysisYearModeBtn" class="active">全年</button><button id="analysisMonthModeBtn">單月</button></div>
+          <select id="analysisMonthSelect" class="analysis-month-select hidden"></select>
+        </section>
+        <section class="summary-grid analysis-summary-grid">
+          <div class="summary-card income-card"><span id="analysisIncomeLabel">全年收入</span><strong id="analysisTotalIncome">$0</strong></div>
+          <div class="summary-card expense-card"><span id="analysisExpenseLabel">全年支出</span><strong id="analysisTotalExpense">$0</strong></div>
+          <div class="summary-card balance-card"><span>收支差額</span><strong id="analysisNetBalance">$0</strong></div>
+          <div class="summary-card investment-card"><span>投資投入</span><strong id="analysisTotalInvestment">$0</strong><small>不列入支出</small></div>
+        </section>
+        <section class="section-card analysis-visual-card">
+          <div class="section-head"><div><h2>支出結構</h2><p>用圓環一眼看出主要花費</p></div></div>
+          <div class="donut-layout">
+            <div id="analysisDonut" class="analysis-donut"><div class="donut-center"><span>支出</span><strong id="analysisDonutTotal">$0</strong></div></div>
+            <div id="analysisDonutLegend" class="donut-legend"></div>
+          </div>
+        </section>
+        <section class="section-card"><div class="section-head"><div><h2>收入種類排名</h2><p id="incomeRankingSub">看看錢從哪裡進來</p></div></div><div id="incomeRanking" class="analysis-bars"></div><div id="incomeRankingEmpty" class="empty-mini hidden">這個期間還沒有收入。</div></section>
+        <section class="section-card"><div class="section-head"><div><h2>支出種類排名</h2><p>最重要：錢花去哪裡</p></div></div><div id="expenseRanking" class="analysis-bars"></div><div id="expenseRankingEmpty" class="empty-mini hidden">這個期間還沒有支出。</div></section>
+        <section class="section-card"><div class="section-head"><div><h2>投資投入排行</h2><p>投資不算支出，但保留投入節奏</p></div></div><div id="investmentRanking" class="analysis-bars"></div><div id="investmentRankingEmpty" class="empty-mini hidden">這個期間還沒有投資。</div></section>
+        <section class="section-card"><div class="section-head"><div><h2 id="analysisTrendTitle">全年月度趨勢</h2><p id="analysisTrendSub">收入與支出逐月比較</p></div></div><div id="analysisTrend" class="dual-trend"></div></section>
+        <section class="section-card"><div class="section-head"><div><h2>期間比較</h2><p>快速看出這段時間有沒有異常</p></div></div><div id="analysisComparison" class="comparison-list"></div></section>
+        <section class="section-card"><div class="section-head"><div><h2>付款方式</h2><p>只做次要參考：現金 / 信用卡</p></div></div><div class="metric-grid two"><div><span>現金</span><strong id="cashAmount">$0</strong></div><div><span>信用卡</span><strong id="cardAmount">$0</strong></div></div></section>
+        <section class="section-card"><div class="section-head"><div><h2>重點追蹤：上班餐飲</h2><p>保留你想控制的午餐費，但不再主導整個分析頁</p></div></div><div class="metric-grid"><div><span>金額</span><strong id="analysisWorkMealAmount">$0</strong></div><div><span>筆數</span><strong id="analysisWorkMealCount">0</strong></div><div><span>平均／期間天數</span><strong id="analysisWorkMealAvg">$0</strong></div></div></section>
+      </main>
+      <nav class="bottom-nav"><button class="nav-item" data-page="home"><span>◫</span><b>明細</b></button><button class="nav-item" data-page="budget"><span>◎</span><b>預算</b></button><button class="nav-item add-nav manual-add-clone"><span>＋</span><b>記一筆</b></button><button class="nav-item active" data-page="analysis"><span>◔</span><b>分析</b></button></nav>
+    </section>
+
+    <section id="editorScreen" class="sheet hidden" aria-modal="true">
+      <div class="sheet-card editor-card">
+        <div class="sheet-head"><button id="cancelEditBtn" class="text-btn">取消</button><h2 id="editorTitle">記一筆</h2><button id="saveTxnBtn" class="text-btn strong">儲存</button></div>
+        <div id="voiceResultCard" class="voice-result hidden"><div class="voice-result-label">🎙️ 語音草稿</div><div id="voiceTranscript"></div><p>只有你按「儲存」後才會真正入帳。</p></div>
+        <div id="editorDateContext" class="date-context">記錄日期：--</div>
+        <div class="type-toggle three"><button id="expenseTypeBtn" class="active">支出</button><button id="incomeTypeBtn">收入</button><button id="investmentTypeBtn">投資</button></div>
+        <div class="amount-entry calculator-entry"><span>$</span><input id="amountInput" type="text" inputmode="none" readonly placeholder="0" aria-label="金額，點一下開啟計算機" /><button id="amountCalcBtn" type="button" class="amount-calc-btn" aria-label="開啟計算機">⌨︎</button></div>
+        <div id="amountCalcHint" class="amount-calc-hint hidden"></div>
+        <div class="form compact-form">
+          <label>日期</label><input id="dateInput" type="date" />
+          <div id="editorRecurringWrap">
+            <label class="check-row recurrence-main-toggle"><input id="editorRecurringInput" type="checkbox" /><span>設為週期性紀錄</span></label>
+            <div id="editorRecurringFields" class="recurring-inline-card hidden">
+              <label>週期</label><select id="editorRecurringFrequency"><option value="weekly">每週</option><option value="monthly" selected>每月</option><option value="bimonthly">每兩個月</option><option value="yearly">每年</option></select>
+              <div id="editorRecurringMonthlyDaysFields">
+                <label>每月日期（可多個）</label>
+                <div class="monthly-day-entry"><input id="editorRecurringMonthlyDayInput" type="number" inputmode="numeric" min="1" max="31" placeholder="例如：16" /><button id="editorAddMonthlyDayBtn" type="button" class="secondary inline-add-btn">＋加入</button></div>
+                <div id="editorRecurringMonthlyDayChips" class="day-chip-list" aria-live="polite"></div>
+                <p class="field-hint">一次加入一個日期；例如加入 1 日與 16 日，就會每月各建立一次。</p>
+              </div>
+              <label>結束日期（選填）</label><input id="editorRecurringEndDate" type="date" />
+              <label class="check-row"><input id="editorPendingAmountInput" type="checkbox" /><span>每期金額不固定，到期時再填金額</span></label>
+              <p id="editorRecurringHint" class="field-hint">上方日期就是週期開始日。</p>
+            </div>
+          </div>
+          <label>內容</label><input id="titleInput" type="text" placeholder="例如：午餐便當、鼎泰豐、0050" autocomplete="off" />
+          <div id="expenseFields">
+            <div class="label-row"><label>用途分類</label><button id="manageCategoriesInlineBtn" type="button" class="tiny-link">管理類別</button></div>
+            <div id="categoryPicker" class="category-picker"></div>
+            <label>細分類</label><select id="subcategoryInput"></select>
+            <label>付款方式</label><div class="payment-toggle"><button type="button" data-payment="card" class="active">💳 信用卡</button><button type="button" data-payment="cash">💵 現金</button></div>
+          </div>
+          <div id="incomeFields" class="hidden"><label>收入分類</label><select id="incomeCategoryInput"><option>薪資</option><option>獎金</option><option>技師執業</option><option>股息</option><option>退款</option><option>其他收入</option></select></div>
+          <div id="investmentFields" class="hidden"><label>投資類型</label><select id="investmentCategoryInput"><option>股票／ETF</option><option>基金</option><option>債券</option><option>其他投資</option></select><p class="field-hint">投資只記錄「投入多少」，不會列入本月支出與預算。</p></div>
+          <details><summary>備註</summary><div class="details-body"><textarea id="noteInput" rows="3" placeholder="選填"></textarea></div></details>
+        </div>
+      </div>
+    </section>
+
+    <section id="calculatorScreen" class="sheet hidden" aria-modal="true">
+      <div class="sheet-card calculator-sheet-card">
+        <div class="sheet-head"><button id="closeCalculatorBtn" class="text-btn">取消</button><h2>金額計算機</h2><button id="applyCalculatorBtn" class="text-btn strong">完成</button></div>
+        <div class="calculator-display">
+          <div id="calcExpression" class="calc-expression">0</div>
+          <div id="calcResult" class="calc-result">$0</div>
+        </div>
+        <div id="calculatorPad" class="calculator-pad">
+          <button type="button" data-calc="clear" class="calc-soft">AC</button><button type="button" data-calc="back" class="calc-soft">⌫</button><button type="button" data-calc="÷" class="calc-op">÷</button><button type="button" data-calc="×" class="calc-op">×</button>
+          <button type="button" data-calc="7">7</button><button type="button" data-calc="8">8</button><button type="button" data-calc="9">9</button><button type="button" data-calc="-" class="calc-op">−</button>
+          <button type="button" data-calc="4">4</button><button type="button" data-calc="5">5</button><button type="button" data-calc="6">6</button><button type="button" data-calc="+" class="calc-op">＋</button>
+          <button type="button" data-calc="1">1</button><button type="button" data-calc="2">2</button><button type="button" data-calc="3">3</button><button type="button" data-calc="equals" class="calc-equals">＝</button>
+          <button type="button" data-calc="0" class="calc-zero">0</button><button type="button" data-calc=".">.</button>
+        </div>
+        <p class="privacy-note calculator-note">例如輸入 110 ＋ 30，完成後會把 $140 帶回這筆紀錄。</p>
+      </div>
+    </section>
+
+    <section id="voiceDraftScreen" class="sheet hidden" aria-modal="true">
+      <div class="sheet-card voice-draft-sheet">
+        <div class="sheet-head"><button id="cancelVoiceDraftBtn" class="text-btn">取消</button><h2>語音草稿</h2><button id="saveVoiceDraftBtn" class="text-btn strong">全部儲存</button></div>
+        <div class="voice-draft-summary"><span id="voiceDraftCount">0 筆</span><strong id="voiceDraftTotal">合計 $0</strong></div>
+        <p class="sheet-note">同一用途會先自動合併；不同用途則分開記錄。確認後一次儲存。</p>
+        <div id="voiceDraftList" class="voice-draft-list"></div>
+      </div>
+    </section>
+
+    <section id="voiceDraftEditScreen" class="sheet hidden" aria-modal="true">
+      <div class="sheet-card">
+        <div class="sheet-head"><button id="cancelVoiceDraftEditBtn" class="text-btn">取消</button><h2>編輯語音草稿</h2><button id="saveVoiceDraftEditBtn" class="text-btn strong">完成</button></div>
+        <div class="form compact-form">
+          <label>內容</label><input id="voiceDraftEditTitle" type="text" />
+          <label>金額</label><input id="voiceDraftEditAmount" type="number" inputmode="decimal" min="1" />
+          <label>日期</label><input id="voiceDraftEditDate" type="date" />
+          <div id="voiceDraftEditExpenseFields"><label>分類</label><select id="voiceDraftEditCategory"></select><label>細分類</label><select id="voiceDraftEditSubcategory"></select><label>付款方式</label><select id="voiceDraftEditPayment"><option value="card">信用卡</option><option value="cash">現金</option></select></div>
+          <div id="voiceDraftEditIncomeFields" class="hidden"><label>收入分類</label><select id="voiceDraftEditIncomeCategory"><option>薪資</option><option>獎金</option><option>技師執業</option><option>股息</option><option>退款</option><option>其他收入</option></select></div>
+          <div id="voiceDraftEditInvestmentFields" class="hidden"><label>投資類型</label><select id="voiceDraftEditInvestmentCategory"><option>股票／ETF</option><option>基金</option><option>債券</option><option>其他投資</option></select></div>
+        </div>
+      </div>
+    </section>
+
+    <section id="voiceSheet" class="sheet hidden" aria-modal="true">
+      <div class="sheet-card voice-sheet-card">
+        <div class="sheet-head"><button id="closeVoiceBtn" class="text-btn">取消</button><h2>語音記帳</h2><span></span></div>
+        <div class="voice-center">
+          <div id="voiceOrb" class="voice-orb">🎙️</div>
+          <h3 id="voiceStatus">正在聽你說</h3>
+          <p id="voiceHint">你可以慢慢說；在你按「完成」之前，不會新增任何紀錄。</p>
+          <div id="voiceBaseDateText" class="voice-base-date">未指定日期時，會記在目前選取日期。</div>
+          <div id="liveTranscript" class="live-transcript">尚未收到語音…</div>
+          <textarea id="voiceFallbackInput" class="hidden" rows="5" placeholder="若瀏覽器不能直接收音，可點這裡後用 iPhone 鍵盤麥克風說完，再按完成。"></textarea>
+          <button id="voiceFallbackBtn" class="secondary full hidden">改用 iPhone 鍵盤麥克風</button>
+          <button id="finishVoiceBtn" class="primary full">完成並產生草稿</button>
+          <p class="privacy-note">完成後會先整理同類項目並產生草稿；不同用途會拆成多筆，確認後才入帳。</p>
+        </div>
+      </div>
+    </section>
+
+    <section id="txnMenuScreen" class="sheet hidden" aria-modal="true"><div class="sheet-card mini-sheet"><button id="editTxnBtn" class="secondary full">編輯這筆</button><button id="deleteTxnBtn" class="danger full">刪除這筆</button><button id="closeTxnMenuBtn" class="secondary full">取消</button></div></section>
+
+    <section id="recurringEditScopeScreen" class="sheet hidden" aria-modal="true">
+      <div class="sheet-card mini-sheet recurring-edit-scope-sheet">
+        <h2>修改週期紀錄</h2>
+        <p id="recurringEditScopeHint" class="sheet-note">要只修改這一筆，還是從這一筆開始套用到之後？</p>
+        <button id="editOccurrenceOnlyBtn" class="secondary full">只修改這一筆</button>
+        <button id="editRecurringFromBtn" class="primary full">從這一筆開始，修改之後所有週期</button>
+        <button id="cancelRecurringEditScopeBtn" class="secondary full">取消</button>
+      </div>
+    </section>
+
+    <section id="recurringDeleteScreen" class="sheet hidden" aria-modal="true">
+      <div class="sheet-card mini-sheet recurring-delete-sheet">
+        <h2>這是週期性紀錄</h2>
+        <p id="recurringDeleteHint" class="sheet-note">要怎麼處理這一筆？之前已經發生的紀錄都會保留。</p>
+        <button id="deleteOccurrenceBtn" class="secondary full">只刪除這一筆</button>
+        <button id="stopRecurringFromBtn" class="danger full">從這一筆開始，取消之後所有週期</button>
+        <button id="cancelRecurringDeleteBtn" class="secondary full">取消</button>
+      </div>
+    </section>
+
+    <section id="budgetEditorScreen" class="sheet hidden" aria-modal="true"><div class="sheet-card"><div class="sheet-head"><button id="cancelBudgetBtn" class="text-btn">取消</button><h2>設定預算</h2><button id="saveBudgetBtn" class="text-btn strong">儲存</button></div><div id="budgetEditorList" class="form"></div></div></section>
+
+    <section id="settingsScreen" class="sheet hidden" aria-modal="true">
+      <div class="sheet-card settings-card-sheet">
+        <div class="sheet-head"><button id="closeSettingsBtn" class="text-btn">完成</button><h2>設定</h2><span></span></div>
+        <div class="settings-list">
+          <div class="setting-card"><h3>🔐 隱私與安全</h3><p>離開 App 就立即上鎖；回來必須重新解鎖。</p><button id="manageSecurityBtn" class="secondary full">管理密碼與 Face ID</button></div>
+          <div class="setting-card"><h3>🗂️ 支出類別</h3><p>新增、修改、排序或隱藏自己的用途分類。</p><button id="manageCategoriesBtn" class="secondary full">管理類別</button></div>
+          <div class="setting-card"><h3>⚡ 快速輸入</h3><p>建立常用模板，例如午餐、停車、家庭餐飲或定期投資。</p><button id="manageQuickTemplatesBtn" class="secondary full">管理快速模板</button></div>
+          <div class="setting-card"><h3>🔁 週期紀錄</h3><p>支援固定收入、固定支出與定期投資；現在也可從某一筆開始修改後續週期，過去紀錄不受影響。</p><div id="recurringCountText" class="status-pill">0 個啟用中</div><button id="manageRecurringBtn" class="secondary full">管理週期紀錄</button></div>
+          <div class="setting-card"><h3>版本</h3><p>目前版本 V1.2.0 · 資料結構 V9</p><div id="updateStatus" class="update-status">尚未檢查</div><button id="checkUpdateBtn" class="secondary full">檢查新版本</button><button id="updateNowBtn" class="primary full hidden">立即更新</button></div>
+          <div class="setting-card backup-card"><h3>🛟 備份與還原</h3><p>備份包含記帳、預算、自訂類別、快速模板與全部週期設定。更新前建議先備份。</p><div id="backupStatusText" class="backup-status">尚未建立備份</div><div class="action-list"><button id="exportBtn" class="secondary full">立即匯出 JSON 備份</button><button id="importBtn" class="secondary full">匯入備份還原</button><input id="importFileInput" type="file" accept="application/json" class="hidden" /></div></div>
+          <div class="setting-card danger-card"><h3>清除資料</h3><p>清除記帳、預算、自訂類別與快速模板；安全設定保留。</p><button id="wipeBtn" class="danger full">清除所有記帳資料</button></div>
+        </div>
+      </div>
+    </section>
+
+    <section id="securityScreen" class="sheet hidden" aria-modal="true">
+      <div class="sheet-card"><div class="sheet-head"><button id="closeSecurityBtn" class="text-btn">完成</button><h2>隱私與安全</h2><span></span></div>
+        <div class="settings-list">
+          <div class="setting-card"><h3>立即上鎖</h3><p>只要 App 進入背景、切換 App 或鎖定螢幕，就會立刻鎖定。</p><div class="status-pill">已強制啟用</div></div>
+          <div class="setting-card"><h3>Face ID</h3><p id="faceStatusText">檢查中…</p><button id="toggleFaceBtn" class="secondary full">設定 Face ID</button></div>
+          <div class="setting-card"><h3>6 位數密碼</h3><p>Face ID 無法使用時，可用密碼解鎖。</p><button id="changePinBtn" class="secondary full">變更密碼</button></div>
+          <div class="setting-card"><h3>本機加密</h3><p>記帳資料以加密內容儲存在此網站的本機儲存空間；加密金鑰以不可匯出的 Web Crypto 金鑰保存在同來源 IndexedDB。</p></div>
+        </div>
+      </div>
+    </section>
+
+
+
+    <section id="recurringManagerScreen" class="sheet hidden" aria-modal="true">
+      <div class="sheet-card">
+        <div class="sheet-head"><button id="closeRecurringManagerBtn" class="text-btn">完成</button><h2>週期紀錄</h2><button id="addRecurringBtn" class="text-btn strong">＋新增</button></div>
+        <p class="sheet-note">你也可以直接在日曆選日期 →「＋新增」→ 勾選「設為週期性」。到期日沒開 App 也沒關係，下次解鎖會自動補登；待填金額的紀錄不會先算入收支。</p>
+        <div id="recurringManagerList" class="recurring-manager-list"></div>
+        <div id="recurringEmpty" class="empty-mini">還沒有週期紀錄。</div>
+      </div>
+    </section>
+
+    <section id="recurringEditorScreen" class="sheet hidden" aria-modal="true">
+      <div class="sheet-card">
+        <div class="sheet-head"><button id="cancelRecurringEditBtn" class="text-btn">取消</button><h2 id="recurringEditorTitle">新增週期紀錄</h2><button id="saveRecurringBtn" class="text-btn strong">儲存</button></div>
+        <div class="type-toggle three"><button id="recurringExpenseTypeBtn" class="active">固定支出</button><button id="recurringIncomeTypeBtn">固定收入</button><button id="recurringInvestmentTypeBtn">定期投資</button></div>
+        <div class="form compact-form recurring-form">
+          <label>名稱</label><input id="recurringTitleInput" type="text" maxlength="40" placeholder="例如：電信費" autocomplete="off" />
+          <label>金額</label><input id="recurringAmountInput" type="number" inputmode="decimal" min="1" step="1" placeholder="1399；待填模式可留空" />
+          <label class="check-row"><input id="recurringPendingAmountInput" type="checkbox" /><span>每期金額不固定，到期時再填金額</span></label>
+          <label>週期</label><select id="recurringFrequencyInput"><option value="monthly">每月</option><option value="bimonthly">每兩個月</option><option value="weekly">每週</option><option value="yearly">每年</option></select>
+          <div id="recurringMonthlyFields">
+            <label>每月幾號（可多個）</label>
+            <div class="monthly-day-entry"><input id="recurringMonthlyDayInput" type="number" inputmode="numeric" min="1" max="31" placeholder="例如：16" /><button id="recurringAddMonthlyDayBtn" type="button" class="secondary inline-add-btn">＋加入</button></div>
+            <div id="recurringMonthlyDayChips" class="day-chip-list" aria-live="polite"></div>
+            <p class="field-hint">一次加入一個日期；已加入的日期會顯示在下方，可直接移除。</p>
+          </div>
+          <div id="recurringBiMonthlyFields" class="hidden"><label>每兩個月幾號</label><input id="recurringDayOfMonthInput" type="number" inputmode="numeric" min="1" max="31" value="5" /></div>
+          <div id="recurringWeeklyFields" class="hidden"><label>星期幾</label><select id="recurringDayOfWeekInput"><option value="0">星期日</option><option value="1">星期一</option><option value="2">星期二</option><option value="3">星期三</option><option value="4">星期四</option><option value="5">星期五</option><option value="6">星期六</option></select></div>
+          <div id="recurringYearlyFields" class="hidden"><div class="inline-fields"><div><label>月份</label><input id="recurringMonthOfYearInput" type="number" inputmode="numeric" min="1" max="12" value="1" /></div><div><label>日期</label><input id="recurringDayOfYearInput" type="number" inputmode="numeric" min="1" max="31" value="1" /></div></div></div>
+          <label>開始日期</label><input id="recurringStartDateInput" type="date" />
+          <label>結束日期（選填）</label><input id="recurringEndDateInput" type="date" />
+          <div id="recurringExpenseFields">
+            <label>用途分類</label><select id="recurringCategoryInput"></select>
+            <label>細分類</label><select id="recurringSubcategoryInput"></select>
+            <label>付款方式</label><div class="payment-toggle"><button type="button" data-recurring-payment="card" class="active">💳 信用卡</button><button type="button" data-recurring-payment="cash">💵 現金</button></div>
+          </div>
+          <div id="recurringIncomeFields" class="hidden"><label>收入分類</label><select id="recurringIncomeCategoryInput"><option>薪資</option><option>獎金</option><option>技師執業</option><option>股息</option><option>退款</option><option>其他收入</option></select></div>
+          <div id="recurringInvestmentFields" class="hidden"><label>投資類型</label><select id="recurringInvestmentCategoryInput"><option>股票／ETF</option><option>基金</option><option>債券</option><option>其他投資</option></select><p class="field-hint">定期投資只計入「投資投入」，不列入生活支出與預算。</p></div>
+          <label class="check-row"><input id="recurringEnabledInput" type="checkbox" checked /><span>啟用這個週期</span></label>
+          <p class="field-hint">每月 29～31 日遇到較短月份時，會自動排在該月最後一天；歷史紀錄不會因停止週期而消失。</p>
+        </div>
+      </div>
+    </section>
+
+    <section id="quickTemplateManagerScreen" class="sheet hidden" aria-modal="true">
+      <div class="sheet-card"><div class="sheet-head"><button id="closeQuickTemplateManagerBtn" class="text-btn">完成</button><h2>快速輸入</h2><button id="addQuickTemplateBtn" class="text-btn strong">＋新增</button></div>
+        <p class="sheet-note">模板只負責預填內容與分類；金額可留空，每次記帳再用計算機輸入。</p><div id="quickTemplateManagerList" class="quick-template-manager-list"></div>
+      </div>
+    </section>
+
+    <section id="quickTemplateEditorScreen" class="sheet hidden" aria-modal="true">
+      <div class="sheet-card"><div class="sheet-head"><button id="cancelQuickTemplateEditBtn" class="text-btn">取消</button><h2 id="quickTemplateEditorTitle">新增快速模板</h2><button id="saveQuickTemplateBtn" class="text-btn strong">儲存</button></div>
+        <div class="form compact-form">
+          <label>圖示</label><input id="quickTemplateIconInput" type="text" maxlength="4" placeholder="🍱" />
+          <label>名稱</label><input id="quickTemplateNameInput" type="text" maxlength="24" placeholder="例如：午餐" />
+          <label>類型</label><select id="quickTemplateTypeInput"><option value="expense">支出</option><option value="income">收入</option><option value="investment">投資</option></select>
+          <label>預設金額（選填）</label><input id="quickTemplateAmountInput" type="number" inputmode="decimal" min="0" step="1" placeholder="留空，每次再輸入" />
+          <div id="quickTemplateExpenseFields"><label>支出類別</label><select id="quickTemplateCategoryInput"></select><label>細分類</label><select id="quickTemplateSubcategoryInput"></select><label>付款方式</label><select id="quickTemplatePaymentInput"><option value="card">信用卡</option><option value="cash">現金</option></select></div>
+          <div id="quickTemplateIncomeFields" class="hidden"><label>收入分類</label><select id="quickTemplateIncomeCategoryInput"><option>薪資</option><option>獎金</option><option>技師執業</option><option>股息</option><option>退款</option><option>其他收入</option></select></div>
+          <div id="quickTemplateInvestmentFields" class="hidden"><label>投資類型</label><select id="quickTemplateInvestmentCategoryInput"><option>股票／ETF</option><option>基金</option><option>債券</option><option>其他投資</option></select></div>
+        </div>
+      </div>
+    </section>
+
+    <section id="categoryManagerScreen" class="sheet hidden" aria-modal="true">
+      <div class="sheet-card"><div class="sheet-head"><button id="closeCategoryManagerBtn" class="text-btn">完成</button><h2>支出類別</h2><button id="addCategoryBtn" class="text-btn strong">＋新增</button></div><p class="sheet-note">已使用過的類別建議用「隱藏」取代刪除，舊帳不會消失。</p><div id="categoryManagerList" class="category-manager-list"></div></div>
+    </section>
+
+    <section id="categoryEditorScreen" class="sheet hidden" aria-modal="true">
+      <div class="sheet-card"><div class="sheet-head"><button id="cancelCategoryEditBtn" class="text-btn">取消</button><h2 id="categoryEditorTitle">新增類別</h2><button id="saveCategoryBtn" class="text-btn strong">儲存</button></div>
+        <div class="form"><label>圖示（Emoji）</label><input id="categoryIconInput" type="text" maxlength="4" placeholder="🍜" /><label>類別名稱</label><input id="categoryNameInput" type="text" maxlength="20" placeholder="例如：寵物" /><label>細分類</label><textarea id="categorySubsInput" rows="6" placeholder="每行一個，例如：\n飼料\n看診\n用品"></textarea><label class="check-row"><input id="categoryFavoriteInput" type="checkbox" /><span>設為常用類別，記帳時優先顯示</span></label><label class="check-row"><input id="categoryHiddenInput" type="checkbox" /><span>暫時隱藏，不在記帳選單顯示</span></label></div>
+      </div>
+    </section>
+  </div>
+
+  <div id="toast" class="toast hidden"></div>
+  <script src="app.js?v=1.2.1"></script>
+</body>
+</html>
