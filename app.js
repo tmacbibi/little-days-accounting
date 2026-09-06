@@ -1,7 +1,7 @@
 'use strict';
 
 const $ = id => document.getElementById(id);
-const APP_VERSION = '1.3.2';
+const APP_VERSION = '1.3.3';
 const DATA_VERSION = 9;
 const VAULT_KEY = 'little_days_bookkeeping_vault_v2';
 const AUTH_KEY = 'little_days_bookkeeping_auth_v2';

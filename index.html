@@ -4,13 +4,13 @@
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover" />
   <meta name="theme-color" content="#5f7fbc" />
-  <meta name="app-version" content="1.3.2" />
+  <meta name="app-version" content="1.3.3" />
   <meta name="apple-mobile-web-app-capable" content="yes" />
   <meta name="apple-mobile-web-app-status-bar-style" content="default" />
   <meta name="apple-mobile-web-app-title" content="小日子記帳" />
-  <link rel="apple-touch-icon" href="apple-touch-icon.png?v=1.3.2" />
-  <link rel="manifest" href="manifest.json?v=1.3.2" />
-  <link rel="stylesheet" href="styles.css?v=1.3.2" />
+  <link rel="apple-touch-icon" href="apple-touch-icon.png?v=1.3.3" />
+  <link rel="manifest" href="manifest.json?v=1.3.3" />
+  <link rel="stylesheet" href="styles.css?v=1.3.3" />
   <title>小日子記帳</title>
 </head>
 <body class="locked">
@@ -55,20 +55,36 @@
 
   <div id="app" aria-hidden="true">
     <section id="homeScreen" class="screen">
-      <header class="topbar">
-        <div>
-          <div class="eyebrow">小日子</div>
-          <h1>每日記帳</h1>
-          <p class="version-line">V1.3.2 · 返回首頁修正版</p>
+      <div class="home-sticky-shell">
+        <header class="topbar">
+          <div>
+            <div class="eyebrow">小日子</div>
+            <h1>每日記帳</h1>
+            <p class="version-line">V1.3.3 · 首頁置頂版</p>
+          </div>
+          <button id="openSettingsBtn" class="icon-btn" aria-label="設定">⚙️</button>
+        </header>
+        <div class="sticky-month-wrap">
+          <section class="month-switch card-inline">
+            <button id="prevMonthBtn" class="round-btn" aria-label="上個月">‹</button>
+            <button id="monthLabelBtn" class="month-label">2026 年 9 月</button>
+            <button id="nextMonthBtn" class="round-btn" aria-label="下個月">›</button>
+          </section>
         </div>
-        <button id="openSettingsBtn" class="icon-btn" aria-label="設定">⚙️</button>
-      </header>
+      </div>
 
-      <main class="content">
-        <section class="month-switch card-inline">
-          <button id="prevMonthBtn" class="round-btn" aria-label="上個月">‹</button>
-          <button id="monthLabelBtn" class="month-label">2026 年 9 月</button>
-          <button id="nextMonthBtn" class="round-btn" aria-label="下個月">›</button>
+      <main class="content home-content">
+        <section class="section-card calendar-card">
+          <div class="section-head"><div><h2>每日金流</h2><p>色點：支出、收入、投資；未來週期會標示預定</p></div></div>
+          <div class="calendar-legend"><span><i class="expense"></i>支出</span><span><i class="income"></i>收入</span><span><i class="investment"></i>投資</span><span><i class="planned"></i>預定</span></div>
+          <div class="weekday-row"><span>日</span><span>一</span><span>二</span><span>三</span><span>四</span><span>五</span><span>六</span></div>
+          <div id="calendarGrid" class="calendar-grid"></div>
+        </section>
+
+        <section class="section-card day-detail-card">
+          <div class="section-head"><div><h2 id="dayListTitle">今天</h2><p id="dayListSub">當日收支明細</p></div><button id="addFromDayBtn" class="text-btn strong">＋ 新增</button></div>
+          <div id="dayList" class="transaction-list"></div>
+          <div id="dayEmpty" class="empty-mini hidden">這天還沒有紀錄。</div>
         </section>
 
         <section class="finance-hero">
@@ -114,18 +130,6 @@
           <div id="quickTemplateEmpty" class="empty-mini hidden">還沒有快速模板，可到設定新增。</div>
         </section>
 
-        <section class="section-card calendar-card">
-          <div class="section-head"><div><h2>每日金流</h2><p>色點：支出、收入、投資；未來週期會標示預定</p></div></div>
-          <div class="calendar-legend"><span><i class="expense"></i>支出</span><span><i class="income"></i>收入</span><span><i class="investment"></i>投資</span><span><i class="planned"></i>預定</span></div>
-          <div class="weekday-row"><span>日</span><span>一</span><span>二</span><span>三</span><span>四</span><span>五</span><span>六</span></div>
-          <div id="calendarGrid" class="calendar-grid"></div>
-        </section>
-
-        <section class="section-card">
-          <div class="section-head"><div><h2 id="dayListTitle">今天</h2><p id="dayListSub">當日收支明細</p></div><button id="addFromDayBtn" class="text-btn strong">＋ 新增</button></div>
-          <div id="dayList" class="transaction-list"></div>
-          <div id="dayEmpty" class="empty-mini hidden">這天還沒有紀錄。</div>
-        </section>
       </main>
 
       <button id="voiceFab" class="voice-fab" aria-label="展開語音記帳" aria-expanded="false"><span class="voice-icon">🎙️</span><span class="voice-label">說一句</span></button>
@@ -312,7 +316,7 @@
           <div class="setting-card"><h3>🗂️ 支出類別</h3><p>新增、修改、排序或隱藏自己的用途分類。</p><button id="manageCategoriesBtn" class="secondary full">管理類別</button></div>
           <div class="setting-card"><h3>⚡ 快速輸入</h3><p>建立常用模板，例如午餐、停車、家庭餐飲或定期投資。</p><button id="manageQuickTemplatesBtn" class="secondary full">管理快速模板</button></div>
           <div class="setting-card"><h3>🔁 週期紀錄</h3><p>支援固定收入、固定支出與定期投資；現在也可從某一筆開始修改後續週期，過去紀錄不受影響。</p><div id="recurringCountText" class="status-pill">0 個啟用中</div><button id="manageRecurringBtn" class="secondary full">管理週期紀錄</button></div>
-          <div class="setting-card"><h3>版本</h3><p>目前版本 V1.3.2 · 資料結構 V9</p><div id="updateStatus" class="update-status">尚未檢查</div><button id="checkUpdateBtn" class="secondary full">檢查新版本</button><button id="updateNowBtn" class="primary full hidden">立即更新</button><button id="updateHomeBtn" class="secondary full update-home-btn">← 回到首頁</button></div>
+          <div class="setting-card"><h3>版本</h3><p>目前版本 V1.3.3 · 資料結構 V9</p><div id="updateStatus" class="update-status">尚未檢查</div><button id="checkUpdateBtn" class="secondary full">檢查新版本</button><button id="updateNowBtn" class="primary full hidden">立即更新</button><button id="updateHomeBtn" class="secondary full update-home-btn">← 回到首頁</button></div>
           <div class="setting-card backup-card"><h3>🛟 備份與還原</h3><p>備份包含記帳、預算、自訂類別、快速模板與全部週期設定。更新前建議先備份。</p><div id="backupStatusText" class="backup-status">尚未建立備份</div><div class="action-list"><button id="exportBtn" class="secondary full">立即匯出 JSON 備份</button><button id="importBtn" class="secondary full">匯入備份還原</button><input id="importFileInput" type="file" accept="application/json" class="hidden" /></div></div>
           <div class="setting-card danger-card"><h3>清除資料</h3><p>清除記帳、預算、自訂類別與快速模板；安全設定保留。</p><button id="wipeBtn" class="danger full">清除所有記帳資料</button></div>
           <button id="settingsHomeBtn" class="settings-home-fixed">⌂ 回到首頁</button>
@@ -426,6 +430,6 @@
   </div>
 
   <div id="toast" class="toast hidden"></div>
-  <script src="app.js?v=1.3.2"></script>
+  <script src="app.js?v=1.3.3"></script>
 </body>
 </html>
