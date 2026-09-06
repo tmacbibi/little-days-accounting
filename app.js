@@ -1,7 +1,7 @@
 'use strict';
 
 const $ = id => document.getElementById(id);
-const APP_VERSION = '1.3.4';
+const APP_VERSION = '1.3.5';
 const DATA_VERSION = 9;
 const VAULT_KEY = 'little_days_bookkeeping_vault_v2';
 const AUTH_KEY = 'little_days_bookkeeping_auth_v2';
@@ -626,10 +626,30 @@ function budgetRows(){
   for(const c of categories.filter(c=>!c.hidden&&c.id!=='food'))rows.push({key:`cat:${c.id}`,label:c.name,icon:c.icon});
   return rows;
 }
+function openBudgetDetailByKey(key,label,icon){
+  const periodLabel=`${formatMonth(viewMonth)} · 預算明細`;
+  const items=expensesOfMonth().filter(t=>!isHistoricalSummary(t));
+  if(key==='__total__'){
+    openBalanceDetail('expense',periodLabel,items,averageBaseDays(viewMonth));
+    return;
+  }
+  if(key.startsWith('sub:')){
+    const [,categoryId,...rest]=key.split(':');
+    const subcategory=rest.join(':');
+    const list=items.filter(t=>t.categoryId===categoryId&&t.subcategory===subcategory);
+    openExpenseDetailBySubcategory(categoryId,subcategory,label,icon,periodLabel,list,averageBaseDays(viewMonth));
+    return;
+  }
+  if(key.startsWith('cat:')){
+    const categoryId=key.slice(4);
+    const list=items.filter(t=>t.categoryId===categoryId);
+    openExpenseDetailByCategory(categoryId,label,periodLabel,list,averageBaseDays(viewMonth));
+  }
+}
 function renderBudget(){
   $('budgetMonthLabel').textContent=formatMonth(viewMonth); const spent=sum(expensesOfMonth().filter(t=>!isHistoricalSummary(t))),total=budgetValue('__total__'); $('totalBudgetValue').textContent=total?money(total):'未設定'; $('budgetSpentValue').textContent=money(spent); $('budgetRemainValue').textContent=total?money(total-spent):'--';
   const pct=total?Math.min(100,spent/total*100):0; $('totalBudgetProgress').style.width=`${pct}%`; $('totalBudgetProgress').classList.toggle('over',total>0&&spent>total);
-  const list=$('budgetCategoryList'); list.innerHTML=''; for(const item of budgetRows().slice(1)){ const b=budgetValue(item.key),s=spendForBudgetKey(item.key),p=b?Math.min(100,s/b*100):0; const row=document.createElement('div'); row.className='budget-row'; row.innerHTML=`<strong>${escapeHtml(item.icon)} ${escapeHtml(item.label)}</strong><span class="budget-amount">${money(s)} / ${b?money(b):'未設定'}</span><div class="progress-track"><div class="progress-fill ${b&&s>b?'over':''}" style="width:${p}%"></div></div><p>${b?(s>b?`已超出 ${money(s-b)}`:`還可使用 ${money(b-s)}`):'尚未設定預算'}</p>`; list.appendChild(row); }
+  const list=$('budgetCategoryList'); list.innerHTML=''; for(const item of budgetRows().slice(1)){ const b=budgetValue(item.key),s=spendForBudgetKey(item.key),p=b?Math.min(100,s/b*100):0; const row=document.createElement('button'); row.type='button'; row.className='budget-row is-clickable'; row.innerHTML=`<strong>${escapeHtml(item.icon)} ${escapeHtml(item.label)}</strong><span class="budget-amount">${money(s)} / ${b?money(b):'未設定'}</span><div class="progress-track"><div class="progress-fill ${b&&s>b?'over':''}" style="width:${p}%"></div></div><p>${b?(s>b?`已超出 ${money(s-b)}`:`還可使用 ${money(b-s)}`):'尚未設定預算'}</p><span class="row-chevron">›</span>`; row.onclick=()=>openBudgetDetailByKey(item.key,item.label,item.icon); list.appendChild(row); }
 }
 function analysisPeriodTxns(){
   if(analysisMode==='year') return txns.filter(t=>parseDateKey(t.date).getFullYear()===analysisYear);
