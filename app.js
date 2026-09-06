@@ -1,7 +1,7 @@
 'use strict';
 
 const $ = id => document.getElementById(id);
-const APP_VERSION = '1.2.1';
+const APP_VERSION = '1.3.0';
 const DATA_VERSION = 9;
 const VAULT_KEY = 'little_days_bookkeeping_vault_v2';
 const AUTH_KEY = 'little_days_bookkeeping_auth_v2';
@@ -79,6 +79,7 @@ let voiceDraftEditingIndex = null;
 let quickTemplateEditingId = null;
 let recurringSplitSourceId = null;
 let recurringSplitEffectiveDate = '';
+let insightDetailState = null;
 
 
 function collapseVoiceFab(){
@@ -297,12 +298,13 @@ function applyQuickTemplate(q){
   if(!(Number(q.amount)>0))setTimeout(openCalculator,120);
 }
 function categoryTotals(list){ const m=new Map(); for(const t of list)m.set(t.categoryId,(m.get(t.categoryId)||0)+Number(t.amount||0)); return [...m.entries()].sort((a,b)=>b[1]-a[1]); }
-function renderCategoryBars(targetId,emptyId,ex,limit=99,detailed=false){
+function renderCategoryBars(targetId,emptyId,ex,limit=99,detailed=false,onRowClick=null){
   const target=$(targetId); if(!target)return; target.innerHTML=''; const rows=categoryTotals(ex).slice(0,limit); $(emptyId)?.classList.toggle('hidden',rows.length>0); if(!rows.length)return;
   const max=rows[0][1]||1,total=sum(ex)||1;
-  for(const [id,val] of rows){ const cat=categoryById(id); const row=document.createElement('div');
-    if(detailed){ row.className='analysis-row'; row.innerHTML=`<div class="txn-icon">${escapeHtml(cat.icon)}</div><div class="analysis-main"><div class="topline"><strong>${escapeHtml(cat.name)}</strong><span>${Math.round(val/total*100)}%</span></div><div class="bar-track"><div class="bar-fill" style="width:${Math.max(2,val/max*100)}%"></div></div></div><div class="analysis-amount">${money(val)}</div>`; }
+  for(const [id,val] of rows){ const cat=categoryById(id); const row=document.createElement(onRowClick&&detailed?'button':'div');
+    if(detailed){ row.className='analysis-row'+(onRowClick?' is-clickable':''); if(onRowClick)row.type='button'; row.innerHTML=`<div class="txn-icon">${escapeHtml(cat.icon)}</div><div class="analysis-main"><div class="topline"><strong>${escapeHtml(cat.name)}</strong><span>${Math.round(val/total*100)}%</span></div><div class="bar-track"><div class="bar-fill" style="width:${Math.max(2,val/max*100)}%"></div></div></div><div class="analysis-amount">${money(val)}</div>${onRowClick?'<span class="row-chevron">›</span>':''}`; }
     else{ row.className='cat-row'; row.innerHTML=`<div class="cat-label">${escapeHtml(cat.icon)} ${escapeHtml(cat.name)}</div><div class="bar-track"><div class="bar-fill" style="width:${Math.max(2,val/max*100)}%"></div></div><div class="cat-value">${money(val)}</div>`; }
+    if(onRowClick&&detailed)row.onclick=()=>onRowClick(id,val);
     target.appendChild(row);
   }
 }
@@ -316,20 +318,24 @@ function topRowsBy(list,getKey,getMeta){
   }
   return [...map.values()].sort((a,b)=>b.amount-a.amount);
 }
-function renderHomeHeroStats(items){
-  const box=$('homeHeroStats'); box.innerHTML='';
+function renderStatCards(targetId,items){
+  const box=$(targetId); if(!box)return; box.innerHTML='';
   for(const item of items){
     const div=document.createElement('div'); div.className='hero-stat';
     div.innerHTML=`<span>${escapeHtml(item.label)}</span><strong>${escapeHtml(item.value)}</strong>${item.note?`<small>${escapeHtml(item.note)}</small>`:''}`;
     box.appendChild(div);
   }
 }
+function renderHomeHeroStats(items){ renderStatCards('homeHeroStats',items); }
 function renderHomeQuickCards(items){
   const box=$('homeQuickCards'); box.innerHTML='';
   if(!items.length)return;
   for(const item of items){
-    const btn=document.createElement('div'); btn.className='quick-card';
-    btn.innerHTML=`<div class="quick-card-top"><span class="quick-icon">${escapeHtml(item.icon||'•')}</span><span class="quick-label">${escapeHtml(item.label)}</span></div><strong>${escapeHtml(item.value)}</strong>${item.meta?`<p>${escapeHtml(item.meta)}</p>`:''}`;
+    const btn=document.createElement(item.action?'button':'div');
+    btn.className='quick-card'+(item.action?' is-clickable':'');
+    if(item.action)btn.type='button';
+    btn.innerHTML=`<div class="quick-card-top"><span class="quick-icon">${escapeHtml(item.icon||'•')}</span><span class="quick-label">${escapeHtml(item.label)}</span></div><strong>${escapeHtml(item.value)}</strong>${item.meta?`<p>${escapeHtml(item.meta)}</p>`:''}${item.action?'<span class="card-chevron">›</span>':''}`;
+    if(item.action)btn.onclick=item.action;
     box.appendChild(btn);
   }
 }
@@ -339,10 +345,105 @@ function renderInsightBars(targetId,emptyId,rows,total,color){
   if(!rows.length)return;
   const max=rows[0].amount||1, denom=total||1;
   for(const rowData of rows){
-    const row=document.createElement('div'); row.className='analysis-row';
-    row.innerHTML=`<div class="txn-icon">${escapeHtml(rowData.icon||'•')}</div><div class="analysis-main"><div class="topline"><strong>${escapeHtml(rowData.label)}</strong><span>${Math.round((rowData.amount/denom)*100)}%</span></div><div class="bar-track"><div class="bar-fill" style="width:${Math.max(2,rowData.amount/max*100)}%;background:${color}"></div></div></div><div class="analysis-amount">${money(rowData.amount)}</div>`;
+    const row=document.createElement(rowData.action?'button':'div'); row.className='analysis-row'+(rowData.action?' is-clickable':'');
+    if(rowData.action)row.type='button';
+    row.innerHTML=`<div class="txn-icon">${escapeHtml(rowData.icon||'•')}</div><div class="analysis-main"><div class="topline"><strong>${escapeHtml(rowData.label)}</strong><span>${Math.round((rowData.amount/denom)*100)}%</span></div><div class="bar-track"><div class="bar-fill" style="width:${Math.max(2,rowData.amount/max*100)}%;background:${color}"></div></div></div><div class="analysis-amount">${money(rowData.amount)}</div>${rowData.action?'<span class="row-chevron">›</span>':''}`;
+    if(rowData.action)row.onclick=rowData.action;
     box.appendChild(row);
   }
+}
+function openInsightDetail(config){
+  const items=[...(config.items||[])].sort((a,b)=>{
+    const dk=String(b.date||'').localeCompare(String(a.date||''));
+    if(dk!==0)return dk;
+    return String(b.createdAt||'').localeCompare(String(a.createdAt||''));
+  });
+  insightDetailState={...config,items};
+  renderInsightDetail();
+  show($('insightDetailScreen'));
+}
+function closeInsightDetail(){ hide($('insightDetailScreen')); insightDetailState=null; }
+function openTxnFromInsight(id){
+  const txn=txns.find(t=>t.id===id); if(!txn)return;
+  if(txn.date){ selectedDate=txn.date; viewMonth=startOfMonth(parseDateKey(txn.date)); }
+  closeInsightDetail(); renderAll();
+  setTimeout(()=>openTxnMenu(txn.id),30);
+}
+function detailMetaByTxn(t){
+  const dateLabel=String(t.date||'').replace(/-/g,'/');
+  if(t.type==='expense')return `${dateLabel} · ${categoryNameByTxn(t)} · ${t.subcategory||'未分類'} · ${t.payment==='cash'?'現金':'信用卡'}`;
+  if(t.type==='income')return `${dateLabel} · ${t.incomeCategory||'其他收入'}`;
+  return `${dateLabel} · ${t.investmentCategory||'股票／ETF'} · 投資`;
+}
+function detailIconByTxn(t){
+  if(t.type==='expense')return catIconByTxn(t);
+  if(t.type==='income')return {'薪資':'💼','獎金':'🎁','股息':'💹','退款':'↩️','其他收入':'💰'}[t.incomeCategory||'其他收入']||'💰';
+  return '📈';
+}
+function renderInsightDetail(){
+  const state=insightDetailState; if(!state)return;
+  const items=state.items||[];
+  const total=sum(items.filter(t=>!t.pendingAmount));
+  const count=items.length;
+  const avg=count?money(total/count):'—';
+  const baseDays=Number(state.baseDays)||0;
+  $('insightDetailTitle').textContent=state.title||'分類明細';
+  $('insightDetailIcon').textContent=state.icon||'•';
+  $('insightDetailPeriod').textContent=state.periodLabel||formatMonth(viewMonth);
+  $('insightDetailLead').textContent=state.lead||state.title||'細項明細';
+  $('insightDetailDesc').textContent=state.desc||'點任一筆細項即可查看或編輯。';
+  $('insightDetailSub').textContent=count?`共 ${count} 筆 · 合計 ${money(total)}`:'目前沒有細項';
+  renderStatCards('insightDetailStats',[
+    {label:'合計金額',value:money(total),note:state.totalNote||'依目前篩選條件計算'},
+    {label:'記錄筆數',value:`${count} 筆`,note:state.countNote||'點任一筆可再查看或編輯'},
+    {label:baseDays?'平均每日':'平均每筆',value:baseDays?money(total/baseDays):avg,note:baseDays?`以 ${baseDays} 天平均`:'依這個清單平均'}
+  ]);
+  const list=$('insightDetailList'), empty=$('insightDetailEmpty');
+  list.innerHTML='';
+  empty.classList.toggle('hidden',items.length>0);
+  for(const t of items){
+    const row=document.createElement('div');
+    row.className='txn-row detail-clickable'+(t.pendingAmount?' pending-txn':'');
+    row.setAttribute('role','button'); row.tabIndex=0;
+    const cls=t.type==='income'?'income':t.type==='investment'?'investment':'expense';
+    const amountText=t.pendingAmount?'待填金額':`${t.type==='expense'?'-':''}${money(t.amount)}`;
+    row.innerHTML=`<div class="txn-icon">${detailIconByTxn(t)}</div><div class="txn-main"><strong>${escapeHtml(t.title||state.title||'未命名')}</strong><span>${escapeHtml(detailMetaByTxn(t))}</span>${t.note?`<span class="detail-note">備註：${escapeHtml(t.note)}</span>`:''}</div><div class="txn-amount ${cls}">${amountText}</div><div class="detail-chevron">›</div>`;
+    row.onclick=()=>openTxnFromInsight(t.id);
+    row.onkeydown=e=>{if(e.key==='Enter'||e.key===' '){e.preventDefault();openTxnFromInsight(t.id);}};
+    list.appendChild(row);
+  }
+}
+function openExpenseDetailByCategory(categoryId,title=null,periodLabel=formatMonth(viewMonth),items=null,baseDays=0){
+  const cat=categoryById(categoryId);
+  const list=items||expensesOfMonth().filter(t=>!isHistoricalSummary(t)&&t.categoryId===categoryId);
+  openInsightDetail({title:title||cat.name,icon:cat.icon,lead:title||cat.name,periodLabel,items:list,baseDays,desc:`查看 ${title||cat.name} 的每一筆細項；點一下可再編輯。`});
+}
+function openExpenseDetailBySubcategory(categoryId,subcategory,label,icon,periodLabel=formatMonth(viewMonth),items=null,baseDays=0){
+  const list=items||expensesOfMonth().filter(t=>!isHistoricalSummary(t)&&t.categoryId===categoryId&&t.subcategory===subcategory);
+  openInsightDetail({title:label,icon:icon||categoryById(categoryId).icon,lead:label,periodLabel,items:list,baseDays,desc:`查看 ${label} 的細項紀錄；點一下可再編輯。`});
+}
+function openIncomeDetailByCategory(name,periodLabel=formatMonth(viewMonth),items=null,baseDays=0){
+  const icons={'薪資':'💼','獎金':'🎁','股息':'💹','退款':'↩️','其他收入':'💰'};
+  const list=items||incomesOfMonth().filter(t=>!isHistoricalSummary(t)&&((t.incomeCategory||'其他收入')===name));
+  openInsightDetail({title:name,icon:icons[name]||'💰',lead:name,periodLabel,items:list,baseDays,desc:`查看 ${name} 的每一筆收入紀錄；點一下可再編輯。`});
+}
+function openInvestmentDetailByKey(name,periodLabel=formatMonth(viewMonth),items=null){
+  const list=items||investmentsOfMonth().filter(t=>!isHistoricalSummary(t)&&((t.title||t.investmentCategory||'投資')===name));
+  openInsightDetail({title:name,icon:'📈',lead:name,periodLabel,items:list,desc:'查看這個投資項目的每一筆投入紀錄；點一下可再編輯。'});
+}
+function openBalanceDetail(kind,periodLabel=formatMonth(viewMonth),items=null,baseDays=0){
+  const configs={
+    income:{title:'收入',icon:'💚',desc:'本期所有收入紀錄'},
+    expense:{title:'支出',icon:'❤️',desc:'本期所有生活支出紀錄'},
+    investment:{title:'投資',icon:'💜',desc:'本期所有投資投入紀錄'}
+  };
+  const cfg=configs[kind]; if(!cfg)return;
+  const list=items||(
+    kind==='income'?incomesOfMonth().filter(t=>!isHistoricalSummary(t)):
+    kind==='investment'?investmentsOfMonth().filter(t=>!isHistoricalSummary(t)):
+    expensesOfMonth().filter(t=>!isHistoricalSummary(t))
+  );
+  openInsightDetail({title:cfg.title,icon:cfg.icon,lead:cfg.title,periodLabel,items:list,baseDays:kind==='expense'?baseDays:0,desc:`${cfg.desc}；點任一筆可查看或編輯。`});
 }
 function renderHomeInsight(ex,inc,inv,balance){
   const title=$('homeInsightTitle'), sub=$('homeInsightSub'), empty=$('homeInsightEmpty');
@@ -356,8 +457,8 @@ function renderHomeInsight(ex,inc,inv,balance){
       {label:'最大來源',value:top?top.label:'尚無',note:top?money(top.amount):'—'},
       {label:'平均每日收入',value:baseDays?money(total/baseDays):'—',note:baseDays?`以本月目前 ${baseDays} 天平均`:'未到該月'}
     ]);
-    renderHomeQuickCards(rows.slice(0,6).map(r=>({icon:r.icon,label:r.label,value:money(r.amount),meta:`${r.count} 筆 · ${Math.round((r.amount/(total||1))*100)}%`})));
-    renderInsightBars('homeInsightBars','homeInsightEmpty',rows,total,'var(--income)');
+    renderHomeQuickCards(rows.slice(0,6).map(r=>({icon:r.icon,label:r.label,value:money(r.amount),meta:`${r.count} 筆 · ${Math.round((r.amount/(total||1))*100)}%`,action:()=>openIncomeDetailByCategory(r.label,formatMonth(viewMonth),inc.filter(t=>!isHistoricalSummary(t)&&(t.incomeCategory||'其他收入')===r.label),baseDays)})));
+    renderInsightBars('homeInsightBars','homeInsightEmpty',rows.map(r=>({...r,action:()=>openIncomeDetailByCategory(r.label,formatMonth(viewMonth),inc.filter(t=>!isHistoricalSummary(t)&&(t.incomeCategory||'其他收入')===r.label),baseDays)})),total,'var(--income)');
     return;
   }
   if(homeInsightMode==='investment'){
@@ -369,8 +470,8 @@ function renderHomeInsight(ex,inc,inv,balance){
       {label:'主要標的',value:top?top.label:'尚無',note:top?money(top.amount):'—'},
       {label:'平均單筆投入',value:avg,note:inv.length?'依本月投資筆數計算':'尚無投資'}
     ]);
-    renderHomeQuickCards(rows.slice(0,6).map(r=>({icon:'📈',label:r.label,value:money(r.amount),meta:`${r.count} 筆${r.note?` · ${r.note}`:''}`})));
-    renderInsightBars('homeInsightBars','homeInsightEmpty',rows,total,'var(--investment)');
+    renderHomeQuickCards(rows.slice(0,6).map(r=>({icon:'📈',label:r.label,value:money(r.amount),meta:`${r.count} 筆${r.note?` · ${r.note}`:''}`,action:()=>openInvestmentDetailByKey(r.label,formatMonth(viewMonth),inv.filter(t=>!isHistoricalSummary(t)&&(t.title||t.investmentCategory||'投資')===r.label))})));
+    renderInsightBars('homeInsightBars','homeInsightEmpty',rows.map(r=>({...r,action:()=>openInvestmentDetailByKey(r.label,formatMonth(viewMonth),inv.filter(t=>!isHistoricalSummary(t)&&(t.title||t.investmentCategory||'投資')===r.label))})),total,'var(--investment)');
     return;
   }
   if(homeInsightMode==='balance'){
@@ -378,9 +479,9 @@ function renderHomeInsight(ex,inc,inv,balance){
     const incomeTotal=sum(inc), expenseTotal=sum(ex), investTotal=sum(inv);
     const remaining=Math.max(0,incomeTotal-expenseTotal);
     const rows=[
-      {label:'收入',icon:'💚',amount:incomeTotal},
-      {label:'支出',icon:'❤️',amount:expenseTotal},
-      {label:'投資',icon:'💜',amount:investTotal},
+      {label:'收入',icon:'💚',amount:incomeTotal,action:()=>openBalanceDetail('income',formatMonth(viewMonth),inc.filter(t=>!isHistoricalSummary(t)),baseDays)},
+      {label:'支出',icon:'❤️',amount:expenseTotal,action:()=>openBalanceDetail('expense',formatMonth(viewMonth),ex.filter(t=>!isHistoricalSummary(t)),baseDays)},
+      {label:'投資',icon:'💜',amount:investTotal,action:()=>openBalanceDetail('investment',formatMonth(viewMonth),inv.filter(t=>!isHistoricalSummary(t)))},
       {label:'淨流入',icon:balance>=0?'📈':'📉',amount:Math.abs(balance)}
     ].filter(r=>r.amount>0);
     const spendingRate=incomeTotal?`${Math.round(expenseTotal/incomeTotal*100)}%`:'—';
@@ -391,16 +492,16 @@ function renderHomeInsight(ex,inc,inv,balance){
       {label:'可留存比例',value:savingRate,note:incomeTotal?`未含投資 ${money(remaining)}`:'尚無收入'}
     ]);
     renderHomeQuickCards([
-      {icon:'💚',label:'收入',value:money(incomeTotal),meta:'本月總收入'},
-      {icon:'❤️',label:'支出',value:money(expenseTotal),meta:'本月總支出'},
-      {icon:'💜',label:'投資',value:money(investTotal),meta:'不列入支出'},
+      {icon:'💚',label:'收入',value:money(incomeTotal),meta:'本月總收入',action:()=>openBalanceDetail('income',formatMonth(viewMonth),inc.filter(t=>!isHistoricalSummary(t)),baseDays)},
+      {icon:'❤️',label:'支出',value:money(expenseTotal),meta:'本月總支出',action:()=>openBalanceDetail('expense',formatMonth(viewMonth),ex.filter(t=>!isHistoricalSummary(t)),baseDays)},
+      {icon:'💜',label:'投資',value:money(investTotal),meta:'不列入支出',action:()=>openBalanceDetail('investment',formatMonth(viewMonth),inv.filter(t=>!isHistoricalSummary(t)))},
       {icon:balance>=0?'📈':'📉',label:'收支差額',value:(balance<0?'-':'')+money(Math.abs(balance)),meta:'收入－支出'}
     ]);
     renderInsightBars('homeInsightBars','homeInsightEmpty',rows,Math.max(incomeTotal,expenseTotal,investTotal,Math.abs(balance)), '#5b7ee5');
     return;
   }
   title.textContent='本月支出去向'; sub.textContent='點卡片就能切到收入、生活收支或投資';
-  const total=sum(ex), categoryRows=categoryTotals(ex).map(([id,amount])=>({label:categoryById(id).name,icon:categoryById(id).icon,amount}));
+  const total=sum(ex), categoryRows=categoryTotals(ex).map(([id,amount])=>({label:categoryById(id).name,icon:categoryById(id).icon,amount,action:()=>openExpenseDetailByCategory(id,categoryById(id).name,formatMonth(viewMonth),ex.filter(t=>!isHistoricalSummary(t)&&t.categoryId===id),baseDays)}));
   const top=categoryRows[0];
   const workMealAmount=sum(ex.filter(t=>t.categoryId==='food'&&t.subcategory==='上班餐飲'));
   const familyMealAmount=sum(ex.filter(t=>t.categoryId==='food'&&t.subcategory==='家庭餐飲'));
@@ -413,11 +514,11 @@ function renderHomeInsight(ex,inc,inv,balance){
     {label:'平均每日支出',value:baseDays?money(sum(ex.filter(t=>!isHistoricalSummary(t)))/baseDays):'—',note:baseDays?`僅以逐筆紀錄／本月目前 ${baseDays} 天平均`:'未到該月'}
   ]);
   const quickCards=[
-    {icon:'🍱',label:'上班餐飲',value:money(workMealAmount),meta:baseDays?`平均每日 ${money(workMealAmount/baseDays)}`:'尚未開始'},
-    {icon:'🍽️',label:'家庭餐飲',value:money(familyMealAmount),meta:total?`${Math.round((familyMealAmount/(total||1))*100)}%`:'本月尚無支出'},
-    {icon:'🥂',label:'交際應酬',value:money(socialAmount),meta:total?`${Math.round((socialAmount/(total||1))*100)}%`:'本月尚無支出'},
-    {icon:'🏠',label:'居家生活',value:money(homeAmount),meta:total?`${Math.round((homeAmount/(total||1))*100)}%`:'本月尚無支出'},
-    {icon:'🧾',label:'固定費用',value:money(fixedAmount),meta:total?`${Math.round((fixedAmount/(total||1))*100)}%`:'本月尚無支出'}
+    {icon:'🍱',label:'上班餐飲',value:money(workMealAmount),meta:baseDays?`平均每日 ${money(workMealAmount/baseDays)}`:'尚未開始',action:()=>openExpenseDetailBySubcategory('food','上班餐飲','上班餐飲','🍱',formatMonth(viewMonth),ex.filter(t=>!isHistoricalSummary(t)&&t.categoryId==='food'&&t.subcategory==='上班餐飲'),baseDays)},
+    {icon:'🍽️',label:'家庭餐飲',value:money(familyMealAmount),meta:total?`${Math.round((familyMealAmount/(total||1))*100)}%`:'本月尚無支出',action:()=>openExpenseDetailBySubcategory('food','家庭餐飲','家庭餐飲','🍽️',formatMonth(viewMonth),ex.filter(t=>!isHistoricalSummary(t)&&t.categoryId==='food'&&t.subcategory==='家庭餐飲'),baseDays)},
+    {icon:'🥂',label:'交際應酬',value:money(socialAmount),meta:total?`${Math.round((socialAmount/(total||1))*100)}%`:'本月尚無支出',action:()=>openExpenseDetailByCategory('social','交際應酬',formatMonth(viewMonth),ex.filter(t=>!isHistoricalSummary(t)&&t.categoryId==='social'),baseDays)},
+    {icon:'🏠',label:'居家生活',value:money(homeAmount),meta:total?`${Math.round((homeAmount/(total||1))*100)}%`:'本月尚無支出',action:()=>openExpenseDetailByCategory('home','居家生活',formatMonth(viewMonth),ex.filter(t=>!isHistoricalSummary(t)&&t.categoryId==='home'),baseDays)},
+    {icon:'🧾',label:'固定費用',value:money(fixedAmount),meta:total?`${Math.round((fixedAmount/(total||1))*100)}%`:'本月尚無支出',action:()=>openExpenseDetailByCategory('fixed','固定費用',formatMonth(viewMonth),ex.filter(t=>!isHistoricalSummary(t)&&t.categoryId==='fixed'),baseDays)}
   ].filter(item=>item.value!==money(0) || ex.length===0 || item.label==='上班餐飲');
   renderHomeQuickCards(quickCards);
   renderInsightBars('homeInsightBars','homeInsightEmpty',categoryRows,total,'var(--accent)');
@@ -468,12 +569,12 @@ function analysisPeriodTxns(){
   return txns.filter(t=>String(t.date||'').slice(0,7)===mk);
 }
 function incomeCategoryTotals(list){ const m=new Map(); for(const t of list){ const k=t.incomeCategory||'其他收入'; m.set(k,(m.get(k)||0)+Number(t.amount||0)); } return [...m.entries()].sort((a,b)=>b[1]-a[1]); }
-function renderIncomeRanking(list){ const box=$('incomeRanking'); box.innerHTML=''; const rows=incomeCategoryTotals(list); $('incomeRankingEmpty').classList.toggle('hidden',rows.length>0); if(!rows.length)return; const total=sum(list)||1,max=rows[0][1]||1; const icons={'薪資':'💼','獎金':'🎁','股息':'💹','退款':'↩️','其他收入':'💰'}; for(const [name,val] of rows){ const row=document.createElement('div'); row.className='analysis-row'; row.innerHTML=`<div class="income-rank-icon">${icons[name]||'💰'}</div><div class="analysis-main"><div class="topline"><strong>${escapeHtml(name)}</strong><span>${Math.round(val/total*100)}%</span></div><div class="bar-track"><div class="bar-fill" style="width:${Math.max(2,val/max*100)}%"></div></div></div><div class="analysis-amount">${money(val)}</div>`; box.appendChild(row); } }
+function renderIncomeRanking(list,onRowClick=null){ const box=$('incomeRanking'); box.innerHTML=''; const rows=incomeCategoryTotals(list); $('incomeRankingEmpty').classList.toggle('hidden',rows.length>0); if(!rows.length)return; const total=sum(list)||1,max=rows[0][1]||1; const icons={'薪資':'💼','獎金':'🎁','股息':'💹','退款':'↩️','其他收入':'💰'}; for(const [name,val] of rows){ const row=document.createElement(onRowClick?'button':'div'); row.className='analysis-row'+(onRowClick?' is-clickable':''); if(onRowClick)row.type='button'; row.innerHTML=`<div class="income-rank-icon">${icons[name]||'💰'}</div><div class="analysis-main"><div class="topline"><strong>${escapeHtml(name)}</strong><span>${Math.round(val/total*100)}%</span></div><div class="bar-track"><div class="bar-fill" style="width:${Math.max(2,val/max*100)}%"></div></div></div><div class="analysis-amount">${money(val)}</div>${onRowClick?'<span class="row-chevron">›</span>':''}`; if(onRowClick)row.onclick=()=>onRowClick(name,val); box.appendChild(row); } }
 function renderAnalysis(){
   $('analysisYearLabel').textContent=`${analysisYear} 年`; $('analysisYearModeBtn').classList.toggle('active',analysisMode==='year'); $('analysisMonthModeBtn').classList.toggle('active',analysisMode==='month'); $('analysisMonthSelect').classList.toggle('hidden',analysisMode!=='month'); $('analysisMonthSelect').value=String(analysisMonth);
   const list=analysisPeriodTxns(), ex=list.filter(t=>t.type==='expense'), inc=list.filter(t=>t.type==='income'), inv=list.filter(t=>t.type==='investment'); const expense=sum(ex),income=sum(inc),net=income-expense;
   $('analysisIncomeLabel').textContent=analysisMode==='year'?'全年收入':'本月收入'; $('analysisExpenseLabel').textContent=analysisMode==='year'?'全年支出':'本月支出'; $('analysisTotalIncome').textContent=money(income); $('analysisTotalExpense').textContent=money(expense); $('analysisTotalInvestment').textContent=money(sum(inv)); $('analysisNetBalance').textContent=(net<0?'-':'')+money(Math.abs(net)); $('analysisNetBalance').style.color=net<0?'var(--expense)':'var(--income)';
-  renderAnalysisDonut(ex); renderIncomeRanking(inc); renderCategoryBars('expenseRanking','expenseRankingEmpty',ex,99,true); renderInvestmentRanking(inv);
+  renderAnalysisDonut(ex); renderIncomeRanking(inc,(name)=>openIncomeDetailByCategory(name,analysisMode==='year'?`${analysisYear} 年`:`${analysisYear} 年 ${analysisMonth+1} 月`,inc.filter(t=>(t.incomeCategory||'其他收入')===name),analysisMode==='month'?analysisPeriodDays():0)); renderCategoryBars('expenseRanking','expenseRankingEmpty',ex,99,true,(id)=>openExpenseDetailByCategory(id,categoryById(id).name,analysisMode==='year'?`${analysisYear} 年`:`${analysisYear} 年 ${analysisMonth+1} 月`,ex.filter(t=>t.categoryId===id),analysisMode==='month'?analysisPeriodDays():0)); renderInvestmentRanking(inv,(name)=>openInvestmentDetailByKey(name,analysisMode==='year'?`${analysisYear} 年`:`${analysisYear} 年 ${analysisMonth+1} 月`,inv.filter(t=>(t.title||t.investmentCategory||'投資')===name)));
   const wm=ex.filter(t=>t.categoryId==='food'&&t.subcategory==='上班餐飲'),amt=sum(wm),avgBase=analysisPeriodDays(); $('analysisWorkMealAmount').textContent=money(amt); $('analysisWorkMealCount').textContent=String(wm.length); $('analysisWorkMealAvg').textContent=money(avgBase?amt/avgBase:0);
   $('cashAmount').textContent=money(sum(ex.filter(t=>t.payment==='cash'))); $('cardAmount').textContent=money(sum(ex.filter(t=>t.payment!=='cash'))); renderAnalysisTrend(); renderAnalysisComparison();
 }
@@ -490,9 +591,9 @@ function renderAnalysisDonut(ex){
   const top=rows.slice(0,5).map(([id,amount])=>({label:categoryById(id).name,icon:categoryById(id).icon,amount})); const other=rows.slice(5).reduce((a,[,v])=>a+v,0); if(other)top.push({label:'其他',icon:'•••',amount:other}); let cursor=0; const stops=[];
   top.forEach((r,i)=>{const start=cursor,end=cursor+r.amount/(total||1)*100;stops.push(`${palette[i%palette.length]} ${start}% ${end}%`);cursor=end;const item=document.createElement('div');item.className='donut-legend-item';item.innerHTML=`<i style="background:${palette[i%palette.length]}"></i><span>${escapeHtml(r.icon)} ${escapeHtml(r.label)}</span><strong>${Math.round(r.amount/(total||1)*100)}%</strong>`;legend.appendChild(item);}); donut.style.background=`conic-gradient(${stops.join(',')})`;
 }
-function renderInvestmentRanking(inv){
+function renderInvestmentRanking(inv,onRowClick=null){
   const box=$('investmentRanking'),empty=$('investmentRankingEmpty'); if(!box)return; box.innerHTML=''; const rows=topRowsBy(inv,t=>t.title||t.investmentCategory||'投資',(t,key)=>({label:key,icon:'📈'})); empty.classList.toggle('hidden',rows.length>0); if(!rows.length)return; const total=sum(inv)||1,max=rows[0].amount||1;
-  rows.forEach(r=>{const row=document.createElement('div');row.className='analysis-row';row.innerHTML=`<div class="txn-icon investment-icon">📈</div><div class="analysis-main"><div class="topline"><strong>${escapeHtml(r.label)}</strong><span>${Math.round(r.amount/total*100)}%</span></div><div class="bar-track"><div class="bar-fill investment-fill" style="width:${Math.max(2,r.amount/max*100)}%"></div></div></div><div class="analysis-amount">${money(r.amount)}</div>`;box.appendChild(row);});
+  rows.forEach(r=>{const row=document.createElement(onRowClick?'button':'div');row.className='analysis-row'+(onRowClick?' is-clickable':''); if(onRowClick)row.type='button'; row.innerHTML=`<div class="txn-icon investment-icon">📈</div><div class="analysis-main"><div class="topline"><strong>${escapeHtml(r.label)}</strong><span>${Math.round(r.amount/total*100)}%</span></div><div class="bar-track"><div class="bar-fill investment-fill" style="width:${Math.max(2,r.amount/max*100)}%"></div></div></div><div class="analysis-amount">${money(r.amount)}</div>${onRowClick?'<span class="row-chevron">›</span>':''}`; if(onRowClick)row.onclick=()=>onRowClick(r.label,r.amount); box.appendChild(row);});
 }
 function renderAnalysisTrend(){ const box=$('analysisTrend'); box.innerHTML=''; box.classList.toggle('monthly-days',analysisMode==='month'); let rows=[]; if(analysisMode==='year'){ $('analysisTrendTitle').textContent='全年月度趨勢'; $('analysisTrendSub').textContent='收入與支出逐月比較'; for(let m=0;m<12;m++){ const mk=`${analysisYear}-${String(m+1).padStart(2,'0')}`; const l=txns.filter(t=>String(t.date||'').slice(0,7)===mk); rows.push({label:`${m+1}月`,income:sum(l.filter(t=>t.type==='income')),expense:sum(l.filter(t=>t.type==='expense'))}); } } else { $('analysisTrendTitle').textContent='本月每日趨勢'; $('analysisTrendSub').textContent='每天的收入與支出'; const days=new Date(analysisYear,analysisMonth+1,0).getDate(); for(let d=1;d<=days;d++){ const key=`${analysisYear}-${String(analysisMonth+1).padStart(2,'0')}-${String(d).padStart(2,'0')}`; const l=txns.filter(t=>t.date===key&&!isHistoricalSummary(t)); rows.push({label:String(d),income:sum(l.filter(t=>t.type==='income')),expense:sum(l.filter(t=>t.type==='expense'))}); } }
   const max=Math.max(1,...rows.flatMap(r=>[r.income,r.expense])); const legend=document.createElement('div'); legend.className='trend-legend'; legend.innerHTML='<span><i class="legend-dot"></i>收入</span><span><i class="legend-dot expense"></i>支出</span>'; box.before(legend); box.parentElement.querySelectorAll('.trend-legend').forEach((el,i,a)=>{if(i<a.length-1)el.remove();}); for(const r of rows){ const col=document.createElement('div'); col.className='dual-col'; col.title=`${r.label} 收入 ${money(r.income)} / 支出 ${money(r.expense)}`; col.innerHTML=`<div class="dual-bars"><div class="dual-bar" style="height:${Math.max(2,r.income/max*125)}px"></div><div class="dual-bar expense" style="height:${Math.max(2,r.expense/max*125)}px"></div></div><small>${r.label}</small>`; box.appendChild(col); } }
@@ -916,7 +1017,7 @@ async function unlockWithFace(){ try{$('unlockMessage').textContent='請完成 F
 async function completeUnlock(){ unlocked=true; try{await loadVault(); unlockAppUi();}catch(e){console.error(e);unlocked=false;$('unlockMessage').textContent='資料解鎖失敗，請重新整理再試';} }
 function unlockAppUi(){ document.body.classList.remove('locked'); hide($('lockScreen')); $('app').setAttribute('aria-hidden','false'); $('pinUnlockInput').value=''; updatePinUnlockState(); $('unlockMessage').textContent=''; renderCategoryPicker(); renderSubcategories(); renderAll(); refreshSecurityUi(); }
 function lockApp(reason='background'){
-  if(!unlocked)return; collapseVoiceFab(); stopVoiceSession(); ['editorScreen','calculatorScreen','voiceSheet','voiceDraftScreen','voiceDraftEditScreen','txnMenuScreen','budgetEditorScreen','settingsScreen','securityScreen','quickTemplateManagerScreen','quickTemplateEditorScreen','categoryManagerScreen','categoryEditorScreen','recurringManagerScreen','recurringEditorScreen','recurringDeleteScreen'].forEach(id=>hide($(id))); unlocked=false;vaultLoaded=false;txns=[];budgets={};categories=clone(DEFAULT_CATEGORIES);quickTemplates=clone(DEFAULT_QUICK_TEMPLATES);settings={};recurring=[]; document.body.classList.add('locked'); show($('lockScreen')); show($('unlockPanel')); hide($('setupPanel')); $('app').setAttribute('aria-hidden','true'); updatePinUnlockState(); refreshLockFaceUi();
+  if(!unlocked)return; collapseVoiceFab(); stopVoiceSession(); ['editorScreen','calculatorScreen','voiceSheet','voiceDraftScreen','voiceDraftEditScreen','txnMenuScreen','budgetEditorScreen','settingsScreen','securityScreen','quickTemplateManagerScreen','quickTemplateEditorScreen','insightDetailScreen','categoryManagerScreen','categoryEditorScreen','recurringManagerScreen','recurringEditorScreen','recurringDeleteScreen'].forEach(id=>hide($(id))); unlocked=false;vaultLoaded=false;txns=[];budgets={};categories=clone(DEFAULT_CATEGORIES);quickTemplates=clone(DEFAULT_QUICK_TEMPLATES);settings={};recurring=[]; document.body.classList.add('locked'); show($('lockScreen')); show($('unlockPanel')); hide($('setupPanel')); $('app').setAttribute('aria-hidden','true'); updatePinUnlockState(); refreshLockFaceUi();
 }
 async function refreshLockFaceUi(){ const yes=!!authConfig.faceEnabled&&!!authConfig.faceCredentialId&&await isFaceAvailable(); $('faceUnlockBtn').classList.toggle('hidden',!yes); $('faceDivider').classList.toggle('hidden',!yes); }
 async function refreshSecurityUi(){ if(!$('faceStatusText'))return; const avail=await isFaceAvailable(); if(authConfig.faceEnabled&&authConfig.faceCredentialId){$('faceStatusText').textContent='已啟用。離開 App 後，回來可用 Face ID 重新解鎖。';$('toggleFaceBtn').textContent='重新設定 Face ID';}else{$('faceStatusText').textContent=avail?'尚未啟用。':'此裝置／瀏覽器目前無法使用平台生物辨識。';$('toggleFaceBtn').textContent='啟用 Face ID';$('toggleFaceBtn').disabled=!avail;} }
@@ -938,7 +1039,7 @@ function bindEvents(){
   $('cancelVoiceDraftBtn').onclick=closeVoiceDrafts; $('saveVoiceDraftBtn').onclick=saveVoiceDrafts; $('voiceDraftList').onclick=e=>{const edit=e.target.closest('[data-voice-edit]'),remove=e.target.closest('[data-voice-remove]');if(edit){openVoiceDraftItemEditor(Number(edit.dataset.voiceEdit));return;}if(remove){voiceDraftItems.splice(Number(remove.dataset.voiceRemove),1);renderVoiceDrafts();}}; $('cancelVoiceDraftEditBtn').onclick=()=>hide($('voiceDraftEditScreen')); $('saveVoiceDraftEditBtn').onclick=saveVoiceDraftItemEdit; $('voiceDraftEditCategory').onchange=()=>renderVoiceDraftEditSubcategories();
   $('cancelEditBtn').onclick=closeEditor; $('saveTxnBtn').onclick=saveTxn; $('expenseTypeBtn').onclick=()=>setEditType('expense'); $('incomeTypeBtn').onclick=()=>setEditType('income'); $('investmentTypeBtn').onclick=()=>setEditType('investment'); document.querySelectorAll('[data-payment]').forEach(b=>b.onclick=()=>setPayment(b.dataset.payment));
   $('closeTxnMenuBtn').onclick=closeTxnMenu; $('editTxnBtn').onclick=()=>{const t=txns.find(x=>x.id===actionTxnId);if(!t)return;if(t.recurringId)openRecurringEditScope();else{closeTxnMenu();openEditor(t);}}; $('deleteTxnBtn').onclick=deleteTxn; $('deleteOccurrenceBtn').onclick=deleteOccurrenceOnly; $('stopRecurringFromBtn').onclick=stopRecurringFromOccurrence; $('cancelRecurringDeleteBtn').onclick=closeRecurringDelete; $('editOccurrenceOnlyBtn').onclick=editOccurrenceOnly; $('editRecurringFromBtn').onclick=editRecurringFromOccurrence; $('cancelRecurringEditScopeBtn').onclick=closeRecurringEditScope;
-  $('editBudgetBtn').onclick=openBudgetEditor; $('cancelBudgetBtn').onclick=()=>hide($('budgetEditorScreen')); $('saveBudgetBtn').onclick=saveBudgetEditor; $('goAnalysisBtn').onclick=()=>setPage('analysis'); document.querySelectorAll('.summary-action[data-insight]').forEach(b=>b.onclick=()=>{homeInsightMode=b.dataset.insight;renderHome();}); document.querySelectorAll('[data-page]').forEach(b=>b.onclick=()=>setPage(b.dataset.page)); document.querySelectorAll('[data-back-home]').forEach(b=>b.onclick=()=>setPage('home'));
+  $('editBudgetBtn').onclick=openBudgetEditor; $('cancelBudgetBtn').onclick=()=>hide($('budgetEditorScreen')); $('saveBudgetBtn').onclick=saveBudgetEditor; $('closeInsightDetailBtn').onclick=closeInsightDetail; $('insightDetailAnalysisBtn').onclick=()=>{closeInsightDetail();setPage('analysis');}; $('goAnalysisBtn').onclick=()=>setPage('analysis'); document.querySelectorAll('.summary-action[data-insight]').forEach(b=>b.onclick=()=>{homeInsightMode=b.dataset.insight;renderHome();}); document.querySelectorAll('[data-page]').forEach(b=>b.onclick=()=>setPage(b.dataset.page)); document.querySelectorAll('[data-back-home]').forEach(b=>b.onclick=()=>setPage('home'));
   $('openSettingsBtn').onclick=()=>{renderBackupStatus();show($('settingsScreen'));}; $('closeSettingsBtn').onclick=()=>hide($('settingsScreen')); $('checkUpdateBtn').onclick=checkForUpdate; $('updateNowBtn').onclick=updateNow; $('exportBtn').onclick=exportBackup; $('importBtn').onclick=()=>$('importFileInput').click(); $('importFileInput').onchange=e=>{const f=e.target.files?.[0];if(f)importBackupFile(f);e.target.value='';};
   $('manageQuickTemplatesBtn').onclick=openQuickTemplateManager; $('manageQuickTemplatesHomeBtn').onclick=openQuickTemplateManager; $('closeQuickTemplateManagerBtn').onclick=()=>hide($('quickTemplateManagerScreen')); $('addQuickTemplateBtn').onclick=()=>openQuickTemplateEditor(); $('cancelQuickTemplateEditBtn').onclick=()=>hide($('quickTemplateEditorScreen')); $('saveQuickTemplateBtn').onclick=saveQuickTemplate; $('quickTemplateTypeInput').onchange=syncQuickTemplateTypeFields; $('quickTemplateCategoryInput').onchange=()=>renderQuickTemplateSubcategories();
   $('wipeBtn').onclick=async()=>{if(confirm('確定要清除全部記帳資料、預算與自訂類別？安全密碼與 Face ID 設定會保留。')){txns=[];budgets={};categories=clone(DEFAULT_CATEGORIES);quickTemplates=clone(DEFAULT_QUICK_TEMPLATES);settings={};await persistState();hide($('settingsScreen'));renderAll();toast('已清除');}};

@@ -4,13 +4,13 @@
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover" />
   <meta name="theme-color" content="#5f7fbc" />
-  <meta name="app-version" content="1.2.1" />
+  <meta name="app-version" content="1.3.0" />
   <meta name="apple-mobile-web-app-capable" content="yes" />
   <meta name="apple-mobile-web-app-status-bar-style" content="default" />
   <meta name="apple-mobile-web-app-title" content="小日子記帳" />
-  <link rel="apple-touch-icon" href="apple-touch-icon.png?v=1.2.1" />
-  <link rel="manifest" href="manifest.json?v=1.2.1" />
-  <link rel="stylesheet" href="styles.css?v=1.2.1" />
+  <link rel="apple-touch-icon" href="apple-touch-icon.png?v=1.3.0" />
+  <link rel="manifest" href="manifest.json?v=1.3.0" />
+  <link rel="stylesheet" href="styles.css?v=1.3.0" />
   <title>小日子記帳</title>
 </head>
 <body class="locked">
@@ -59,7 +59,7 @@
         <div>
           <div class="eyebrow">小日子</div>
           <h1>每日記帳</h1>
-          <p class="version-line">V1.2.1 · 隱私安全版</p>
+          <p class="version-line">V1.3.0 · 互動細項版</p>
         </div>
         <button id="openSettingsBtn" class="icon-btn" aria-label="設定">⚙️</button>
       </header>
@@ -394,6 +394,25 @@
       </div>
     </section>
 
+
+    <section id="insightDetailScreen" class="sheet hidden" aria-modal="true">
+      <div class="sheet-card insight-detail-sheet">
+        <div class="sheet-head"><button id="closeInsightDetailBtn" class="text-btn">完成</button><h2 id="insightDetailTitle">分類明細</h2><button id="insightDetailAnalysisBtn" class="text-btn strong">完整分析</button></div>
+        <div class="insight-detail-hero">
+          <div class="insight-detail-badge" id="insightDetailIcon">🍱</div>
+          <div class="insight-detail-copy">
+            <div id="insightDetailPeriod" class="eyebrow">本月</div>
+            <strong id="insightDetailLead">上班餐飲</strong>
+            <p id="insightDetailDesc">點任一筆細項即可查看或編輯。</p>
+          </div>
+        </div>
+        <div id="insightDetailStats" class="hero-stat-grid detail-stat-grid"></div>
+        <div class="section-head detail-list-head"><div><h2>細項清單</h2><p id="insightDetailSub">共 0 筆紀錄</p></div></div>
+        <div id="insightDetailList" class="transaction-list insight-detail-list"></div>
+        <div id="insightDetailEmpty" class="empty-mini hidden">這個項目目前還沒有細項。</div>
+      </div>
+    </section>
+
     <section id="categoryManagerScreen" class="sheet hidden" aria-modal="true">
       <div class="sheet-card"><div class="sheet-head"><button id="closeCategoryManagerBtn" class="text-btn">完成</button><h2>支出類別</h2><button id="addCategoryBtn" class="text-btn strong">＋新增</button></div><p class="sheet-note">已使用過的類別建議用「隱藏」取代刪除，舊帳不會消失。</p><div id="categoryManagerList" class="category-manager-list"></div></div>
     </section>
@@ -406,6 +425,6 @@
   </div>
 
   <div id="toast" class="toast hidden"></div>
-  <script src="app.js?v=1.2.1"></script>
+  <script src="app.js?v=1.3.0"></script>
 </body>
 </html>
