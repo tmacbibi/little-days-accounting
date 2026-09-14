@@ -1,8 +1,8 @@
 'use strict';
 
 const $ = id => document.getElementById(id);
-const APP_VERSION = '1.4.3';
-const DATA_VERSION = 12;
+const APP_VERSION = '1.4.4';
+const DATA_VERSION = 13;
 const VAULT_KEY = 'little_days_bookkeeping_vault_v2';
 const AUTH_KEY = 'little_days_bookkeeping_auth_v2';
 const LEGACY_TXN_KEY = 'little_days_bookkeeping_txns_v1';
@@ -98,6 +98,12 @@ let investmentLedger = [];
 let investmentQuotes = [];
 let investmentEditingId = null;
 let investmentQuoteEditingId = null;
+let dividendEvents = [];
+let dividendEventEditingId = null;
+let annualIncomeSummaries = [];
+let annualSummaryEditingYear = null;
+let investmentDetailSymbol = null;
+let autoQuoteRefreshInFlight = false;
 
 
 function collapseVoiceFab(){
@@ -238,15 +244,15 @@ function sameSeedTxn(a,b){
 }
 function applyHistoricalSeed(){ return false; }
 
-function currentState(){ return {version:DATA_VERSION,txns,budgets,categories,quickTemplates,settings,recurring,investmentLedger,investmentQuotes}; }
+function currentState(){ return {version:DATA_VERSION,txns,budgets,categories,quickTemplates,settings,recurring,investmentLedger,investmentQuotes,dividendEvents,annualIncomeSummaries}; }
 async function persistState(){ if(!unlocked)return; reconcileInvestmentLinks(); localStorage.setItem(VAULT_KEY,await encryptJson(currentState())); }
 async function loadVault(){
   const payload=localStorage.getItem(VAULT_KEY);
   if(payload){
     const st=await decryptJson(payload);
-    txns=Array.isArray(st.txns)?st.txns:[]; budgets=st.budgets||{}; categories=Array.isArray(st.categories)&&st.categories.length?st.categories:clone(DEFAULT_CATEGORIES); quickTemplates=Array.isArray(st.quickTemplates)&&st.quickTemplates.length?st.quickTemplates:clone(DEFAULT_QUICK_TEMPLATES); settings=st.settings||{}; recurring=Array.isArray(st.recurring)?st.recurring:(Array.isArray(st.settings?.recurring)?st.settings.recurring:[]); investmentLedger=Array.isArray(st.investmentLedger)?st.investmentLedger:[]; investmentQuotes=Array.isArray(st.investmentQuotes)?st.investmentQuotes:[];
+    txns=Array.isArray(st.txns)?st.txns:[]; budgets=st.budgets||{}; categories=Array.isArray(st.categories)&&st.categories.length?st.categories:clone(DEFAULT_CATEGORIES); quickTemplates=Array.isArray(st.quickTemplates)&&st.quickTemplates.length?st.quickTemplates:clone(DEFAULT_QUICK_TEMPLATES); settings=st.settings||{}; recurring=Array.isArray(st.recurring)?st.recurring:(Array.isArray(st.settings?.recurring)?st.settings.recurring:[]); investmentLedger=Array.isArray(st.investmentLedger)?st.investmentLedger:[]; investmentQuotes=Array.isArray(st.investmentQuotes)?st.investmentQuotes:[]; dividendEvents=Array.isArray(st.dividendEvents)?st.dividendEvents:[]; annualIncomeSummaries=Array.isArray(st.annualIncomeSummaries)?st.annualIncomeSummaries:[];
   }else{
-    txns=loadLegacyJson(LEGACY_TXN_KEY,[]); budgets=loadLegacyJson(LEGACY_BUDGET_KEY,{}); settings=loadLegacyJson(LEGACY_SETTINGS_KEY,{}); categories=clone(DEFAULT_CATEGORIES); quickTemplates=clone(DEFAULT_QUICK_TEMPLATES); recurring=Array.isArray(settings.recurring)?settings.recurring:[]; investmentLedger=[]; investmentQuotes=[];
+    txns=loadLegacyJson(LEGACY_TXN_KEY,[]); budgets=loadLegacyJson(LEGACY_BUDGET_KEY,{}); settings=loadLegacyJson(LEGACY_SETTINGS_KEY,{}); categories=clone(DEFAULT_CATEGORIES); quickTemplates=clone(DEFAULT_QUICK_TEMPLATES); recurring=Array.isArray(settings.recurring)?settings.recurring:[]; investmentLedger=[]; investmentQuotes=[]; dividendEvents=[]; annualIncomeSummaries=[];
   }
   normalizeData(); applyHistoricalSeed(); normalizeData(); migrateHistoricalCategorySummaries(); normalizeData(); vaultLoaded=true;
   await processRecurringDue(false);
@@ -282,7 +288,18 @@ function normalizeData(){
     createdAt:t.createdAt||new Date().toISOString()
   })).filter(t=>t.symbol||t.kind==='contribution');
   if(!Array.isArray(investmentQuotes))investmentQuotes=[];
-  investmentQuotes=investmentQuotes.map(q=>({...q,id:q.id||uid(),symbol:String(q.symbol||'').trim().toUpperCase(),name:String(q.name||'').trim(),price:Number(q.price||0),date:q.date||dateKey(new Date()),createdAt:q.createdAt||new Date().toISOString()})).filter(q=>q.symbol&&q.price>0);
+  investmentQuotes=investmentQuotes.map(q=>({...q,id:q.id||uid(),symbol:String(q.symbol||'').trim().toUpperCase(),name:String(q.name||'').trim(),price:Number(q.price||0),date:q.date||dateKey(new Date()),priceType:q.priceType||'close',source:q.source||'manual',createdAt:q.createdAt||new Date().toISOString()})).filter(q=>q.symbol&&q.price>0);
+  {const unique=new Map();for(const q of investmentQuotes){const k=`${q.symbol}|${q.date}|${q.priceType||'close'}`,prev=unique.get(k),stamp=String(q.updatedAt||q.createdAt||''),prevStamp=String(prev?.updatedAt||prev?.createdAt||'');if(!prev||stamp>=prevStamp)unique.set(k,q);}investmentQuotes=[...unique.values()];}
+  if(!Array.isArray(dividendEvents))dividendEvents=[];
+  dividendEvents=dividendEvents.map(e=>({...e,id:e.id||uid(),symbol:String(e.symbol||'').trim().toUpperCase(),name:String(e.name||'').trim(),shortName:String(e.shortName||'').trim(),securityType:String(e.securityType||''),exDate:String(e.exDate||''),expectedPayDate:String(e.expectedPayDate||''),actualPayDate:String(e.actualPayDate||''),perShare:Number(e.perShare||0),actualAmount:e.actualAmount==null||e.actualAmount===''?null:ntd(e.actualAmount),statusOverride:String(e.statusOverride||''),note:String(e.note||''),createdAt:e.createdAt||new Date().toISOString(),bookkeepingTxnId:e.bookkeepingTxnId||null,ledgerTxnId:e.ledgerTxnId||null})).filter(e=>e.symbol&&(e.exDate||e.expectedPayDate||e.actualPayDate));
+  if(!Array.isArray(annualIncomeSummaries))annualIncomeSummaries=[];
+  annualIncomeSummaries=annualIncomeSummaries.map(a=>({year:Number(a.year),dividendIncome:ntd(a.dividendIncome||0),spouseBonus:ntd(a.spouseBonus||0),note:String(a.note||''),updatedAt:a.updatedAt||new Date().toISOString()})).filter(a=>Number.isInteger(a.year)&&a.year>=1900&&a.year<=2200);
+  {const byYear=new Map();for(const a of annualIncomeSummaries){const prev=byYear.get(a.year);if(!prev||String(a.updatedAt||'')>=String(prev.updatedAt||''))byYear.set(a.year,a);}annualIncomeSummaries=[...byYear.values()];}
+  // V1.4.4: legacy confirmed dividend ledger entries get a lightweight lifecycle event exactly once.
+  const eventLedgerIds=new Set(dividendEvents.map(e=>e.ledgerTxnId).filter(Boolean));
+  for(const t of investmentLedger.filter(x=>x.kind==='dividend'&&!eventLedgerIds.has(x.id))){
+    dividendEvents.push({id:uid(),symbol:t.symbol,name:t.name||'',shortName:t.shortName||'',securityType:t.securityType||'',exDate:t.exDate||'',expectedPayDate:t.date,actualPayDate:t.date,perShare:Number(t.perShare||0),actualAmount:ntd(t.amount||0),statusOverride:'',note:t.note||'',createdAt:t.createdAt||new Date().toISOString(),bookkeepingTxnId:t.bookkeepingTxnId||null,ledgerTxnId:t.id});
+  }
   settings.investmentFeeConfig={...DEFAULT_INVESTMENT_FEE_CONFIG,...(settings.investmentFeeConfig||{})};
   settings.investmentSecurityCache=settings.investmentSecurityCache&&typeof settings.investmentSecurityCache==='object'?settings.investmentSecurityCache:{};
   // Enrich common legacy holdings immediately so upgraded data gets names/types offline, too.
@@ -436,11 +453,14 @@ function collectHomeReminders(){
   if(totalBudget&&spent>totalBudget)items.push({icon:'⚠️',title:`本月預算已超出 ${money(spent-totalBudget)}`,meta:`已花 ${money(spent)}／預算 ${money(totalBudget)}`,tone:'warn'});
   const wm=sum(expensesOfMonth().filter(t=>t.categoryId==='food'&&t.subcategory==='上班餐飲')),days=averageBaseDays(viewMonth),avg=days?wm/days:0; const prev=addMonths(viewMonth,-1),prevDays=daysInMonthOf(prev),prevWm=sum(expensesOfMonth(prev).filter(t=>t.categoryId==='food'&&t.subcategory==='上班餐飲')),prevAvg=prevDays?prevWm/prevDays:0;
   if(avg&&prevAvg&&avg>prevAvg*1.2)items.push({icon:'🍱',title:'上班餐飲平均偏高',meta:`目前每日 ${money(avg)}，高於上月平均`,tone:'soft'});
-  return items.slice(0,4);
+  const dueDividends=dividendNeedsConfirmation();
+  dueDividends.slice(0,2).forEach(e=>items.unshift({icon:'💰',title:`${e.symbol} 股息${e.status==='due'?'今天預計入帳':'待確認入帳'}`,meta:`${e.estimatedAmount==null?'金額待確認':`預估 ${money(e.estimatedAmount)}`} · 預計 ${e.expectedPayDate}`,tone:'income',action:()=>confirmDividendEvent(e.id)}));
+  if(!dueDividends.length){const upcomingDividend=dividendUpcoming(30)[0];if(upcomingDividend)items.unshift({icon:'🗓️',title:`${upcomingDividend.symbol} 股息將入帳`,meta:`預計 ${upcomingDividend.expectedPayDate}${upcomingDividend.estimatedAmount==null?'':` · 約 ${money(upcomingDividend.estimatedAmount)}`}`,tone:'info',action:()=>openDividendEventEditor(upcomingDividend.id)});}
+  return items.slice(0,5);
 }
 function renderHomeReminders(){
   const panel=$('homeReminderPanel'),list=$('homeReminderList'),items=collectHomeReminders(); if(!panel||!list)return; panel.classList.toggle('hidden',!items.length); if(!items.length)return; $('homeReminderCount').textContent=String(items.length); $('homeReminderTitle').textContent=items.length===1?'有 1 件事情值得注意':`有 ${items.length} 件事情值得注意`; list.innerHTML='';
-  items.forEach(item=>{const b=document.createElement('button');b.className=`reminder-item ${item.tone||''}`;b.innerHTML=`<span class="reminder-icon">${item.icon}</span><span><strong>${escapeHtml(item.title)}</strong><small>${escapeHtml(item.meta)}</small></span><b>›</b>`; if(item.date)b.onclick=()=>{selectedDate=item.date;viewMonth=startOfMonth(parseDateKey(item.date));renderAll();setTimeout(()=>$('dayListTitle')?.scrollIntoView({behavior:'smooth',block:'center'}),50);}; else b.disabled=true; list.appendChild(b);});
+  items.forEach(item=>{const b=document.createElement('button');b.className=`reminder-item ${item.tone||''}`;b.innerHTML=`<span class="reminder-icon">${item.icon}</span><span><strong>${escapeHtml(item.title)}</strong><small>${escapeHtml(item.meta)}</small></span><b>›</b>`; if(item.action)b.onclick=item.action; else if(item.date)b.onclick=()=>{selectedDate=item.date;viewMonth=startOfMonth(parseDateKey(item.date));renderAll();setTimeout(()=>$('dayListTitle')?.scrollIntoView({behavior:'smooth',block:'center'}),50);}; else b.disabled=true; list.appendChild(b);});
 }
 function renderQuickTemplateStrip(){
   const box=$('quickTemplateStrip'),empty=$('quickTemplateEmpty'); if(!box)return; box.innerHTML=''; empty?.classList.toggle('hidden',quickTemplates.length>0); quickTemplates.slice(0,10).forEach(q=>{const b=document.createElement('button');b.className='quick-template-btn';b.innerHTML=`<span>${escapeHtml(q.icon||'⚡')}</span><strong>${escapeHtml(q.name)}</strong><small>${q.amount>0?money(q.amount):'補金額'}</small>`;b.onclick=()=>applyQuickTemplate(q);box.appendChild(b);});
@@ -526,12 +546,13 @@ function openTxnFromInsight(id){
 function detailMetaByTxn(t){
   const dateLabel=String(t.date||'').replace(/-/g,'/');
   if(t.type==='expense')return `${dateLabel} · ${categoryNameByTxn(t)} · ${t.subcategory||'未分類'} · ${t.payment==='cash'?'現金':'信用卡'}`;
+  if(t.annualSummary)return `${String(t.date||'').slice(0,4)} 年 · 年度摘要（不建立日現金流）`;
   if(t.type==='income')return `${dateLabel} · ${t.incomeCategory||'其他收入'}`;
   return `${dateLabel} · ${t.investmentCategory||'股票／ETF'} · 投資`;
 }
 function detailIconByTxn(t){
   if(t.type==='expense')return catIconByTxn(t);
-  if(t.type==='income')return {'薪資':'💼','獎金':'🎁','股息':'💹','退款':'↩️','其他收入':'💰'}[t.incomeCategory||'其他收入']||'💰';
+  if(t.type==='income')return {'薪資':'💼','獎金':'🎁','股息':'💹','老婆分紅':'👩‍❤️‍👨','退款':'↩️','其他收入':'💰'}[t.incomeCategory||'其他收入']||'💰';
   return '📈';
 }
 function renderInsightDetail(){
@@ -557,13 +578,12 @@ function renderInsightDetail(){
   empty.classList.toggle('hidden',items.length>0);
   for(const t of items){
     const row=document.createElement('div');
-    row.className='txn-row detail-clickable'+(t.pendingAmount?' pending-txn':'');
-    row.setAttribute('role','button'); row.tabIndex=0;
+    row.className='txn-row'+(t.virtual?'':' detail-clickable')+(t.pendingAmount?' pending-txn':'');
+    if(!t.virtual){row.setAttribute('role','button'); row.tabIndex=0;}
     const cls=t.type==='income'?'income':t.type==='investment'?'investment':'expense';
     const amountText=t.pendingAmount?'待填金額':`${t.type==='expense'?'-':''}${money(t.amount)}`;
     row.innerHTML=`<div class="txn-icon">${detailIconByTxn(t)}</div><div class="txn-main"><strong>${escapeHtml(t.title||state.title||'未命名')}</strong><span>${escapeHtml(detailMetaByTxn(t))}</span>${t.note?`<span class="detail-note">備註：${escapeHtml(t.note)}</span>`:''}</div><div class="txn-amount ${cls}">${amountText}</div><div class="detail-chevron">›</div>`;
-    row.onclick=()=>openTxnFromInsight(t.id);
-    row.onkeydown=e=>{if(e.key==='Enter'||e.key===' '){e.preventDefault();openTxnFromInsight(t.id);}};
+    if(!t.virtual){row.onclick=()=>openTxnFromInsight(t.id);row.onkeydown=e=>{if(e.key==='Enter'||e.key===' '){e.preventDefault();openTxnFromInsight(t.id);}};}
     list.appendChild(row);
   }
 }
@@ -577,7 +597,7 @@ function openExpenseDetailBySubcategory(categoryId,subcategory,label,icon,period
   openInsightDetail({title:label,icon:icon||categoryById(categoryId).icon,lead:label,periodLabel,items:list,baseDays,desc:`查看 ${label} 的細項紀錄；點一下可再編輯。`});
 }
 function openIncomeDetailByCategory(name,periodLabel=formatMonth(viewMonth),items=null,baseDays=0){
-  const icons={'薪資':'💼','獎金':'🎁','股息':'💹','退款':'↩️','其他收入':'💰'};
+  const icons={'薪資':'💼','獎金':'🎁','股息':'💹','老婆分紅':'👩‍❤️‍👨','退款':'↩️','其他收入':'💰'};
   const list=items||incomesOfMonth().filter(t=>!isHistoricalSummary(t)&&((t.incomeCategory||'其他收入')===name));
   openInsightDetail({title:name,icon:icons[name]||'💰',lead:name,periodLabel,items:list,baseDays,desc:`查看 ${name} 的每一筆收入紀錄；點一下可再編輯。`});
 }
@@ -737,13 +757,25 @@ function renderBudget(){
   const pct=total?Math.min(100,spent/total*100):0; $('totalBudgetProgress').style.width=`${pct}%`; $('totalBudgetProgress').classList.toggle('over',total>0&&spent>total);
   const list=$('budgetCategoryList'); list.innerHTML=''; for(const item of budgetRows().slice(1)){ const b=budgetValue(item.key),s=spendForBudgetKey(item.key),p=b?Math.min(100,s/b*100):0; const row=document.createElement('button'); row.type='button'; row.className='budget-row is-clickable'; row.innerHTML=`<strong>${escapeHtml(item.icon)} ${escapeHtml(item.label)}</strong><span class="budget-amount">${money(s)} / ${b?money(b):'未設定'}</span><div class="progress-track"><div class="progress-fill ${b&&s>b?'over':''}" style="width:${p}%"></div></div><p>${b?(s>b?`已超出 ${money(s-b)}`:`還可使用 ${money(b-s)}`):'尚未設定預算'}</p><span class="row-chevron">›</span>`; row.onclick=()=>openBudgetDetailByKey(item.key,item.label,item.icon); list.appendChild(row); }
 }
+function annualSummaryVirtualTxns(year){
+  const a=annualIncomeSummaries.find(x=>Number(x.year)===Number(year)); if(!a)return [];
+  const rows=[];
+  if(a.dividendIncome>0)rows.push({id:`annual-${year}-dividend`,date:`${year}-12-31`,type:'income',title:`${year} 年股息收入摘要`,amount:ntd(a.dividendIncome),incomeCategory:'股息',annualSummary:true,virtual:true});
+  if(a.spouseBonus>0)rows.push({id:`annual-${year}-spouse`,date:`${year}-12-31`,type:'income',title:`${year} 年老婆分紅摘要`,amount:ntd(a.spouseBonus),incomeCategory:'老婆分紅',annualSummary:true,virtual:true});
+  return rows;
+}
 function analysisPeriodTxns(){
-  if(analysisMode==='year') return txns.filter(t=>parseDateKey(t.date).getFullYear()===analysisYear);
+  if(analysisMode==='year'){
+    const summary=annualSummaryForYear(analysisYear);let rows=txns.filter(t=>parseDateKey(t.date).getFullYear()===analysisYear);
+    if(summary?.dividendIncome>0)rows=rows.filter(t=>!(t.type==='income'&&(t.incomeCategory||'')==='股息'));
+    if(summary?.spouseBonus>0)rows=rows.filter(t=>!(t.type==='income'&&(t.incomeCategory||'')==='老婆分紅'));
+    return rows.concat(annualSummaryVirtualTxns(analysisYear));
+  }
   const mk=`${analysisYear}-${String(analysisMonth+1).padStart(2,'0')}`;
   return txns.filter(t=>String(t.date||'').slice(0,7)===mk);
 }
 function incomeCategoryTotals(list){ const m=new Map(); for(const t of list){ const k=t.incomeCategory||'其他收入'; m.set(k,(m.get(k)||0)+Number(t.amount||0)); } return [...m.entries()].sort((a,b)=>b[1]-a[1]); }
-function renderIncomeRanking(list,onRowClick=null){ const box=$('incomeRanking'); box.innerHTML=''; const rows=incomeCategoryTotals(list); $('incomeRankingEmpty').classList.toggle('hidden',rows.length>0); if(!rows.length)return; const total=sum(list)||1,max=rows[0][1]||1; const icons={'薪資':'💼','獎金':'🎁','股息':'💹','退款':'↩️','其他收入':'💰'}; for(const [name,val] of rows){ const row=document.createElement(onRowClick?'button':'div'); row.className='analysis-row'+(onRowClick?' is-clickable':''); if(onRowClick)row.type='button'; row.innerHTML=`<div class="income-rank-icon">${icons[name]||'💰'}</div><div class="analysis-main"><div class="topline"><strong>${escapeHtml(name)}</strong><span>${Math.round(val/total*100)}%</span></div><div class="bar-track"><div class="bar-fill" style="width:${Math.max(2,val/max*100)}%"></div></div></div><div class="analysis-amount">${money(val)}</div>${onRowClick?'<span class="row-chevron">›</span>':''}`; if(onRowClick)row.onclick=()=>onRowClick(name,val); box.appendChild(row); } }
+function renderIncomeRanking(list,onRowClick=null){ const box=$('incomeRanking'); box.innerHTML=''; const rows=incomeCategoryTotals(list); $('incomeRankingEmpty').classList.toggle('hidden',rows.length>0); if(!rows.length)return; const total=sum(list)||1,max=rows[0][1]||1; const icons={'薪資':'💼','獎金':'🎁','股息':'💹','老婆分紅':'👩‍❤️‍👨','退款':'↩️','其他收入':'💰'}; for(const [name,val] of rows){ const row=document.createElement(onRowClick?'button':'div'); row.className='analysis-row'+(onRowClick?' is-clickable':''); if(onRowClick)row.type='button'; row.innerHTML=`<div class="income-rank-icon">${icons[name]||'💰'}</div><div class="analysis-main"><div class="topline"><strong>${escapeHtml(name)}</strong><span>${Math.round(val/total*100)}%</span></div><div class="bar-track"><div class="bar-fill" style="width:${Math.max(2,val/max*100)}%"></div></div></div><div class="analysis-amount">${money(val)}</div>${onRowClick?'<span class="row-chevron">›</span>':''}`; if(onRowClick)row.onclick=()=>onRowClick(name,val); box.appendChild(row); } }
 function renderAnalysis(){
   $('analysisYearLabel').textContent=`${analysisYear} 年`; $('analysisYearModeBtn').classList.toggle('active',analysisMode==='year'); $('analysisMonthModeBtn').classList.toggle('active',analysisMode==='month'); $('analysisMonthSelect').classList.toggle('hidden',analysisMode!=='month'); $('analysisMonthSelect').value=String(analysisMonth);
   const list=analysisPeriodTxns(), ex=list.filter(t=>t.type==='expense'), inc=list.filter(t=>t.type==='income'), inv=list.filter(t=>t.type==='investment'); const expense=sum(ex),income=sum(inc),net=income-expense;
@@ -1248,7 +1280,7 @@ async function unlockWithFace(){
 async function completeUnlock(){ unlocked=true; try{await loadVault(); unlockAppUi();}catch(e){console.error(e);unlocked=false;$('unlockMessage').textContent='資料解鎖失敗，請重新整理再試';} }
 function unlockAppUi(){ document.body.classList.remove('locked'); hide($('lockScreen')); $('app').setAttribute('aria-hidden','false'); $('pinUnlockInput').value=''; updatePinUnlockState(); $('unlockMessage').textContent=''; renderCategoryPicker(); renderSubcategories(); renderAll(); refreshSecurityUi(); showPostUpdateNotice(); }
 function lockApp(reason='background'){
-  if(!unlocked)return; collapseVoiceFab(); stopVoiceSession(); ['editorScreen','calculatorScreen','voiceSheet','voiceDraftScreen','voiceDraftEditScreen','txnMenuScreen','budgetEditorScreen','investmentTxnEditorScreen','investmentQuoteEditorScreen','settingsScreen','securityScreen','quickTemplateManagerScreen','quickTemplateEditorScreen','insightDetailScreen','categoryManagerScreen','categoryEditorScreen','recurringManagerScreen','recurringEditorScreen','recurringDeleteScreen'].forEach(id=>hide($(id))); unlocked=false;vaultLoaded=false;txns=[];budgets={};categories=clone(DEFAULT_CATEGORIES);quickTemplates=clone(DEFAULT_QUICK_TEMPLATES);settings={};recurring=[];investmentLedger=[];investmentQuotes=[]; document.body.classList.add('locked'); show($('lockScreen')); show($('unlockPanel')); hide($('setupPanel')); $('app').setAttribute('aria-hidden','true'); updatePinUnlockState(); refreshLockFaceUi();
+  if(!unlocked)return; collapseVoiceFab(); stopVoiceSession(); ['editorScreen','calculatorScreen','voiceSheet','voiceDraftScreen','voiceDraftEditScreen','txnMenuScreen','budgetEditorScreen','investmentTxnEditorScreen','investmentQuoteEditorScreen','dividendEventEditorScreen','annualSummaryEditorScreen','investmentSecurityDetailScreen','settingsScreen','securityScreen','quickTemplateManagerScreen','quickTemplateEditorScreen','insightDetailScreen','categoryManagerScreen','categoryEditorScreen','recurringManagerScreen','recurringEditorScreen','recurringDeleteScreen'].forEach(id=>hide($(id))); unlocked=false;vaultLoaded=false;txns=[];budgets={};categories=clone(DEFAULT_CATEGORIES);quickTemplates=clone(DEFAULT_QUICK_TEMPLATES);settings={};recurring=[];investmentLedger=[];investmentQuotes=[];dividendEvents=[];annualIncomeSummaries=[];dividendEventEditingId=null;annualSummaryEditingYear=null;investmentDetailSymbol=null; document.body.classList.add('locked'); show($('lockScreen')); show($('unlockPanel')); hide($('setupPanel')); $('app').setAttribute('aria-hidden','true'); updatePinUnlockState(); refreshLockFaceUi();
 }
 async function refreshLockFaceUi(){ const yes=!!authConfig.faceEnabled&&!!authConfig.faceCredentialId&&await isFaceAvailable(); $('faceUnlockBtn').classList.toggle('hidden',!yes); $('faceDivider').classList.toggle('hidden',!yes); }
 async function refreshSecurityUi(){ if(!$('faceStatusText'))return; const avail=await isFaceAvailable(); if(authConfig.faceEnabled&&authConfig.faceCredentialId){$('faceStatusText').textContent='已啟用。離開 App 後，回來可用 Face ID 重新解鎖。';$('toggleFaceBtn').textContent='重新設定 Face ID';}else{$('faceStatusText').textContent=avail?'尚未啟用。':'此裝置／瀏覽器目前無法使用平台生物辨識。';$('toggleFaceBtn').textContent='啟用 Face ID';$('toggleFaceBtn').disabled=!avail;} }
@@ -1353,6 +1385,19 @@ function reconcileInvestmentLinks(){
   const grouped=new Map();
   for(const l of investmentLedger){if(!l.bookkeepingTxnId)continue;if(!grouped.has(l.bookkeepingTxnId))grouped.set(l.bookkeepingTxnId,[]);grouped.get(l.bookkeepingTxnId).push(l);}
   for(const [txnId,rows] of grouped){if(rows.length<=1)continue;const t=txById.get(txnId),keep=rows.find(r=>r.id===t?.investmentLedgerId)||rows.find(isCompletedInvestmentBuy)||rows[0];investmentLedger=investmentLedger.filter(r=>r.bookkeepingTxnId!==txnId||r.id===keep.id);if(t)t.investmentLedgerId=keep.id;}
+
+  // 股息生命週期與正式收入也維持雙向：記帳頁改日期／金額會回寫實際入帳；刪除收入則撤銷「已入帳」，但保留原除息提醒。
+  if(!Array.isArray(dividendEvents))dividendEvents=[];
+  const ledgerById=new Map(investmentLedger.map(l=>[l.id,l]));
+  dividendEvents=dividendEvents.filter(e=>{
+    if(!e.ledgerTxnId)return true;
+    const l=ledgerById.get(e.ledgerTxnId);
+    if(l&&l.kind==='dividend'){e.symbol=l.symbol||e.symbol;e.name=l.name||e.name;e.shortName=l.shortName||e.shortName;e.securityType=l.securityType||e.securityType;e.actualPayDate=l.date;e.actualAmount=ntd(l.amount||0);e.bookkeepingTxnId=l.bookkeepingTxnId||null;e.note=l.note||e.note;return true;}
+    if(e.exDate||e.expectedPayDate){e.actualPayDate='';e.actualAmount=null;e.ledgerTxnId=null;e.bookkeepingTxnId=null;return true;}
+    return false;
+  });
+  const eventLedgerIds=new Set(dividendEvents.map(e=>e.ledgerTxnId).filter(Boolean));
+  for(const l of investmentLedger.filter(x=>x.kind==='dividend'&&!eventLedgerIds.has(x.id))){dividendEvents.push({id:uid(),symbol:l.symbol,name:l.name||'',shortName:l.shortName||'',securityType:l.securityType||'',exDate:'',expectedPayDate:l.date,actualPayDate:l.date,perShare:0,actualAmount:ntd(l.amount||0),statusOverride:'',note:l.note||'',createdAt:l.createdAt||new Date().toISOString(),bookkeepingTxnId:l.bookkeepingTxnId||null,ledgerTxnId:l.id});}
 }
 
 // ===== V1.4.0 投資帳本 =====
@@ -1445,22 +1490,160 @@ function investmentKindLabel(k){return ({initial:'初始持股',buy:'買進',sel
 function investmentKindIcon(k){return ({initial:'📌',buy:'🟣',sell:'🔵',dividend:'💰',contribution:'🟪'})[k]||'📈';}
 function investmentTxnCash(t){
   if(t.kind==='initial')return ntd(Math.max(0,Number(t.quantity||0)*Number(t.price||0)));
-  if(t.kind==='buy'){
-    const recorded=ntd(t.amount||0); if(recorded>0)return recorded;
-    return ntd(Math.max(0,Number(t.quantity||0)*Number(t.price||0)+Number(t.fee||0)));
-  }
+  if(t.kind==='buy')return ntd(Math.max(0,Number(t.quantity||0)*Number(t.price||0)+Number(t.fee||0)));
   if(t.kind==='contribution')return ntd(Math.max(0,Number(t.amount||0)));
   if(t.kind==='sell')return ntd(Math.max(0,Number(t.quantity||0)*Number(t.price||0)-Number(t.fee||0)-Number(t.tax||0)));
   if(t.kind==='dividend')return ntd(Math.max(0,Number(t.amount||0)));
   return 0;
 }
+function investmentPreviousDayKey(key){return addDaysKey(key,-1);}
+function ledgerSort(rows){return rows.slice().sort((a,b)=>String(a.date).localeCompare(String(b.date))||String(a.createdAt||'').localeCompare(String(b.createdAt||''))||String(a.id||'').localeCompare(String(b.id||'')));}
+function validateInvestmentLedger(rows=investmentLedger){
+  const qty=new Map(),issues=[];
+  for(const t of ledgerSort(rows)){
+    if(!t.symbol||t.kind==='contribution'||t.kind==='dividend')continue;
+    const key=investmentAssetKey(t.symbol),available=Number(qty.get(key)||0),q=Math.max(0,Number(t.quantity||0));
+    if(t.kind==='initial'||t.kind==='buy'){qty.set(key,available+q);continue;}
+    if(t.kind==='sell'){
+      if(q>available+1e-8){issues.push({type:'oversell',id:t.id,symbol:key,date:t.date,requested:q,available});continue;}
+      qty.set(key,Math.max(0,available-q));
+    }
+  }
+  return issues;
+}
+function investmentHealthIssues(){return validateInvestmentLedger(investmentLedger);}
+function investmentSharesAsOf(symbol,asOf){
+  const key=investmentAssetKey(symbol); if(!key||!asOf)return 0;
+  const p=investmentPortfolio(asOf).positions.find(x=>x.symbol===key); return Math.max(0,Number(p?.quantity||0));
+}
+function dividendDerived(e,today=dateKey(new Date())){
+  const entitlementDate=e.exDate?investmentPreviousDayKey(e.exDate):(e.actualPayDate||e.expectedPayDate||today);
+  const entitledShares=e.exDate?investmentSharesAsOf(e.symbol,entitlementDate):0;
+  const estimatedAmount=e.perShare>0&&e.exDate?ntd(entitledShares*Number(e.perShare||0)):null;
+  let status='planned';
+  if(e.statusOverride==='cancelled')status='cancelled';
+  else if(e.actualPayDate&&e.actualAmount!=null)status='paid';
+  else if(e.expectedPayDate&&e.expectedPayDate<today)status='overdue';
+  else if(e.expectedPayDate===today)status='due';
+  else if(e.exDate&&e.exDate<=today)status='exed';
+  return {...e,entitlementDate,entitledShares,estimatedAmount,status};
+}
+function dividendStatusLabel(status){return ({planned:'預定',exed:'已除息／待入帳',due:'今天預計入帳',overdue:'待確認入帳',paid:'已入帳',cancelled:'已取消'})[status]||status;}
+function dividendStatusIcon(status){return ({planned:'🗓️',exed:'⏳',due:'💰',overdue:'🔔',paid:'✅',cancelled:'⛔'})[status]||'💰';}
+function annualSummaryForYear(year){return annualIncomeSummaries.find(x=>Number(x.year)===Number(year))||null;}
+function detailedDividendIncomeForYear(year){
+  return investmentLedger.filter(t=>t.kind==='dividend'&&Number(String(t.date).slice(0,4))===Number(year)).reduce((sum,t)=>sum+investmentTxnCash(t),0);
+}
+function annualDividendDisplay(year){const a=annualSummaryForYear(year);return a?ntd(a.dividendIncome):detailedDividendIncomeForYear(year);}
+function allRecordedDividendIncome(){
+  const summaryYears=new Set(annualIncomeSummaries.filter(a=>Number(a.dividendIncome)>0).map(a=>Number(a.year)));
+  const detailed=investmentLedger.filter(t=>t.kind==='dividend'&&!summaryYears.has(Number(String(t.date||'').slice(0,4)))).reduce((sum,t)=>sum+investmentTxnCash(t),0);
+  const annual=annualIncomeSummaries.reduce((sum,a)=>sum+ntd(a.dividendIncome||0),0);
+  return ntd(detailed+annual);
+}
+function dividendUpcoming(days=30){
+  const today=dateKey(new Date()),end=addDaysKey(today,days);
+  return dividendEvents.map(e=>dividendDerived(e,today)).filter(e=>!['paid','cancelled'].includes(e.status)&&e.expectedPayDate&&e.expectedPayDate>=today&&e.expectedPayDate<=end).sort((a,b)=>a.expectedPayDate.localeCompare(b.expectedPayDate));
+}
+function dividendNeedsConfirmation(){
+  const today=dateKey(new Date()); return dividendEvents.map(e=>dividendDerived(e,today)).filter(e=>['due','overdue'].includes(e.status)).sort((a,b)=>a.expectedPayDate.localeCompare(b.expectedPayDate));
+}
+function upsertInvestmentQuote(q){
+  const symbol=investmentAssetKey(q.symbol),date=q.date,priceType=q.priceType||'close'; if(!symbol||!date||!(Number(q.price)>0))return null;
+  const idx=investmentQuotes.findIndex(x=>investmentAssetKey(x.symbol)===symbol&&x.date===date&&(x.priceType||'close')===priceType);
+  const item={...(idx>=0?investmentQuotes[idx]:{}),...q,id:idx>=0?investmentQuotes[idx].id:(q.id||uid()),symbol,price:Number(q.price),date,priceType,createdAt:idx>=0?(investmentQuotes[idx].createdAt||new Date().toISOString()):(q.createdAt||new Date().toISOString()),updatedAt:new Date().toISOString()};
+  if(idx>=0)investmentQuotes[idx]=item;else investmentQuotes.push(item); return item;
+}
+function rocDateToIso(v){const s=String(v||'').replace(/\D/g,'');if(s.length<7)return'';const y=Number(s.slice(0,3))+1911;return `${y}-${s.slice(3,5)}-${s.slice(5,7)}`;}
+function twseRowDateToIso(v){const parts=String(v||'').trim().split('/').map(Number);if(parts.length!==3)return'';const y=parts[0]<1911?parts[0]+1911:parts[0];return `${y}-${String(parts[1]).padStart(2,'0')}-${String(parts[2]).padStart(2,'0')}`;}
+function ymdNoDash(d=new Date()){return `${d.getFullYear()}${String(d.getMonth()+1).padStart(2,'0')}${String(d.getDate()).padStart(2,'0')}`;}
+async function fetchLatestCompletedClose(meta,symbol){
+  const today=dateKey(new Date()),key=investmentAssetKey(symbol),market=meta?.market||cachedSecurityMeta(key)?.market||'TWSE';
+  if(market==='TPEx'){
+    const rows=await fetchJsonWithTimeout('https://www.tpex.org.tw/openapi/v1/tpex_mainboard_daily_close_quotes',7000);
+    const r=(Array.isArray(rows)?rows:[]).find(x=>investmentAssetKey(x.SecuritiesCompanyCode||x.Code||x['證券代號'])===key); if(!r)throw new Error('no quote');
+    const dt=rocDateToIso(r.Date||r['日期']),price=Number(String(r.Close||r['收盤']||r['收盤價']||'').replace(/,/g,'')); if(!(price>0)||!dt)throw new Error('bad quote');
+    // 自動估值只採「今天以前」的完整收盤資料；若官方端點已切到今日收盤，留待下一交易日再納入。
+    if(dt>=today)throw new Error('latest TPEx close is not prior trading day');
+    return {symbol:key,name:meta?.name||'',price,date:dt,priceType:'close',source:'TPEx'};
+  }
+  const fetchMonth=async d=>{
+    const url=`https://www.twse.com.tw/rwd/zh/afterTrading/STOCK_DAY?date=${ymdNoDash(d)}&stockNo=${encodeURIComponent(key)}&response=json`;
+    const data=await fetchJsonWithTimeout(url,7000),rows=Array.isArray(data?.data)?data.data:[];
+    return rows.map(r=>({date:twseRowDateToIso(r[0]),price:Number(String(r[6]||'').replace(/,/g,''))})).filter(r=>r.date&&r.price>0&&r.date<today);
+  };
+  let parsed=await fetchMonth(new Date());
+  // 每月第一個交易日前，當月尚無「前一交易日」資料，改查前一個月。
+  if(!parsed.length){const d=new Date();d.setDate(1);d.setMonth(d.getMonth()-1);parsed=await fetchMonth(d);}
+  parsed.sort((a,b)=>b.date.localeCompare(a.date));
+  if(!parsed.length)throw new Error('no completed close'); return {symbol:key,name:meta?.name||'',price:parsed[0].price,date:parsed[0].date,priceType:'close',source:'TWSE'};
+}
+async function fetchBatchLatestCompletedCloses(items){
+  const today=dateKey(new Date()),out=new Map(),byMarket={TWSE:[],TPEx:[]};
+  for(const item of items){const market=item.meta?.market==='TPEx'?'TPEx':'TWSE';byMarket[market].push(item);}
+  if(byMarket.TWSE.length){
+    try{
+      const rows=await fetchJsonWithTimeout('https://openapi.twse.com.tw/v1/exchangeReport/STOCK_DAY_ALL',7000),wanted=new Set(byMarket.TWSE.map(x=>x.symbol));
+      for(const r of Array.isArray(rows)?rows:[]){
+        const symbol=investmentAssetKey(r.Code||r['證券代號']);if(!wanted.has(symbol))continue;
+        const dt=rocDateToIso(r.Date||r['日期']),price=Number(String(r.ClosingPrice||r['收盤價']||'').replace(/,/g,''));
+        if(dt&&dt<today&&price>0)out.set(symbol,{symbol,name:byMarket.TWSE.find(x=>x.symbol===symbol)?.meta?.name||r.Name||'',price,date:dt,priceType:'close',source:'TWSE OpenAPI'});
+      }
+    }catch(e){console.warn('TWSE batch close',e);}
+  }
+  if(byMarket.TPEx.length){
+    try{
+      const rows=await fetchJsonWithTimeout('https://www.tpex.org.tw/openapi/v1/tpex_mainboard_daily_close_quotes',7000),wanted=new Set(byMarket.TPEx.map(x=>x.symbol));
+      for(const r of Array.isArray(rows)?rows:[]){
+        const symbol=investmentAssetKey(r.SecuritiesCompanyCode||r.Code||r['證券代號']);if(!wanted.has(symbol))continue;
+        const dt=rocDateToIso(r.Date||r['日期']),price=Number(String(r.Close||r['收盤']||r['收盤價']||'').replace(/,/g,''));
+        if(dt&&dt<today&&price>0)out.set(symbol,{symbol,name:byMarket.TPEx.find(x=>x.symbol===symbol)?.meta?.name||'',price,date:dt,priceType:'close',source:'TPEx OpenAPI'});
+      }
+    }catch(e){console.warn('TPEx batch close',e);}
+  }
+  return out;
+}
+async function ensureLatestClosePrices({force=false}={}){
+  if(autoQuoteRefreshInFlight)return; const pf=investmentPortfolio(dateKey(new Date())),symbols=[...new Set(pf.active.map(p=>p.symbol))]; if(!symbols.length)return;
+  const today=dateKey(new Date()); settings.investmentAutoCloseChecked=settings.investmentAutoCloseChecked&&typeof settings.investmentAutoCloseChecked==='object'?settings.investmentAutoCloseChecked:{};
+  const targets=symbols.filter(s=>force||settings.investmentAutoCloseChecked[s]!==today); if(!targets.length)return;
+  autoQuoteRefreshInFlight=true; let changed=false,touched=false;
+  try{
+    const items=[];for(const symbol of targets){items.push({symbol,meta:await resolveSecurityMeta(symbol).catch(()=>cachedSecurityMeta(symbol)||{market:'TWSE'})});}
+    const batch=await fetchBatchLatestCompletedCloses(items);
+    for(const {symbol,meta} of items){
+      try{
+        let q=batch.get(symbol);
+        // 若官方全市場端點已切到今日資料，就只在需要時用個股歷史端點補「今日以前」最近一個完整交易日。
+        if(!q)q=await fetchLatestCompletedClose(meta,symbol);
+        upsertInvestmentQuote(q);changed=true;
+      }catch(e){console.warn('close quote',symbol,e);}
+      settings.investmentAutoCloseChecked[symbol]=today;touched=true;
+    }
+    if(touched)await persistState();if(changed)renderInvestment();
+  }finally{autoQuoteRefreshInFlight=false;}
+}
+async function fetchIntradayQuotes(){
+  const pf=investmentPortfolio(dateKey(new Date())),symbols=pf.active.map(p=>p.symbol); if(!symbols.length){toast('目前沒有持股');return;}
+  toast('正在更新今日股價…',1200); let ok=0;
+  for(const symbol of symbols){
+    try{
+      const meta=await resolveSecurityMeta(symbol),market=meta?.market==='TPEx'?'otc':'tse',url=`https://mis.twse.com.tw/stock/api/getStockInfo.jsp?ex_ch=${market}_${encodeURIComponent(symbol)}.tw&_=${Date.now()}`;
+      const data=await fetchJsonWithTimeout(url,6000),r=Array.isArray(data?.msgArray)?data.msgArray[0]:null; if(!r)continue;
+      const p=Number(r.z&&r.z!=='-'?r.z:r.y),d=String(r.d||''); if(!(p>0))continue; const marketDate=d.length===8?`${d.slice(0,4)}-${d.slice(4,6)}-${d.slice(6,8)}`:dateKey(new Date());
+      upsertInvestmentQuote({symbol,name:meta?.name||'',price:p,date:marketDate,priceType:'intraday',source:'TWSE MIS',fetchedAt:new Date().toISOString()});ok++;
+    }catch(e){console.warn('intraday',symbol,e);}
+  }
+  await persistState();renderInvestment();toast(ok?`已更新 ${ok} 檔今日股價`:'今日股價暫時無法取得',2400);
+}
 function investmentSortedLedger(asOf='9999-12-31'){
   return investmentLedger.filter(t=>t.date<=asOf).slice().sort((a,b)=>String(a.date).localeCompare(String(b.date))||String(a.createdAt||'').localeCompare(String(b.createdAt||'')));
 }
-function investmentLatestQuote(symbol,asOf=dateKey(new Date())){
+function investmentLatestQuote(symbol,asOf=dateKey(new Date()),priceType='close'){
   const key=investmentAssetKey(symbol);
-  return investmentQuotes.filter(q=>q.symbol===key&&q.date<=asOf).sort((a,b)=>String(b.date).localeCompare(String(a.date))||String(b.createdAt||'').localeCompare(String(a.createdAt||'')))[0]||null;
+  return investmentQuotes.filter(q=>q.symbol===key&&q.date<=asOf&&(q.priceType||'close')===priceType).sort((a,b)=>String(b.date).localeCompare(String(a.date))||String(b.updatedAt||b.createdAt||'').localeCompare(String(a.updatedAt||a.createdAt||'')))[0]||null;
 }
+function investmentLatestIntraday(symbol){return investmentLatestQuote(symbol,dateKey(new Date()),'intraday');}
 function investmentFallbackPrice(symbol,asOf=dateKey(new Date())){
   const q=investmentLatestQuote(symbol,asOf); if(q)return {price:Number(q.price)||0,date:q.date,source:'quote'};
   const t=investmentSortedLedger(asOf).filter(x=>x.symbol===investmentAssetKey(symbol)&&['initial','buy','sell'].includes(x.kind)&&Number(x.price)>0).pop();
@@ -1478,9 +1661,10 @@ function investmentPortfolio(asOf=dateKey(new Date())){
       const q=Math.max(0,Number(t.quantity)||0), c=t.kind==='buy'?investmentTxnCash(t):ntd(q*Math.max(0,Number(t.price)||0));
       p.quantity+=q; p.cost+=c; p.totalBuyCost+=c; p.lastTradeDate=t.date;p.lastTradePrice=Number(t.price)||0;
     }else if(t.kind==='sell'){
-      const q=Math.min(Math.max(0,Number(t.quantity)||0),Math.max(0,p.quantity));
+      const q=Math.max(0,Number(t.quantity)||0);
+      if(q>p.quantity+1e-8){p.issues=(p.issues||[]).concat({type:'oversell',id:t.id,date:t.date,requested:q,available:p.quantity});continue;}
       const avg=p.quantity>0?p.cost/p.quantity:0, removed=ntd(avg*q), proceeds=ntd(q*Math.max(0,Number(t.price)||0)-Math.max(0,Number(t.fee)||0)-Math.max(0,Number(t.tax)||0));
-      p.quantity-=q; p.cost=Math.max(0,p.cost-removed); p.realized+=proceeds-removed; p.lastTradeDate=t.date;p.lastTradePrice=Number(t.price)||0;
+      p.quantity=Math.max(0,p.quantity-q); p.cost=Math.max(0,p.cost-removed); p.realized+=proceeds-removed; p.lastTradeDate=t.date;p.lastTradePrice=Number(t.price)||0;
     }else if(t.kind==='dividend')p.dividends+=ntd(Math.max(0,Number(t.amount)||0));
   }
   const positions=[...map.values()].map(p=>{
@@ -1491,7 +1675,8 @@ function investmentPortfolio(asOf=dateKey(new Date())){
   const totals=positions.reduce((a,p)=>({cost:a.cost+p.cost,marketValue:a.marketValue+p.marketValue,realized:a.realized+p.realized,dividends:a.dividends+p.dividends,totalBuyCost:a.totalBuyCost+p.totalBuyCost,unrealized:a.unrealized+p.unrealized,totalProfit:a.totalProfit+p.totalProfit}),{cost:0,marketValue:0,realized:0,dividends:0,totalBuyCost:0,unrealized:0,totalProfit:0});
   totals.unresolvedContributions=unresolvedContributions;
   totals.roi=totals.totalBuyCost>0?totals.totalProfit/totals.totalBuyCost:null;
-  return {positions,active,totals};
+  const issues=investmentHealthIssues();
+  return {positions,active,totals,issues};
 }
 function investmentValueAsOf(d){return investmentPortfolio(d).active.reduce((s,p)=>s+p.marketValue,0);}
 function investmentXirr(flows){
@@ -1529,13 +1714,30 @@ function renderInvestment(){
   $('invCost').textContent=investmentMoney(t.cost);
   $('invTotalProfit').textContent=investmentMoney(t.totalProfit);
   $('invTotalReturn').textContent=investmentPct(t.roi);
-  $('invDividendTotal').textContent=investmentMoney(t.dividends);
+  $('invDividendTotal').textContent=investmentMoney(allRecordedDividendIncome());
   $('invRealizedTotal').textContent=investmentMoney(t.realized);
   $('invUnrealizedTotal').textContent=investmentMoney(t.unrealized);
   $('invTotalProfit').classList.toggle('negative',t.totalProfit<0);
   $('invTotalReturn').classList.toggle('negative',Number(t.roi)<0);
   $('invUnrealizedTotal').classList.toggle('negative',t.unrealized<0);
   $('invRealizedTotal').classList.toggle('negative',t.realized<0);
+  const quoteDates=pf.active.map(p=>p.quoteDate).filter(Boolean).sort();
+  if($('investmentQuoteBasis')){
+    if(!quoteDates.length)$('investmentQuoteBasis').textContent='尚無收盤價，暫以最近交易價估算';
+    else if(new Set(quoteDates).size===1)$('investmentQuoteBasis').textContent=`依 ${quoteDates[0]} 收盤價估算`;
+    else $('investmentQuoteBasis').textContent=`依各標的最近收盤價估算 · 最舊 ${quoteDates[0]}`;
+  }
+  const todayIntraday=pf.active.map(p=>({p,q:investmentLatestIntraday(p.symbol)})).filter(x=>x.q&&x.q.date===now);
+  if($('investmentIntradayValue')){
+    if(!todayIntraday.length){$('investmentIntradayValue').textContent='抓今日股價';if($('investmentIntradayBasis'))$('investmentIntradayBasis').textContent='';}
+    else{
+      const intradayMap=new Map(todayIntraday.map(x=>[x.p.symbol,x.q]));
+      const value=pf.active.reduce((sum,p)=>sum+ntd(p.quantity*Number(intradayMap.get(p.symbol)?.price||p.currentPrice||0)),0);
+      $('investmentIntradayValue').textContent=investmentMoney(value);
+      if($('investmentIntradayBasis'))$('investmentIntradayBasis').textContent=`今日 ${todayIntraday.length}/${pf.active.length} 檔已更新`;
+    }
+  }
+  const issues=pf.issues||[];if($('investmentHealthNotice')){$('investmentHealthNotice').classList.toggle('hidden',issues.length===0);$('investmentHealthIssueCount').textContent=String(issues.length);if(issues.length){const x=issues[0];$('investmentHealthIssueText').textContent=`${x.date} ${x.symbol} 賣出 ${x.requested.toLocaleString('zh-TW')} 股，但當時可用持股僅 ${x.available.toLocaleString('zh-TW')} 股。此筆暫不納入持股計算，請修正歷史交易。`;}}
 
   const pendingRows=investmentLedger.filter(x=>x.kind==='contribution');
   const pendingAmount=pendingRows.reduce((sum,x)=>sum+investmentTxnCash(x),0);
@@ -1556,9 +1758,9 @@ function renderInvestment(){
     const colors=['#7188c6','#8b78cb','#67a78d','#d7aa61','#d47d72','#65a3b5'];
     const sorted=pf.active.slice().sort((a,b)=>b.marketValue-a.marketValue);
     const slices=[];
-    if(sorted.length<=6) slices.push(...sorted.map(p=>({name:p.shortName||p.symbol,value:p.marketValue})));
+    if(sorted.length<=6) slices.push(...sorted.map(p=>({symbol:p.symbol,name:p.shortName||p.symbol,value:p.marketValue})));
     else{
-      slices.push(...sorted.slice(0,5).map(p=>({name:p.shortName||p.symbol,value:p.marketValue})));
+      slices.push(...sorted.slice(0,5).map(p=>({symbol:p.symbol,name:p.shortName||p.symbol,value:p.marketValue})));
       slices.push({name:'其他',value:sorted.slice(5).reduce((sum,p)=>sum+p.marketValue,0)});
     }
     let acc=0; const stops=[];
@@ -1566,9 +1768,9 @@ function renderInvestment(){
       const from=acc/allocationTotal*100; acc+=item.value; const to=acc/allocationTotal*100; const color=colors[i%colors.length];
       stops.push(`${color} ${from.toFixed(2)}% ${to.toFixed(2)}%`);
       const pct=allocationTotal?item.value/allocationTotal:0;
-      const row=document.createElement('div'); row.className='investment-allocation-legend-item';
+      const row=document.createElement(item.symbol?'button':'div'); row.className='investment-allocation-legend-item'; if(item.symbol)row.type='button';
       row.innerHTML=`<i style="background:${color}"></i><span>${escapeHtml(item.name)}</span><strong>${(pct*100).toFixed(pct<.1?1:0)}%</strong>`;
-      allocationLegend.appendChild(row);
+      if(item.symbol)row.onclick=()=>openInvestmentSecurityDetail(item.symbol);allocationLegend.appendChild(row);
     });
     allocationDonut.style.background=`conic-gradient(${stops.join(',')})`;
   }else{
@@ -1581,7 +1783,7 @@ function renderInvestment(){
     const row=document.createElement('button'); row.className='investment-holding-row'; row.type='button';
     const profitClass=p.totalProfit<0?'negative':'';
     row.innerHTML=`<div class="investment-symbol">${escapeHtml(p.symbol)}</div><div class="investment-holding-main"><strong>${escapeHtml(p.name||p.symbol)}</strong><span>${p.quantity.toLocaleString('zh-TW',{maximumFractionDigits:4})} 股 · 均價 ${investmentPrice(p.avgCost)}</span><small>現價 ${investmentPrice(p.currentPrice)}${p.quoteDate?` · ${escapeHtml(p.quoteDate)}${p.priceSource==='trade'?'（最近交易價）':''}`:' · 尚未設定現價'}</small></div><div class="investment-holding-value"><strong>${investmentMoney(p.marketValue)}</strong><span class="${profitClass}">${investmentMoney(p.totalProfit)} · ${investmentPct(p.roi)}</span><em>›</em></div>`;
-    row.onclick=()=>openInvestmentQuoteEditor(p.symbol,p.name); holdings.appendChild(row);
+    row.onclick=()=>openInvestmentSecurityDetail(p.symbol); holdings.appendChild(row);
   });
 
   const yearBox=$('investmentYearList'); yearBox.innerHTML='';
@@ -1598,6 +1800,9 @@ function renderInvestment(){
   });
   $('investmentYearEmpty').classList.toggle('hidden',yearRows.length>0);
 
+  renderDividendCalendar();
+  renderAnnualSummaries();
+
   const ledger=$('investmentLedgerList'); ledger.innerHTML='';
   const rows=investmentLedger.slice().sort((a,b)=>String(b.date).localeCompare(String(a.date))||String(b.createdAt||'').localeCompare(String(a.createdAt||''))).slice(0,30);
   $('investmentLedgerEmpty').classList.toggle('hidden',rows.length>0);
@@ -1613,6 +1818,7 @@ function renderInvestment(){
     row.innerHTML=`<div class="investment-ledger-icon kind-${escapeHtml(t.kind)}">${investmentKindIcon(t.kind)}</div><div class="investment-ledger-main"><strong>${escapeHtml(displaySymbol)} <span class="investment-kind-chip">${investmentKindLabel(t.kind)}</span></strong><span>${detail}</span><small>${escapeHtml(t.date)}${t.note?` · ${escapeHtml(t.note)}`:''}</small></div><div class="investment-ledger-amount ${flowClass}">${flowClass==='out'?'-':'+'}${investmentMoney(amt)}<em>›</em></div>`;
     row.onclick=()=>openInvestmentTxnEditor(t.id); ledger.appendChild(row);
   });
+  setTimeout(()=>ensureLatestClosePrices(),0);
 }
 function syncInvestmentTxnFields(){
   const kind=$('investmentTxnKindInput').value,qtyPrice=['initial','buy','sell'].includes(kind); $('investmentQtyPriceFields').classList.toggle('hidden',!qtyPrice); $('investmentFeeTaxFields').classList.toggle('hidden',!['buy','sell'].includes(kind)); $('investmentDividendFields').classList.toggle('hidden',kind!=='dividend'); $('investmentContributionFields').classList.toggle('hidden',kind!=='contribution'); $('investmentTaxWrap').classList.toggle('hidden',kind!=='sell'); $('investmentTxnPriceLabel').textContent=kind==='initial'?'平均成本價':'成交價'; syncInvestmentAutoCosts();
@@ -1648,7 +1854,7 @@ async function refreshSimpleSecurityMeta(inputId,statusId){
 }
 function scheduleSimpleSecurityMeta(inputId,statusId){clearTimeout(securityLookupTimer);securityLookupTimer=setTimeout(()=>refreshSimpleSecurityMeta(inputId,statusId),350);}
 function openInvestmentTxnEditor(id=null){
-  investmentEditingId=id; const t=id?investmentLedger.find(x=>x.id===id):null; $('investmentTxnEditorTitle').textContent=t?'編輯投資紀錄':'新增投資紀錄'; $('investmentTxnKindInput').value=t?.kind||'buy'; $('investmentSymbolInput').value=t?.symbol||''; $('investmentNameInput').value=t?.name||''; $('investmentQuantityInput').value=t?.quantity||''; $('investmentTxnPriceInput').value=t?.price||''; $('investmentFeeInput').value=ntd(t?.fee||0); $('investmentTaxInput').value=ntd(t?.tax||0); $('investmentDividendAmountInput').value=t?.kind==='dividend'?(ntd(t?.amount)||''):''; $('investmentContributionAmountInput').value=t?.kind==='contribution'?(ntd(t?.amount)||''):''; $('investmentTxnDateInput').value=t?.date||dateKey(new Date()); $('investmentTxnNoteInput').value=t?.note||''; if($('investmentCostManualInput'))$('investmentCostManualInput').checked=t?.feeMode==='manual'||t?.taxMode==='manual'; syncInvestmentTxnFields(); syncInvestmentCostManualState(); $('deleteInvestmentTxnBtn').classList.toggle('hidden',!t); show($('investmentTxnEditorScreen')); if(t?.symbol)refreshInvestmentSymbolMeta(false);
+  investmentEditingId=id; const t=id?investmentLedger.find(x=>x.id===id):null; $('investmentTxnEditorTitle').textContent=t?'編輯投資紀錄':'新增投資紀錄'; $('investmentTxnKindInput').value=t?.kind||'buy'; $('investmentSymbolInput').value=t?.symbol||''; $('investmentNameInput').value=t?.name||''; $('investmentQuantityInput').value=t?.quantity||''; $('investmentTxnPriceInput').value=t?.price||''; $('investmentFeeInput').value=ntd(t?.fee||0); $('investmentTaxInput').value=ntd(t?.tax||0); $('investmentDividendAmountInput').value=t?.kind==='dividend'?(ntd(t?.amount)||''):''; $('investmentContributionAmountInput').value=t?.kind==='contribution'?(ntd(t?.amount)||''):''; $('investmentTxnDateInput').value=t?.date||selectedDate||dateKey(new Date()); $('investmentTxnNoteInput').value=t?.note||''; if($('investmentCostManualInput'))$('investmentCostManualInput').checked=t?.feeMode==='manual'||t?.taxMode==='manual'; syncInvestmentTxnFields(); syncInvestmentCostManualState(); $('deleteInvestmentTxnBtn').classList.toggle('hidden',!t); show($('investmentTxnEditorScreen')); if(t?.symbol)refreshInvestmentSymbolMeta(false);
 }
 function investmentHoldingBefore(symbol,date,excludeId=null){
   const old=investmentLedger; investmentLedger=old.filter(t=>t.id!==excludeId&&t.date<=date); const p=investmentPortfolio(date).positions.find(p=>p.symbol===symbol); investmentLedger=old; return p?.quantity||0;
@@ -1671,22 +1877,102 @@ async function saveInvestmentTxn(){
   const name=meta?.name||$('investmentNameInput').value.trim(),shortName=meta?.shortName||shortenSecurityName(name,symbol),securityType=meta?.securityType||guessSecurityType(symbol,name),quantity=Number($('investmentQuantityInput').value||0),price=Number($('investmentTxnPriceInput').value||0),manualCosts=!!$('investmentCostManualInput')?.checked,recurring=ledgerIsRecurring(old);
   const auto=calcAutoInvestmentCosts({kind,quantity,price,symbol,name,securityType,date,recurring});
   const fee=['buy','sell'].includes(kind)?(manualCosts?ntd($('investmentFeeInput').value||0):auto.fee):0,tax=kind==='sell'?(manualCosts?ntd($('investmentTaxInput').value||0):auto.tax):0;
-  let amount=kind==='dividend'?ntd($('investmentDividendAmountInput').value||0):kind==='contribution'?ntd($('investmentContributionAmountInput').value||0):0;
-  if(kind==='buy')amount=ntd(auto.gross+fee);
+  const amount=kind==='dividend'?ntd($('investmentDividendAmountInput').value||0):kind==='contribution'?ntd($('investmentContributionAmountInput').value||0):0;
   const t={id:old?.id||uid(),kind,symbol,name,shortName,securityType,title:old?.title||'',date,note,quantity,price,fee,tax,amount,feeMode:manualCosts?'manual':'auto',taxMode:manualCosts?'manual':'auto',ownedBy:kind==='contribution'?'bookkeeping':(kind==='buy'?'investment':'shared'),status:kind==='contribution'?'pending':'complete',createdAt:old?.createdAt||new Date().toISOString(),bookkeepingTxnId:old?.bookkeepingTxnId||null,source:old?.source||'investment-ledger'};
   if(['initial','buy','sell'].includes(kind)&&(t.quantity<=0||t.price<=0)){toast('請輸入正確的股數與價格');return;} if(kind==='dividend'&&t.amount<=0){toast('請輸入實收股息');return;} if(kind==='contribution'&&t.amount<=0){toast('請輸入投入金額');return;}
-  if(kind==='sell'){const available=investmentHoldingBefore(symbol,date,old?.id);if(t.quantity>available+1e-8){toast(`可賣股數不足，目前最多 ${available.toLocaleString('zh-TW',{maximumFractionDigits:4})} 股`,2800);return;}}
-  if(old)investmentLedger=investmentLedger.map(x=>x.id===old.id?t:x);else investmentLedger.push(t); syncInvestmentBookkeeping(t,old); await persistState(); hide($('investmentTxnEditorScreen'));renderAll();toast(kind==='dividend'?'股息已記錄並同步收入':kind==='contribution'?'投入金額已同步記帳':'投資紀錄已儲存並同步');
+  const beforeIssueKeys=new Set(validateInvestmentLedger(investmentLedger).map(x=>`${x.id}|${x.date}|${x.symbol}`));
+  const candidate=old?investmentLedger.map(x=>x.id===old.id?t:x):investmentLedger.concat(t);const newIssues=validateInvestmentLedger(candidate).filter(x=>!beforeIssueKeys.has(`${x.id}|${x.date}|${x.symbol}`)||x.id===t.id);
+  if(newIssues.length){const x=newIssues[0];toast(`${x.date} ${x.symbol} 賣出 ${x.requested.toLocaleString('zh-TW')} 股，但當時只有 ${x.available.toLocaleString('zh-TW')} 股。請先補齊或修正歷史交易。`,4200);return;}
+  if(old)investmentLedger=investmentLedger.map(x=>x.id===old.id?t:x);else investmentLedger.push(t); syncInvestmentBookkeeping(t,old);
+  const linkedDividendEvent=dividendEvents.find(e=>e.ledgerTxnId===t.id);
+  if(kind==='dividend'){
+    if(linkedDividendEvent){Object.assign(linkedDividendEvent,{symbol:t.symbol,name:t.name,shortName:t.shortName,securityType:t.securityType,expectedPayDate:linkedDividendEvent.expectedPayDate||t.date,actualPayDate:t.date,actualAmount:t.amount,note:t.note,bookkeepingTxnId:t.bookkeepingTxnId});}
+    else dividendEvents.push({id:uid(),symbol:t.symbol,name:t.name,shortName:t.shortName,securityType:t.securityType,exDate:'',expectedPayDate:t.date,actualPayDate:t.date,perShare:0,actualAmount:t.amount,statusOverride:'',note:t.note,createdAt:t.createdAt,bookkeepingTxnId:t.bookkeepingTxnId,ledgerTxnId:t.id});
+  }else if(linkedDividendEvent){dividendEvents=dividendEvents.filter(e=>e.id!==linkedDividendEvent.id);}
+  await persistState(); hide($('investmentTxnEditorScreen'));renderAll();toast(kind==='dividend'?'股息已記錄並同步收入':kind==='contribution'?'投入金額已同步記帳':'投資紀錄已儲存並同步');
 }
 async function deleteInvestmentTxn(){
-  const t=investmentLedger.find(x=>x.id===investmentEditingId);if(!t)return;if(!confirm(`確定刪除「${t.symbol} ${investmentKindLabel(t.kind)}」？${t.bookkeepingTxnId?'\n\n連動的記帳紀錄也會一併刪除。':''}`))return;removeLinkedBookkeepingTxn(t);investmentLedger=investmentLedger.filter(x=>x.id!==t.id);await persistState();hide($('investmentTxnEditorScreen'));renderAll();toast('投資紀錄已刪除');
+  const t=investmentLedger.find(x=>x.id===investmentEditingId);if(!t)return;const candidate=investmentLedger.filter(x=>x.id!==t.id),before=new Set(validateInvestmentLedger(investmentLedger).map(x=>`${x.id}|${x.date}|${x.symbol}`)),newIssues=validateInvestmentLedger(candidate).filter(x=>!before.has(`${x.id}|${x.date}|${x.symbol}`));
+  if(newIssues.length){const x=newIssues[0];toast(`不能刪除：會讓 ${x.date} ${x.symbol} 出現超賣。請先調整後續交易。`,3600);return;}
+  if(!confirm(`確定刪除「${t.symbol} ${investmentKindLabel(t.kind)}」？${t.bookkeepingTxnId?'\n\n連動的記帳紀錄也會一併刪除。':''}`))return;removeLinkedBookkeepingTxn(t);investmentLedger=candidate;dividendEvents=dividendEvents.filter(e=>e.ledgerTxnId!==t.id);await persistState();hide($('investmentTxnEditorScreen'));renderAll();toast('投資紀錄已刪除');
 }
 async function refreshInvestmentQuoteSymbolMeta(){const symbol=investmentAssetKey($('investmentQuoteSymbolInput').value);if(!symbol)return;const meta=await resolveSecurityMeta(symbol).catch(()=>cachedSecurityMeta(symbol));if(meta&&investmentAssetKey($('investmentQuoteSymbolInput').value)===symbol)$('investmentQuoteNameInput').value=meta.name||'';}
 function openInvestmentQuoteEditor(symbol='',name=''){
   investmentQuoteEditingId=null;const key=investmentAssetKey(symbol),meta=cachedSecurityMeta(key),q=investmentLatestQuote(key,dateKey(new Date()));$('investmentQuoteSymbolInput').value=key;$('investmentQuoteNameInput').value=name||meta?.name||q?.name||'';$('investmentQuotePriceInput').value=q?.price||'';$('investmentQuoteDateInput').value=dateKey(new Date());show($('investmentQuoteEditorScreen'));if(key)refreshInvestmentQuoteSymbolMeta();
 }
 async function saveInvestmentQuote(){
-  const symbol=investmentAssetKey($('investmentQuoteSymbolInput').value),price=Number($('investmentQuotePriceInput').value||0),date=$('investmentQuoteDateInput').value;if(!symbol||price<=0||!date){toast('請輸入代號、價格與日期');return;}const meta=await resolveSecurityMeta(symbol).catch(()=>cachedSecurityMeta(symbol)),name=meta?.name||$('investmentQuoteNameInput').value.trim(),shortName=meta?.shortName||shortenSecurityName(name,symbol),securityType=meta?.securityType||guessSecurityType(symbol,name); investmentQuotes.push({id:uid(),symbol,name,price,date,createdAt:new Date().toISOString()}); if(name)investmentLedger=investmentLedger.map(t=>t.symbol===symbol?{...t,name,shortName,securityType}:t);await persistState();hide($('investmentQuoteEditorScreen'));renderInvestment();toast('市價已更新');
+  const symbol=investmentAssetKey($('investmentQuoteSymbolInput').value),price=Number($('investmentQuotePriceInput').value||0),date=$('investmentQuoteDateInput').value;if(!symbol||price<=0||!date){toast('請輸入代號、價格與日期');return;}const meta=await resolveSecurityMeta(symbol).catch(()=>cachedSecurityMeta(symbol)),name=meta?.name||$('investmentQuoteNameInput').value.trim(),shortName=meta?.shortName||shortenSecurityName(name,symbol),securityType=meta?.securityType||guessSecurityType(symbol,name); upsertInvestmentQuote({symbol,name,price,date,priceType:'close',source:'manual'}); if(name)investmentLedger=investmentLedger.map(t=>t.symbol===symbol?{...t,name,shortName,securityType}:t);await persistState();hide($('investmentQuoteEditorScreen'));renderInvestment();toast('收盤價已更新');
+}
+
+
+function openDividendEventEditor(id=null,symbol=''){
+  dividendEventEditingId=id; const e=id?dividendEvents.find(x=>x.id===id):null,key=investmentAssetKey(e?.symbol||symbol),meta=cachedSecurityMeta(key);
+  $('dividendEventEditorTitle').textContent=e?'編輯股息事件':'新增股息事件';
+  $('dividendSymbolInput').value=key;$('dividendNameInput').value=e?.name||meta?.name||'';$('dividendExDateInput').value=e?.exDate||'';$('dividendExpectedPayDateInput').value=e?.expectedPayDate||'';$('dividendActualPayDateInput').value=e?.actualPayDate||'';$('dividendPerShareInput').value=e?.perShare||'';$('dividendActualAmountInput').value=e?.actualAmount??'';$('dividendNoteInput').value=e?.note||'';
+  $('deleteDividendEventBtn').classList.toggle('hidden',!e); renderDividendEditorPreview(); show($('dividendEventEditorScreen')); if(key)refreshDividendSymbolMeta();
+}
+async function refreshDividendSymbolMeta(){
+  const symbol=investmentAssetKey($('dividendSymbolInput').value); if(!symbol){$('dividendMetaStatus').textContent='輸入代號後會自動顯示名稱。';renderDividendEditorPreview();return;}
+  $('dividendMetaStatus').textContent='正在辨識標的…';
+  try{const meta=await resolveSecurityMeta(symbol);if(investmentAssetKey($('dividendSymbolInput').value)!==symbol)return;$('dividendNameInput').value=meta.name||'';$('dividendMetaStatus').textContent=`${meta.shortName||meta.name} · ${meta.securityType==='stock'?'股票':meta.securityType==='bond-etf'?'債券 ETF':'ETF'}`;}catch{$('dividendMetaStatus').textContent='暫時無法抓名稱，可先用代號儲存。';}
+  renderDividendEditorPreview();
+}
+function renderDividendEditorPreview(){
+  const symbol=investmentAssetKey($('dividendSymbolInput')?.value),exDate=$('dividendExDateInput')?.value,perShare=Number($('dividendPerShareInput')?.value||0);if(!$('dividendDerivedPreview'))return;
+  if(!symbol||!exDate){$('dividendDerivedPreview').innerHTML='<span>填入代號與除息日後，會依除息前一交易日的持股現算應領股數。</span>';return;}
+  const shares=investmentSharesAsOf(symbol,investmentPreviousDayKey(exDate)),estimated=perShare>0?ntd(shares*perShare):null;
+  $('dividendDerivedPreview').innerHTML=`<span>除息前持股</span><strong>${shares.toLocaleString('zh-TW',{maximumFractionDigits:4})} 股</strong><span>預估股息</span><strong>${estimated==null?'--':money(estimated)}</strong>`;
+}
+function syncDividendEventLedger(e){
+  const paid=!!e.actualPayDate&&e.actualAmount!=null&&Number(e.actualAmount)>=0;
+  const existing=e.ledgerTxnId?investmentLedger.find(x=>x.id===e.ledgerTxnId):null;
+  if(!paid){if(existing){removeLinkedBookkeepingTxn(existing);investmentLedger=investmentLedger.filter(x=>x.id!==existing.id);}e.ledgerTxnId=null;e.bookkeepingTxnId=null;return;}
+  const meta=cachedSecurityMeta(e.symbol)||normalizeSecurityMeta({name:e.name,securityType:e.securityType},e.symbol);
+  const t={id:existing?.id||e.ledgerTxnId||uid(),kind:'dividend',symbol:e.symbol,name:e.name||meta?.name||'',shortName:e.shortName||meta?.shortName||shortenSecurityName(e.name,e.symbol),securityType:e.securityType||meta?.securityType||'',title:'',date:e.actualPayDate,note:e.note||'',quantity:0,price:0,fee:0,tax:0,amount:ntd(e.actualAmount||0),feeMode:'auto',taxMode:'auto',ownedBy:'shared',status:'complete',createdAt:existing?.createdAt||e.createdAt||new Date().toISOString(),bookkeepingTxnId:existing?.bookkeepingTxnId||e.bookkeepingTxnId||null,source:'dividend-event',dividendEventId:e.id};
+  if(existing)investmentLedger=investmentLedger.map(x=>x.id===existing.id?t:x);else investmentLedger.push(t);syncInvestmentBookkeeping(t,existing);e.ledgerTxnId=t.id;e.bookkeepingTxnId=t.bookkeepingTxnId;
+}
+async function saveDividendEvent(){
+  const symbol=investmentAssetKey($('dividendSymbolInput').value),exDate=$('dividendExDateInput').value,expectedPayDate=$('dividendExpectedPayDateInput').value,actualPayDate=$('dividendActualPayDateInput').value,perShare=Number($('dividendPerShareInput').value||0),actualRaw=$('dividendActualAmountInput').value,note=$('dividendNoteInput').value.trim();
+  if(!symbol){toast('請輸入股票代號');return;} if(!exDate&&!actualPayDate){toast('請輸入除息日；若是歷史已入帳股息，至少要有實際入帳日');return;} if(exDate&&expectedPayDate&&expectedPayDate<exDate){toast('預計入帳日不能早於除息日');return;} if(actualPayDate&&actualRaw===''){toast('已填實際入帳日，請一併輸入實收金額');return;}
+  const old=dividendEventEditingId?dividendEvents.find(x=>x.id===dividendEventEditingId):null,meta=await resolveSecurityMeta(symbol).catch(()=>cachedSecurityMeta(symbol));
+  const e={id:old?.id||uid(),symbol,name:meta?.name||$('dividendNameInput').value.trim(),shortName:meta?.shortName||shortenSecurityName($('dividendNameInput').value.trim(),symbol),securityType:meta?.securityType||guessSecurityType(symbol,$('dividendNameInput').value,meta?.market),exDate,expectedPayDate,actualPayDate,perShare:Math.max(0,perShare),actualAmount:actualRaw===''?null:ntd(actualRaw),statusOverride:old?.statusOverride||'',note,createdAt:old?.createdAt||new Date().toISOString(),ledgerTxnId:old?.ledgerTxnId||null,bookkeepingTxnId:old?.bookkeepingTxnId||null};
+  if(old?.actualPayDate&&!actualPayDate&&old.ledgerTxnId&&!confirm('這筆股息原本已入帳。清除實際入帳日會同步刪除記帳本中的股息收入，確定繼續？'))return;
+  syncDividendEventLedger(e); if(old)dividendEvents=dividendEvents.map(x=>x.id===old.id?e:x);else dividendEvents.push(e); await persistState();hide($('dividendEventEditorScreen'));renderAll();toast(e.actualPayDate?'股息已入帳並同步收入':'股息提醒已儲存');
+}
+async function deleteDividendEvent(){
+  const e=dividendEvents.find(x=>x.id===dividendEventEditingId);if(!e)return;const linked=e.ledgerTxnId?investmentLedger.find(x=>x.id===e.ledgerTxnId):null;if(!confirm(`確定刪除「${e.symbol} 股息事件」？${linked?'\n\n已入帳的投資股息與記帳收入也會一併刪除。':''}`))return;
+  if(linked){removeLinkedBookkeepingTxn(linked);investmentLedger=investmentLedger.filter(x=>x.id!==linked.id);}dividendEvents=dividendEvents.filter(x=>x.id!==e.id);await persistState();hide($('dividendEventEditorScreen'));renderAll();toast('股息事件已刪除');
+}
+async function confirmDividendEvent(id){
+  const e=dividendEvents.find(x=>x.id===id);if(!e)return;const d=dividendDerived(e),suggested=d.estimatedAmount;
+  if(suggested==null){openDividendEventEditor(id);toast('請先填每股股息或直接填實收金額',2600);return;}
+  if(!confirm(`${e.symbol} ${e.shortName||e.name||''}\n預估股息 ${money(suggested)}\n\n確認今天已入帳？`)){openDividendEventEditor(id);return;}
+  e.actualPayDate=dateKey(new Date());e.actualAmount=ntd(suggested);syncDividendEventLedger(e);await persistState();renderAll();toast('股息已確認並自動加入收入');
+}
+function renderDividendCalendar(){
+  const box=$('investmentDividendEvents'),empty=$('investmentDividendEmpty');if(!box)return;box.innerHTML='';const today=dateKey(new Date()),rows=dividendEvents.map(e=>dividendDerived(e,today)).sort((a,b)=>String(b.actualPayDate||b.expectedPayDate||b.exDate).localeCompare(String(a.actualPayDate||a.expectedPayDate||a.exDate))).slice(0,12);empty.classList.toggle('hidden',rows.length>0);
+  rows.forEach(e=>{const row=document.createElement('button');row.type='button';row.className='investment-dividend-row';const amount=e.status==='paid'?e.actualAmount:e.estimatedAmount;row.innerHTML=`<span class="investment-dividend-icon">${dividendStatusIcon(e.status)}</span><span class="investment-dividend-main"><strong>${escapeHtml(e.symbol)} ${escapeHtml(e.shortName||e.name||'')}</strong><small>除息 ${escapeHtml(e.exDate||'--')} · ${e.actualPayDate?`入帳 ${escapeHtml(e.actualPayDate)}`:`預計 ${escapeHtml(e.expectedPayDate||'--')}`}</small><em>${escapeHtml(dividendStatusLabel(e.status))}${e.entitledShares?` · ${e.entitledShares.toLocaleString('zh-TW',{maximumFractionDigits:4})} 股`:''}</em></span><b>${amount==null?'--':money(amount)}</b>`;row.onclick=()=>openDividendEventEditor(e.id);box.appendChild(row);});
+}
+function renderAnnualSummaries(){
+  const box=$('investmentAnnualSummaryList'),empty=$('investmentAnnualSummaryEmpty');if(!box)return;box.innerHTML='';const rows=annualIncomeSummaries.slice().sort((a,b)=>b.year-a.year);empty.classList.toggle('hidden',rows.length>0);rows.forEach(a=>{const row=document.createElement('button');row.type='button';row.className='annual-summary-row';row.innerHTML=`<div><strong>${a.year} 年</strong><span>股息收入 ${money(a.dividendIncome)} · 老婆分紅 ${money(a.spouseBonus)}</span></div><b>${money(a.dividendIncome+a.spouseBonus)}</b><em>›</em>`;row.onclick=()=>openAnnualSummaryEditor(a.year);box.appendChild(row);});
+}
+function openAnnualSummaryEditor(year=null){
+  const y=Number(year)||new Date().getFullYear()-1,a=annualSummaryForYear(y);annualSummaryEditingYear=a?.year||null;$('annualSummaryYearInput').value=String(a?.year||y);$('annualSummaryDividendInput').value=a?.dividendIncome||'';$('annualSummarySpouseInput').value=a?.spouseBonus||'';$('annualSummaryNoteInput').value=a?.note||'';$('deleteAnnualSummaryBtn').classList.toggle('hidden',!a);show($('annualSummaryEditorScreen'));
+}
+async function saveAnnualSummary(){
+  const year=Number($('annualSummaryYearInput').value),dividendIncome=ntd($('annualSummaryDividendInput').value||0),spouseBonus=ntd($('annualSummarySpouseInput').value||0),note=$('annualSummaryNoteInput').value.trim();if(!Number.isInteger(year)||year<1900||year>2200){toast('請輸入正確年份');return;}
+  const detailed=detailedDividendIncomeForYear(year);if(dividendIncome>0&&detailed>0&&!annualSummaryForYear(year)){if(!confirm(`${year} 年已經有逐筆股息 ${money(detailed)}。\n\n年度股息摘要不會和逐筆股息相加，但為避免混淆，仍建議同一年只選一種方式。確定建立年度摘要？`))return;}
+  const row={year,dividendIncome,spouseBonus,note,updatedAt:new Date().toISOString()};annualIncomeSummaries=annualIncomeSummaries.filter(x=>x.year!==annualSummaryEditingYear&&x.year!==year);annualIncomeSummaries.push(row);await persistState();hide($('annualSummaryEditorScreen'));renderAll();toast('年度收入摘要已儲存');
+}
+async function deleteAnnualSummary(){const y=annualSummaryEditingYear;if(!y)return;if(!confirm(`刪除 ${y} 年度收入摘要？逐筆記帳與投資交易不會受影響。`))return;annualIncomeSummaries=annualIncomeSummaries.filter(x=>x.year!==y);await persistState();hide($('annualSummaryEditorScreen'));renderAll();toast('年度摘要已刪除');}
+function openInvestmentSecurityDetail(symbol){investmentDetailSymbol=investmentAssetKey(symbol);renderInvestmentSecurityDetail();show($('investmentSecurityDetailScreen'));}
+function renderInvestmentSecurityDetail(){
+  const symbol=investmentDetailSymbol;if(!symbol)return;const p=investmentPortfolio(dateKey(new Date())).positions.find(x=>x.symbol===symbol),meta=cachedSecurityMeta(symbol),name=p?.name||meta?.name||symbol,shortName=p?.shortName||meta?.shortName||name;$('investmentDetailTitle').textContent=`${symbol} ${shortName}`;$('investmentDetailName').textContent=name;
+  const year=new Date().getFullYear(),divs=investmentLedger.filter(t=>t.kind==='dividend'&&t.symbol===symbol),yearDiv=divs.filter(t=>Number(String(t.date).slice(0,4))===year).reduce((a,t)=>a+investmentTxnCash(t),0),allDiv=divs.reduce((a,t)=>a+investmentTxnCash(t),0);
+  $('investmentDetailStats').innerHTML=[['目前股數',p?`${p.quantity.toLocaleString('zh-TW',{maximumFractionDigits:4})} 股`:'0 股'],['平均成本',p?investmentPrice(p.avgCost):'--'],['目前市值',p?money(p.marketValue):'$0'],['未實現損益',p?money(p.unrealized):'$0'],[`${year} 已領股息`,money(yearDiv)],['累積股息',money(allDiv)]].map(([k,v])=>`<div><span>${k}</span><strong>${v}</strong></div>`).join('');
+  const dbox=$('investmentDetailDividends');dbox.innerHTML='';const events=dividendEvents.filter(e=>e.symbol===symbol).map(e=>dividendDerived(e)).sort((a,b)=>String(b.actualPayDate||b.expectedPayDate||b.exDate).localeCompare(String(a.actualPayDate||a.expectedPayDate||a.exDate)));events.forEach(e=>{const b=document.createElement('button');b.type='button';b.className='detail-mini-row';const amt=e.status==='paid'?e.actualAmount:e.estimatedAmount;b.innerHTML=`<span>${dividendStatusIcon(e.status)}</span><div><strong>${escapeHtml(dividendStatusLabel(e.status))}</strong><small>除息 ${escapeHtml(e.exDate||'--')} · ${e.actualPayDate?`入帳 ${escapeHtml(e.actualPayDate)}`:`預計 ${escapeHtml(e.expectedPayDate||'--')}`}</small></div><b>${amt==null?'--':money(amt)}</b>`;b.onclick=()=>openDividendEventEditor(e.id);dbox.appendChild(b);});$('investmentDetailDividendEmpty').classList.toggle('hidden',events.length>0);
+  const tbox=$('investmentDetailTrades');tbox.innerHTML='';const trades=investmentLedger.filter(t=>t.symbol===symbol&&t.kind!=='dividend').slice().sort((a,b)=>b.date.localeCompare(a.date));trades.forEach(t=>{const b=document.createElement('button');b.type='button';b.className='detail-mini-row';b.innerHTML=`<span>${investmentKindIcon(t.kind)}</span><div><strong>${investmentKindLabel(t.kind)}</strong><small>${escapeHtml(t.date)}${['initial','buy','sell'].includes(t.kind)?` · ${Number(t.quantity||0).toLocaleString('zh-TW',{maximumFractionDigits:4})} 股 @ ${investmentPrice(t.price)}`:''}</small></div><b>${money(investmentTxnCash(t))}</b>`;b.onclick=()=>openInvestmentTxnEditor(t.id);tbox.appendChild(b);});$('investmentDetailTradeEmpty').classList.toggle('hidden',trades.length>0);
+  const q=investmentLatestQuote(symbol),intraday=investmentLatestIntraday(symbol);$('investmentDetailQuote').textContent=q?`${investmentPrice(q.price)} · ${q.date} 收盤`:'尚無收盤價';$('investmentDetailIntraday').textContent=intraday&&intraday.date===dateKey(new Date())?`今日 ${investmentPrice(intraday.price)}`:'';
 }
 
 function returnHomeFromSettings(){
@@ -1702,8 +1988,8 @@ function showPostUpdateNotice(){
   }
 }
 
-async function exportBackup(){ settings.lastBackupAt=new Date().toISOString();await persistState();const data={app:'little-days-bookkeeping',version:APP_VERSION,dataVersion:DATA_VERSION,exportedAt:settings.lastBackupAt,txns,budgets,categories,quickTemplates,settings,recurring,investmentLedger,investmentQuotes};const blob=new Blob([JSON.stringify(data,null,2)],{type:'application/json'}),url=URL.createObjectURL(blob),a=document.createElement('a');a.href=url;a.download=`小日子記帳備份_${dateKey(new Date())}.json`;a.click();setTimeout(()=>URL.revokeObjectURL(url),1000);renderBackupStatus();toast('備份檔已產生，請妥善保存'); }
-async function importBackupFile(file){ try{const data=JSON.parse(await file.text());if(data.app!=='little-days-bookkeeping'||!Array.isArray(data.txns))throw new Error('bad');const mergeOnly=Boolean(data.mergeOnly);if(!confirm(`匯入 ${data.txns.length} 筆紀錄？目前資料會以 ID 合併。${mergeOnly?'\n這是私人一次性資料檔，不會覆蓋其他設定。':''}`))return;const map=new Map(txns.map(t=>[t.id,t]));data.txns.forEach(t=>map.set(t.id||uid(),t));txns=[...map.values()];if(mergeOnly){if(Array.isArray(data.recurring)){const rmap=new Map(recurring.map(r=>[r.id,r]));data.recurring.forEach(r=>rmap.set(r.id||uid(),r));recurring=[...rmap.values()];}if(Array.isArray(data.investmentLedger)){const imap=new Map(investmentLedger.map(r=>[r.id,r]));data.investmentLedger.forEach(r=>imap.set(r.id||uid(),r));investmentLedger=[...imap.values()];}if(Array.isArray(data.investmentQuotes)){const qmap=new Map(investmentQuotes.map(r=>[r.id,r]));data.investmentQuotes.forEach(r=>qmap.set(r.id||uid(),r));investmentQuotes=[...qmap.values()];}settings={...settings,lastRestoreAt:new Date().toISOString()};}else{budgets={...budgets,...(data.budgets||{})};if(Array.isArray(data.categories)&&data.categories.length)categories=data.categories;if(Array.isArray(data.quickTemplates)&&data.quickTemplates.length)quickTemplates=data.quickTemplates;if(Array.isArray(data.recurring))recurring=data.recurring;if(Array.isArray(data.investmentLedger))investmentLedger=data.investmentLedger;if(Array.isArray(data.investmentQuotes))investmentQuotes=data.investmentQuotes;settings={...settings,...(data.settings||{}),lastRestoreAt:new Date().toISOString()};}normalizeData();migrateHistoricalCategorySummaries();normalizeData();await persistState();renderAll();renderBackupStatus();toast(mergeOnly?'私人資料合併完成':'備份還原完成');}catch{toast('這不是有效的記帳備份檔',2600);} }
+async function exportBackup(){ settings.lastBackupAt=new Date().toISOString();await persistState();const data={app:'little-days-bookkeeping',version:APP_VERSION,dataVersion:DATA_VERSION,exportedAt:settings.lastBackupAt,txns,budgets,categories,quickTemplates,settings,recurring,investmentLedger,investmentQuotes,dividendEvents,annualIncomeSummaries};const blob=new Blob([JSON.stringify(data,null,2)],{type:'application/json'}),url=URL.createObjectURL(blob),a=document.createElement('a');a.href=url;a.download=`小日子記帳備份_${dateKey(new Date())}.json`;a.click();setTimeout(()=>URL.revokeObjectURL(url),1000);renderBackupStatus();toast('備份檔已產生，請妥善保存'); }
+async function importBackupFile(file){ try{const data=JSON.parse(await file.text());if(data.app!=='little-days-bookkeeping'||!Array.isArray(data.txns))throw new Error('bad');const mergeOnly=Boolean(data.mergeOnly);if(!confirm(`匯入 ${data.txns.length} 筆紀錄？目前資料會以 ID 合併。${mergeOnly?'\n這是私人一次性資料檔，不會覆蓋其他設定。':''}`))return;const map=new Map(txns.map(t=>[t.id,t]));data.txns.forEach(t=>map.set(t.id||uid(),t));txns=[...map.values()];if(mergeOnly){if(Array.isArray(data.recurring)){const rmap=new Map(recurring.map(r=>[r.id,r]));data.recurring.forEach(r=>rmap.set(r.id||uid(),r));recurring=[...rmap.values()];}if(Array.isArray(data.investmentLedger)){const imap=new Map(investmentLedger.map(r=>[r.id,r]));data.investmentLedger.forEach(r=>imap.set(r.id||uid(),r));investmentLedger=[...imap.values()];}if(Array.isArray(data.investmentQuotes)){const qmap=new Map(investmentQuotes.map(r=>[r.id,r]));data.investmentQuotes.forEach(r=>qmap.set(r.id||uid(),r));investmentQuotes=[...qmap.values()];}if(Array.isArray(data.dividendEvents)){const dmap=new Map(dividendEvents.map(r=>[r.id,r]));data.dividendEvents.forEach(r=>dmap.set(r.id||uid(),r));dividendEvents=[...dmap.values()];}if(Array.isArray(data.annualIncomeSummaries)){const amap=new Map(annualIncomeSummaries.map(r=>[Number(r.year),r]));data.annualIncomeSummaries.forEach(r=>amap.set(Number(r.year),r));annualIncomeSummaries=[...amap.values()];}settings={...settings,lastRestoreAt:new Date().toISOString()};}else{budgets={...budgets,...(data.budgets||{})};if(Array.isArray(data.categories)&&data.categories.length)categories=data.categories;if(Array.isArray(data.quickTemplates)&&data.quickTemplates.length)quickTemplates=data.quickTemplates;if(Array.isArray(data.recurring))recurring=data.recurring;if(Array.isArray(data.investmentLedger))investmentLedger=data.investmentLedger;if(Array.isArray(data.investmentQuotes))investmentQuotes=data.investmentQuotes;if(Array.isArray(data.dividendEvents))dividendEvents=data.dividendEvents;if(Array.isArray(data.annualIncomeSummaries))annualIncomeSummaries=data.annualIncomeSummaries;settings={...settings,...(data.settings||{}),lastRestoreAt:new Date().toISOString()};}normalizeData();migrateHistoricalCategorySummaries();normalizeData();await persistState();renderAll();renderBackupStatus();toast(mergeOnly?'私人資料合併完成':'備份還原完成');}catch{toast('這不是有效的記帳備份檔',2600);} }
 
 function bindEvents(){
   $('prevMonthBtn').onclick=()=>{viewMonth=addMonths(viewMonth,-1);selectedDate=dateKey(viewMonth);renderAll();}; $('nextMonthBtn').onclick=()=>{viewMonth=addMonths(viewMonth,1);selectedDate=dateKey(viewMonth);renderAll();};
@@ -1716,13 +2002,16 @@ function bindEvents(){
   $('editBudgetBtn').onclick=openBudgetEditor; $('cancelBudgetBtn').onclick=()=>hide($('budgetEditorScreen')); $('saveBudgetBtn').onclick=saveBudgetEditor; $('closeInsightDetailBtn').onclick=closeInsightDetail; $('insightDetailAnalysisBtn').onclick=()=>{closeInsightDetail();setPage('analysis');}; $('goAnalysisBtn').onclick=()=>setPage('analysis'); document.querySelectorAll('.summary-action[data-insight]').forEach(b=>b.onclick=()=>{homeInsightMode=b.dataset.insight;renderHome();}); document.querySelectorAll('[data-page]').forEach(b=>b.onclick=()=>setPage(b.dataset.page)); document.querySelectorAll('[data-back-home]').forEach(b=>b.onclick=()=>setPage('home'));
   $('openSettingsBtn').onclick=()=>{renderBackupStatus();show($('settingsScreen'));}; $('closeSettingsBtn').onclick=returnHomeFromSettings; $('manageBudgetBtn').onclick=()=>{hide($('settingsScreen'));setPage('budget');}; $('settingsHomeBtn').onclick=returnHomeFromSettings; $('updateHomeBtn').onclick=returnHomeFromSettings; $('checkUpdateBtn').onclick=checkForUpdate; $('updateNowBtn').onclick=updateNow; $('exportBtn').onclick=exportBackup; $('importBtn').onclick=()=>$('importFileInput').click(); $('importFileInput').onchange=e=>{const f=e.target.files?.[0];if(f)importBackupFile(f);e.target.value='';};
   $('manageQuickTemplatesBtn').onclick=openQuickTemplateManager; $('manageQuickTemplatesHomeBtn').onclick=openQuickTemplateManager; $('closeQuickTemplateManagerBtn').onclick=()=>hide($('quickTemplateManagerScreen')); $('addQuickTemplateBtn').onclick=()=>openQuickTemplateEditor(); $('cancelQuickTemplateEditBtn').onclick=()=>hide($('quickTemplateEditorScreen')); $('saveQuickTemplateBtn').onclick=saveQuickTemplate; $('quickTemplateTypeInput').onchange=syncQuickTemplateTypeFields; $('quickTemplateCategoryInput').onchange=()=>renderQuickTemplateSubcategories();
-  $('wipeBtn').onclick=async()=>{if(confirm('確定要清除全部記帳資料、預算、自訂類別與投資帳本？安全密碼與 Face ID 設定會保留。')){txns=[];budgets={};categories=clone(DEFAULT_CATEGORIES);quickTemplates=clone(DEFAULT_QUICK_TEMPLATES);settings={};recurring=[];investmentLedger=[];investmentQuotes=[];await persistState();hide($('settingsScreen'));renderAll();toast('已清除');}};
+  $('wipeBtn').onclick=async()=>{if(confirm('確定要清除全部記帳資料、預算、自訂類別與投資帳本？安全密碼與 Face ID 設定會保留。')){txns=[];budgets={};categories=clone(DEFAULT_CATEGORIES);quickTemplates=clone(DEFAULT_QUICK_TEMPLATES);settings={};recurring=[];investmentLedger=[];investmentQuotes=[];dividendEvents=[];annualIncomeSummaries=[];await persistState();hide($('settingsScreen'));renderAll();toast('已清除');}};
   $('manageCategoriesBtn').onclick=openCategoryManager; $('manageCategoriesInlineBtn').onclick=openCategoryManager; $('closeCategoryManagerBtn').onclick=()=>hide($('categoryManagerScreen')); $('addCategoryBtn').onclick=()=>openCategoryEditor(); $('cancelCategoryEditBtn').onclick=()=>hide($('categoryEditorScreen')); $('saveCategoryBtn').onclick=saveCategory;
   $('dateInput').addEventListener('change',updateEditorDateContext); $('editorRecurringInput').onchange=toggleEditorRecurringFields; $('editorRecurringFrequency').onchange=updateEditorRecurringHint; $('editorAddMonthlyDayBtn').onclick=addEditorMonthlyDay; $('editorRecurringMonthlyDayInput').addEventListener('keydown',e=>{if(e.key==='Enter'){e.preventDefault();addEditorMonthlyDay();}});
   for(let m=0;m<12;m++){const o=document.createElement('option');o.value=String(m);o.textContent=`${m+1} 月`;$('analysisMonthSelect').appendChild(o);}
   $('analysisPrevYearBtn').onclick=()=>{analysisYear--;renderAnalysis();}; $('analysisNextYearBtn').onclick=()=>{analysisYear++;renderAnalysis();}; $('analysisYearModeBtn').onclick=()=>{analysisMode='year';renderAnalysis();}; $('analysisMonthModeBtn').onclick=()=>{analysisMode='month';renderAnalysis();}; $('analysisMonthSelect').onchange=e=>{analysisMonth=Number(e.target.value);renderAnalysis();};
   $('manageRecurringBtn').onclick=openRecurringManager; $('closeRecurringManagerBtn').onclick=()=>hide($('recurringManagerScreen')); $('addRecurringBtn').onclick=()=>openRecurringEditor(); $('cancelRecurringEditBtn').onclick=()=>{recurringSplitSourceId=null;recurringSplitEffectiveDate='';$('recurringStartDateInput').disabled=false;hide($('recurringEditorScreen'));}; $('saveRecurringBtn').onclick=saveRecurring; $('recurringExpenseTypeBtn').onclick=()=>setRecurringType('expense'); $('recurringIncomeTypeBtn').onclick=()=>setRecurringType('income'); $('recurringInvestmentTypeBtn').onclick=()=>setRecurringType('investment'); $('recurringFrequencyInput').onchange=updateRecurringFrequencyFields; $('recurringAddMonthlyDayBtn').onclick=addRecurringMonthlyDay; $('recurringMonthlyDayInput').addEventListener('keydown',e=>{if(e.key==='Enter'){e.preventDefault();addRecurringMonthlyDay();}}); $('recurringCategoryInput').onchange=()=>renderRecurringSubcategories(); document.querySelectorAll('[data-recurring-payment]').forEach(b=>b.onclick=()=>setRecurringPayment(b.dataset.recurringPayment));
-    $('addInvestmentTxnBtn').onclick=()=>openInvestmentTxnEditor(); $('investmentAddHoldingBtn').onclick=()=>openInvestmentTxnEditor(); $('cancelInvestmentTxnBtn').onclick=()=>hide($('investmentTxnEditorScreen')); $('saveInvestmentTxnBtn').onclick=saveInvestmentTxn; $('deleteInvestmentTxnBtn').onclick=deleteInvestmentTxn; $('investmentTxnKindInput').onchange=syncInvestmentTxnFields; $('investmentSymbolInput').addEventListener('input',scheduleInvestmentSymbolLookup); $('investmentSymbolInput').addEventListener('blur',()=>refreshInvestmentSymbolMeta(false)); $('bookkeepingInvestmentSymbolInput').addEventListener('input',()=>scheduleSimpleSecurityMeta('bookkeepingInvestmentSymbolInput','bookkeepingInvestmentMetaStatus')); $('bookkeepingInvestmentSymbolInput').addEventListener('blur',()=>refreshSimpleSecurityMeta('bookkeepingInvestmentSymbolInput','bookkeepingInvestmentMetaStatus')); $('recurringInvestmentSymbolInput').addEventListener('input',()=>scheduleSimpleSecurityMeta('recurringInvestmentSymbolInput','recurringInvestmentMetaStatus')); $('recurringInvestmentSymbolInput').addEventListener('blur',()=>refreshSimpleSecurityMeta('recurringInvestmentSymbolInput','recurringInvestmentMetaStatus')); ['investmentQuantityInput','investmentTxnPriceInput','investmentTxnDateInput'].forEach(id=>$(id).addEventListener('input',syncInvestmentAutoCosts)); $('investmentCostManualInput').onchange=syncInvestmentCostManualState; $('updateInvestmentPriceBtn').onclick=()=>openInvestmentQuoteEditor(); $('investmentQuoteSymbolInput').addEventListener('blur',refreshInvestmentQuoteSymbolMeta); $('cancelInvestmentQuoteBtn').onclick=()=>hide($('investmentQuoteEditorScreen')); $('saveInvestmentQuoteBtn').onclick=saveInvestmentQuote;
+    $('addInvestmentTxnBtn').onclick=()=>openInvestmentTxnEditor(); $('investmentAddHoldingBtn').onclick=()=>openInvestmentTxnEditor(); $('cancelInvestmentTxnBtn').onclick=()=>hide($('investmentTxnEditorScreen')); $('saveInvestmentTxnBtn').onclick=saveInvestmentTxn; $('deleteInvestmentTxnBtn').onclick=deleteInvestmentTxn; $('investmentTxnKindInput').onchange=syncInvestmentTxnFields; $('investmentSymbolInput').addEventListener('input',scheduleInvestmentSymbolLookup); $('investmentSymbolInput').addEventListener('blur',()=>refreshInvestmentSymbolMeta(false)); $('bookkeepingInvestmentSymbolInput').addEventListener('input',()=>scheduleSimpleSecurityMeta('bookkeepingInvestmentSymbolInput','bookkeepingInvestmentMetaStatus')); $('bookkeepingInvestmentSymbolInput').addEventListener('blur',()=>refreshSimpleSecurityMeta('bookkeepingInvestmentSymbolInput','bookkeepingInvestmentMetaStatus')); $('recurringInvestmentSymbolInput').addEventListener('input',()=>scheduleSimpleSecurityMeta('recurringInvestmentSymbolInput','recurringInvestmentMetaStatus')); $('recurringInvestmentSymbolInput').addEventListener('blur',()=>refreshSimpleSecurityMeta('recurringInvestmentSymbolInput','recurringInvestmentMetaStatus')); ['investmentQuantityInput','investmentTxnPriceInput','investmentTxnDateInput'].forEach(id=>$(id).addEventListener('input',syncInvestmentAutoCosts)); $('investmentCostManualInput').onchange=syncInvestmentCostManualState; $('updateInvestmentPriceBtn').onclick=()=>openInvestmentQuoteEditor(); $('refreshTodayInvestmentPriceBtn').onclick=fetchIntradayQuotes; $('investmentQuoteSymbolInput').addEventListener('blur',refreshInvestmentQuoteSymbolMeta); $('cancelInvestmentQuoteBtn').onclick=()=>hide($('investmentQuoteEditorScreen')); $('saveInvestmentQuoteBtn').onclick=saveInvestmentQuote;
+    $('addDividendEventBtn').onclick=()=>openDividendEventEditor(); $('investmentAddDividendBtn').onclick=()=>openDividendEventEditor(); $('cancelDividendEventBtn').onclick=()=>hide($('dividendEventEditorScreen')); $('saveDividendEventBtn').onclick=saveDividendEvent; $('deleteDividendEventBtn').onclick=deleteDividendEvent; $('dividendSymbolInput').addEventListener('blur',refreshDividendSymbolMeta); ['dividendSymbolInput','dividendExDateInput','dividendPerShareInput'].forEach(id=>$(id).addEventListener('input',renderDividendEditorPreview));
+    $('addAnnualSummaryBtn').onclick=()=>openAnnualSummaryEditor(); $('investmentAddAnnualBtn').onclick=()=>openAnnualSummaryEditor(); $('cancelAnnualSummaryBtn').onclick=()=>hide($('annualSummaryEditorScreen')); $('saveAnnualSummaryBtn').onclick=saveAnnualSummary; $('deleteAnnualSummaryBtn').onclick=deleteAnnualSummary;
+    $('closeInvestmentDetailBtn').onclick=()=>hide($('investmentSecurityDetailScreen')); $('investmentDetailAddDividendBtn').onclick=()=>openDividendEventEditor(null,investmentDetailSymbol); $('investmentDetailManualQuoteBtn').onclick=()=>openInvestmentQuoteEditor(investmentDetailSymbol,cachedSecurityMeta(investmentDetailSymbol)?.name||'');
   $('manageSecurityBtn').onclick=()=>{show($('securityScreen'));refreshSecurityUi();}; $('closeSecurityBtn').onclick=()=>hide($('securityScreen')); $('changePinBtn').onclick=changePin; $('toggleFaceBtn').onclick=async()=>{try{await registerFaceId();refreshSecurityUi();toast('Face ID 已啟用');}catch(e){console.warn(e);toast(e.message||'Face ID 設定未完成',2600);}};
   $('finishSetupBtn').onclick=finishInitialSetup; $('pinUnlockBtn').onclick=unlockWithPin; $('faceUnlockBtn').onclick=unlockWithFace; $('pinUnlockInput').addEventListener('keydown',e=>{if(e.key==='Enter'&&validPin(normalizePin(e.currentTarget.value)))unlockWithPin();});
   for(const id of ['setupPinInput','setupPinConfirmInput','pinUnlockInput'])$(id).addEventListener('input',e=>{e.target.value=normalizePin(e.target.value); if(e.target.id==='pinUnlockInput')updatePinUnlockState();});
