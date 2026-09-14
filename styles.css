@@ -181,3 +181,7 @@ body{background:linear-gradient(180deg,#f6f8fc 0,#f4f6f8 36%,#f4f6f8 100%)}
   .investment-holding-row{grid-template-columns:42px minmax(0,1fr) auto}.investment-holding-value{grid-column:auto;text-align:right;display:block}
   .investment-symbol{width:42px;height:42px}.nav-item{font-size:17px}.nav-item b{font-size:9px}
 }
+
+/* V1.4.3：記帳 ↔ 投資安全雙向聯動提示 */
+.investment-sync-notice{display:grid;grid-template-columns:auto 1fr auto;gap:10px;align-items:center;margin-top:10px;padding:12px 14px;border:1px solid #e5ddc7;border-radius:18px;background:#fffaf0;box-shadow:0 6px 18px rgba(25,35,53,.035)}
+.investment-sync-notice>span{font-size:18px}.investment-sync-notice strong{display:block;font-size:11px}.investment-sync-notice p{margin:3px 0 0;color:var(--muted);font-size:9px;line-height:1.45}.investment-sync-notice em{font-style:normal;font-size:12px;font-weight:900;color:var(--investment);white-space:nowrap}.investment-ledger-icon.kind-contribution{background:#f3efff}
