@@ -4,13 +4,13 @@
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover" />
   <meta name="theme-color" content="#5f7fbc" />
-  <meta name="app-version" content="1.4.6" />
+  <meta name="app-version" content="1.4.7" />
   <meta name="apple-mobile-web-app-capable" content="yes" />
   <meta name="apple-mobile-web-app-status-bar-style" content="default" />
   <meta name="apple-mobile-web-app-title" content="小日子記帳" />
-  <link rel="apple-touch-icon" href="apple-touch-icon.png?v=1.4.6" />
-  <link rel="manifest" href="manifest.json?v=1.4.6" />
-  <link rel="stylesheet" href="styles.css?v=1.4.6" />
+  <link rel="apple-touch-icon" href="apple-touch-icon.png?v=1.4.7" />
+  <link rel="manifest" href="manifest.json?v=1.4.7" />
+  <link rel="stylesheet" href="styles.css?v=1.4.7" />
   <title>小日子記帳</title>
 </head>
 <body class="locked">
@@ -60,7 +60,7 @@
           <div>
             <div class="eyebrow">小日子</div>
             <h1>每日記帳</h1>
-            <p class="version-line">V1.4.6 · 隱私顯示與投資修復版</p>
+            <p class="version-line">V1.4.7 · 投資儀表板重整版</p>
           </div>
           <button id="openSettingsBtn" class="icon-btn" aria-label="設定">⚙️</button>
         </header>
@@ -190,27 +190,34 @@
 
     <section id="investmentScreen" class="screen hidden">
       <header class="subbar investment-subbar"><button class="back-btn" data-back-home>‹</button><div><div class="eyebrow">INVEST</div><h1>投資帳本</h1><p>用圖表看懂資產、報酬與持股配置</p></div><button id="addInvestmentTxnBtn" class="icon-btn" aria-label="新增投資紀錄">＋</button></header>
-      <main class="content sub-content investment-page">
+      <main class="content sub-content investment-page investment-dashboard-v147">
         <section class="investment-hero-card investment-hero-v141">
-          <div class="investment-hero-top"><div><span class="investment-kicker">目前市值</span><strong id="invMarketValue">****</strong><small id="investmentQuoteBasis">依最近收盤價估值</small></div><button id="toggleInvestmentVisibilityBtn" class="investment-visibility-btn" type="button" aria-label="顯示投資金額" aria-pressed="false">👁</button></div>
+          <div class="investment-hero-top"><div><span class="investment-kicker">目前市值</span><strong id="invMarketValue">****</strong><small id="investmentQuoteBasis">依最近收盤價估值</small></div><button id="toggleInvestmentVisibilityBtn" class="investment-visibility-btn" type="button" aria-label="顯示投資金額" aria-pressed="false"></button></div>
           <div class="investment-hero-bottom">
-            <div class="investment-return-pill"><span>累積總報酬</span><strong id="invTotalReturn">--</strong><small id="invTotalProfit">$0</small></div>
-            <div class="investment-hero-mini"><span>持有成本</span><strong id="invCost">$0</strong></div>
+            <div class="investment-return-pill"><span>今年投資報酬率</span><strong id="invTotalReturn">--</strong><small id="invTotalProfit">以 XIRR 計算</small></div>
+            <div class="investment-hero-mini"><span>目前持有成本</span><strong id="invCost">****</strong></div>
           </div>
         </section>
 
-        <section class="investment-metric-grid investment-metric-grid-v141">
-          <div class="investment-metric-card"><span class="investment-metric-icon">📈</span><div><span>未實現損益</span><strong id="invUnrealizedTotal">$0</strong></div></div>
-          <div class="investment-metric-card"><span class="investment-metric-icon">💰</span><div><span>累積股息</span><strong id="invDividendTotal">$0</strong></div></div>
-          <div class="investment-metric-card"><span class="investment-metric-icon">✅</span><div><span>已實現損益</span><strong id="invRealizedTotal">$0</strong></div></div>
+        <section class="investment-metric-grid investment-metric-grid-v141 investment-metric-grid-v147">
+          <div class="investment-metric-card"><span class="investment-metric-icon">↗</span><div><span>目前未實現損益</span><strong id="invUnrealizedTotal">****</strong></div></div>
+          <button id="openInvestmentIncomeAnalysisBtn" class="investment-metric-card investment-click-card" type="button"><span class="investment-metric-icon">$</span><div><span>今年股息＋分紅</span><strong id="invDividendTotal">****</strong></div><span class="metric-chevron">›</span></button>
+          <div class="investment-metric-card"><span class="investment-metric-icon">✓</span><div><span>今年已實現損益</span><strong id="invRealizedTotal">****</strong></div></div>
           <button id="refreshTodayInvestmentPriceBtn" class="investment-metric-card investment-price-card" type="button"><span class="investment-metric-icon">↻</span><div><span>盤中估值</span><strong id="investmentIntradayValue">抓今日股價</strong><small id="investmentIntradayBasis"></small></div><span class="metric-chevron">›</span></button>
         </section>
-        <div class="investment-quick-actions"><button id="addDividendEventBtn" type="button">💰 配息／入帳</button><button id="addAnnualSummaryBtn" type="button">▥ 年度摘要</button><button id="updateInvestmentPriceBtn" type="button">◎ 手動價格</button></div>
+
+        <div class="investment-quick-actions investment-quick-actions-v147"><button id="updateInvestmentPriceBtn" type="button">◎ 手動價格</button><button id="investmentIncomeAnalysisShortcutBtn" type="button">▥ 收益分析</button></div>
         <div id="investmentHealthNotice" class="investment-health-notice hidden"><span>⚠️</span><div><strong>有 <b id="investmentHealthIssueCount">0</b> 筆歷史交易需要確認</strong><p id="investmentHealthIssueText"></p></div></div>
         <div id="investmentSyncNotice" class="investment-sync-notice hidden"><span>🔗</span><div><strong>有 <b id="investmentSyncPendingCount">0</b> 筆記帳投入待補成交資訊</strong><p>已同步日期與金額；補上股數與成交價後，才會納入持股市值與 XIRR。</p></div><em id="investmentSyncPendingAmount">$0</em></div>
 
-        <section class="section-card investment-allocation-card">
-          <div class="section-head"><div><h2>持股分布</h2><p>用市值比例快速看資金放在哪裡</p></div></div>
+        <section class="section-card investment-return-overview-card">
+          <div class="section-head"><div><h2>年度投報率</h2><p>紅色代表獲利、綠色代表虧損；今年為 YTD</p></div></div>
+          <div id="investmentReturnChartHome" class="investment-return-chart-home"></div>
+          <div id="investmentReturnChartEmpty" class="empty-mini">尚無足夠資料計算年度投報率。</div>
+        </section>
+
+        <section id="investmentAllocationCard" class="section-card investment-allocation-card investment-click-section" role="button" tabindex="0" aria-label="查看持股總覽">
+          <div class="section-head"><div><h2>持股分布</h2><p>用市值比例快速看資金放在哪裡</p></div><span class="section-chevron">›</span></div>
           <div class="investment-allocation-layout">
             <div id="investmentAllocationDonut" class="investment-allocation-donut"><div class="investment-allocation-center"><strong id="investmentPositionCount">0</strong><span>檔持股</span></div></div>
             <div id="investmentAllocationLegend" class="investment-allocation-legend"></div>
@@ -220,33 +227,46 @@
           </div>
         </section>
 
-        <section class="section-card investment-holdings-card">
-          <div class="section-head"><div><h2>目前持股</h2><p>點持股可查看今年股息、交易與成本細節</p></div><button id="investmentAddHoldingBtn" class="text-btn strong">＋ 新增</button></div>
-          <div id="investmentHoldings" class="investment-holdings"></div><div id="investmentHoldingsEmpty" class="empty-mini">尚未建立持股。先新增「初始持股」或「買進」。</div>
-        </section>
-
-        <section class="section-card investment-dividend-card">
-          <div class="section-head"><div><h2>股息行事曆</h2><p>除息、預計入帳與實際入帳分開記；應領股數與預估金額即時計算</p></div><button id="investmentAddDividendBtn" class="text-btn strong">＋ 配息</button></div>
-          <div id="investmentDividendEvents" class="investment-dividend-list"></div><div id="investmentDividendEmpty" class="empty-mini">還沒有股息事件。新增除息日與預計入帳日後，記帳首頁會提醒你。</div>
-        </section>
-
-        <section class="section-card investment-annual-card">
-          <div class="section-head"><div><h2>歷史年度收入摘要</h2><p>適合 2025 年以前：只記股息收入與老婆分紅，不製造假的日交易</p></div><button id="investmentAddAnnualBtn" class="text-btn strong">＋ 年度</button></div>
-          <div id="investmentAnnualSummaryList" class="annual-summary-list"></div><div id="investmentAnnualSummaryEmpty" class="empty-mini">尚未建立年度摘要。</div>
-        </section>
-
-        <section class="section-card investment-year-card">
-          <div class="section-head"><div><h2>年度投報率</h2><p>以 XIRR 計算；條形長度代表各年度報酬幅度</p></div></div>
-          <div id="investmentYearList" class="investment-year-list"></div><div id="investmentYearEmpty" class="investment-empty-visual compact"><div class="investment-empty-icon">▥</div><strong>還沒有年度報酬圖</strong><span>開始記錄交易與市價後，就能逐年比較。</span></div>
-        </section>
-
-        <section class="section-card investment-ledger-card">
-          <div class="section-head"><div><h2>最近投資紀錄</h2><p>記帳投入、買進、賣出與股息集中在這裡</p></div></div>
-          <div id="investmentLedgerList" class="investment-ledger-list"></div><div id="investmentLedgerEmpty" class="investment-empty-visual compact"><div class="investment-empty-icon">↕</div><strong>還沒有投資紀錄</strong><span>右上角「＋」可以新增第一筆。</span></div>
-        </section>
-        <section class="section-card investment-note-card"><strong>與原記帳同步</strong><p>雙向聯動：從投資頁新增／修改／刪除買進或股息，記帳頁會跟著更新；從記帳頁新增／修改／刪除投資，投資頁也會同步。定期定額與不定期投入都會帶入日期與金額；尚未有股數／成交價的紀錄會標示「待補成交資訊」。</p></section>
+        <button id="openInvestmentActivityBtn" class="section-card investment-year-invest-card investment-click-section" type="button">
+          <div class="investment-year-invest-copy"><span class="investment-kicker">今年投入</span><strong id="investmentYearInvestAmount">****</strong><small><b id="investmentYearInvestCount">0</b> 筆買進 · <b id="investmentYearInvestSymbols">0</b> 檔標的</small></div><span class="section-chevron">›</span>
+        </button>
       </main>
       <nav class="bottom-nav"><button class="nav-item" data-page="home"><span>◫</span><b>明細</b></button><button class="nav-item" data-page="analysis"><span>◔</span><b>分析</b></button><button class="nav-item add-nav manual-add-clone"><span>＋</span><b>記一筆</b></button><button class="nav-item active" data-page="investment"><span>↗</span><b>投資</b></button></nav>
+    </section>
+
+    <section id="investmentHoldingsScreen" class="screen hidden investment-subscreen">
+      <header class="subbar"><button id="closeInvestmentHoldingsBtn" class="back-btn">‹</button><div><div class="eyebrow">PORTFOLIO</div><h1>持股總覽</h1><p>用大卡片看股數、配置與損益</p></div><button id="investmentAddHoldingBtn" class="icon-btn" aria-label="新增持股">＋</button></header>
+      <main class="content sub-content investment-subpage-content">
+        <section class="section-card investment-holdings-summary-card"><div><span>持股檔數</span><strong id="investmentHoldingsCount">0</strong></div><div><span>目前市值</span><strong id="investmentHoldingsMarketValue">****</strong></div></section>
+        <div id="investmentHoldingsCards" class="investment-holdings-cards"></div><div id="investmentHoldingsCardsEmpty" class="investment-empty-visual"><div class="investment-empty-icon">◔</div><strong>還沒有持股</strong><span>新增初始持股或買進後，就會顯示在這裡。</span></div>
+        <button id="addDividendEventBtn" class="secondary full investment-sub-action" type="button">新增配息提醒</button>
+      </main>
+    </section>
+
+    <section id="investmentIncomeAnalysisScreen" class="screen hidden investment-subscreen">
+      <header class="subbar"><button id="closeInvestmentIncomeAnalysisBtn" class="back-btn">‹</button><div><div class="eyebrow">INCOME</div><h1>收益分析</h1><p>比較股息、老婆分紅與各期間合計</p></div><button id="addAnnualSummaryBtn" class="icon-btn" aria-label="編輯年度資料">＋</button></header>
+      <main class="content sub-content investment-subpage-content">
+        <section class="section-card investment-period-card">
+          <div class="section-head"><div><h2>選擇期間</h2><p>可查整年、跨年度或指定月份</p></div></div>
+          <div class="investment-period-inputs"><label>開始月份<input id="investmentIncomeStartMonth" type="month" /></label><span>→</span><label>結束月份<input id="investmentIncomeEndMonth" type="month" /></label></div>
+          <button id="applyInvestmentIncomeRangeBtn" class="primary full" type="button">查詢這段期間</button>
+          <div id="investmentIncomeRangeWarning" class="field-hint investment-range-warning hidden"></div>
+        </section>
+        <section class="investment-income-summary-grid">
+          <div><span>股息收入</span><strong id="investmentPeriodDividend">****</strong></div><div><span>老婆分紅</span><strong id="investmentPeriodSpouse">****</strong></div><div><span>合計</span><strong id="investmentPeriodTotal">****</strong></div>
+        </section>
+        <section class="section-card"><div class="section-head"><div><h2>各年份收入比較</h2><p>股息、老婆分紅與總收入放在一起比較</p></div></div><div id="investmentIncomeAnnualChart" class="investment-income-annual-chart"></div><div id="investmentIncomeAnnualEmpty" class="empty-mini">尚無年度收入資料。</div></section>
+        <section class="section-card"><div class="section-head"><div><h2>年度資料</h2><p>只有年度摘要的年份，可在這裡維護</p></div></div><div id="investmentAnnualSummaryList" class="annual-summary-list"></div><div id="investmentAnnualSummaryEmpty" class="empty-mini">尚未建立年度摘要。</div></section>
+      </main>
+    </section>
+
+    <section id="investmentActivityScreen" class="screen hidden investment-subscreen">
+      <header class="subbar"><button id="closeInvestmentActivityBtn" class="back-btn">‹</button><div><div class="eyebrow">ACTIVITY</div><h1>投入與交易</h1><p>查看年度總投入與交易明細</p></div></header>
+      <main class="content sub-content investment-subpage-content">
+        <section class="section-card investment-activity-filter"><div class="section-head"><div><h2>年度</h2><p>切換年份查看投入與交易</p></div><select id="investmentActivityYearInput"></select></div></section>
+        <section class="investment-income-summary-grid investment-activity-summary-grid"><div><span>總投入</span><strong id="investmentActivityTotal">****</strong></div><div><span>買進筆數</span><strong id="investmentActivityCount">0</strong></div><div><span>買進標的</span><strong id="investmentActivitySymbols">0</strong></div></section>
+        <section class="section-card"><div class="section-head"><div><h2>交易明細</h2><p>買進、賣出、股息與投入紀錄</p></div></div><div id="investmentActivityList" class="investment-ledger-list"></div><div id="investmentActivityEmpty" class="empty-mini">這一年尚無交易紀錄。</div></section>
+      </main>
     </section>
 
     <section id="editorScreen" class="sheet hidden" aria-modal="true">
@@ -449,7 +469,7 @@
           <div class="setting-card"><h3>⚡ 快速輸入</h3><p>建立常用模板，例如午餐、停車、家庭餐飲或定期投資。</p><button id="manageQuickTemplatesBtn" class="secondary full">管理快速模板</button></div>
           <div class="setting-card"><h3>🔁 週期紀錄</h3><p>支援固定收入、固定支出與定期投資；現在也可從某一筆開始修改後續週期，過去紀錄不受影響。</p><div id="recurringCountText" class="status-pill">0 個啟用中</div><button id="manageRecurringBtn" class="secondary full">管理週期紀錄</button></div>
           <div class="setting-card"><h3>投資交易成本</h3><p>定期定額手續費：1 元／筆<br>一般買賣手續費：牌告 0.1425% × 2.8 折，最低 20 元<br>證交稅：賣出時依股票／ETF／債券 ETF 類型自動判斷</p></div>
-          <div class="setting-card"><h3>版本</h3><p>目前版本 V1.4.6 · 資料結構 V13</p><div id="updateStatus" class="update-status">尚未檢查</div><button id="checkUpdateBtn" class="secondary full">檢查新版本</button><button id="updateNowBtn" class="primary full hidden">立即更新</button><button id="updateHomeBtn" class="secondary full update-home-btn">← 回到首頁</button></div>
+          <div class="setting-card"><h3>版本</h3><p>目前版本 V1.4.7 · 資料結構 V13</p><div id="updateStatus" class="update-status">尚未檢查</div><button id="checkUpdateBtn" class="secondary full">檢查新版本</button><button id="updateNowBtn" class="primary full hidden">立即更新</button><button id="updateHomeBtn" class="secondary full update-home-btn">← 回到首頁</button></div>
           <div class="setting-card backup-card"><h3>🛟 備份與還原</h3><p>備份包含記帳、預算、自訂類別、快速模板、週期設定，以及股票買賣／股息／市價資料。更新前建議先備份。</p><div id="backupStatusText" class="backup-status">尚未建立備份</div><div class="action-list"><button id="exportBtn" class="secondary full">立即匯出 JSON 備份</button><button id="importBtn" class="secondary full">匯入備份還原</button><input id="importFileInput" type="file" accept="application/json" class="hidden" /></div></div>
           <div class="setting-card danger-card"><h3>清除資料</h3><p>清除記帳、預算、自訂類別、快速模板與投資帳本；安全設定保留。</p><button id="wipeBtn" class="danger full">清除所有記帳資料</button></div>
           <button id="settingsHomeBtn" class="settings-home-fixed">⌂ 回到首頁</button>
@@ -563,6 +583,6 @@
   </div>
 
   <div id="toast" class="toast hidden"></div>
-  <script src="app.js?v=1.4.6"></script>
+  <script src="app.js?v=1.4.7"></script>
 </body>
 </html>
