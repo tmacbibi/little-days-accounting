@@ -1,9 +1,11 @@
 {
   "schemaVersion": 1,
-  "generatedAt": "2026-09-15T05:41:10.713Z",
+  "generatedAt": "2026-09-15T06:06:18.560Z",
   "sourceStatus": {
     "TWSE": "ok",
-    "TPEx": "error: terminated"
+    "TPEx": "error: This operation was aborted",
+    "TWSE_INDEX": "ok",
+    "TPEx_INDEX": "ok"
   },
   "items": [
     {
