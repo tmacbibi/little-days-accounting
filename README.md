@@ -1,6 +1,6 @@
-# 小日子記帳 V1.5.1
+# 小日子記帳 V1.5.3
 
-V1.5.1 改成 **GitHub Pages + 靜態市場資料**，不再依賴 Cloudflare Pages Function。資料結構仍為 V13，不需重新匯入既有記帳／投資資料。
+V1.5.3 改成 **GitHub Pages + 靜態市場資料**，不再依賴 Cloudflare Pages Function。資料結構仍為 V13，不需重新匯入既有記帳／投資資料。
 
 ## 這版解決的兩個問題
 
@@ -16,7 +16,7 @@ App 只讀同一個 GitHub Pages 網站內的：
 
 這份主檔由 GitHub Actions 每個交易日下午自動向 TWSE / TPEx 更新。App 本身不跨網域打官方 API，因此不受 iPhone Safari / PWA CORS 影響。
 
-V1.5.1 內建 bootstrap 主檔，至少可立即辨識現有常用持股與 `2330 台積電`；第一次 GitHub Action 成功後會擴充成完整市場主檔。
+V1.5.3 內建 bootstrap 主檔，至少可立即辨識現有常用持股與 `2330 台積電`；第一次 GitHub Action 成功後會擴充成完整市場主檔。
 
 ### 每日收盤價
 App 只讀：
@@ -52,7 +52,7 @@ Workflow 支援：
 
 ## 舊 Cloudflare 檔案
 
-舊的 `functions/api/quotes.js` 與 `_routes.json` 已不再被 V1.5.1 使用。它們即使暫時留在 repository 也不會影響 V1.5.1，但之後可刪除以免混淆。
+舊的 `functions/api/quotes.js` 與 `_routes.json` 已不再被 V1.5.3 使用。它們即使暫時留在 repository 也不會影響 V1.5.3，但之後可刪除以免混淆。
 
 ## 驗證方式
 
@@ -70,7 +70,13 @@ node scripts/test-market-data.mjs
 ```
 
 
-## V1.5.1
+## V1.5.3
 - 證券代號第一次查不到時會立即強制重讀 security-master，避免 GitHub Actions 剛更新後仍卡在舊的 10 分鐘記憶體快取。
 - 「更新股價」改為開啟行情總覽，可核對加權指數、櫃買指數與目前持股的收盤價／交易日。
 - 每日行情檔新增指數與個股漲跌欄位。
+
+
+## V1.5.3 修正
+- 修正舊版將 unresolved 代號（例如 `00713 -> 00713`）保存 7 天，導致完整 `security-master.json` 已有中文名稱仍不會重新查詢的問題。
+- 只有 `name !== symbol` 且來源不是 `unresolved` 的證券名稱快取才可直接命中。
+- 發現舊的無效快取會自動刪除並立即重新讀取 GitHub Pages 證券主檔。

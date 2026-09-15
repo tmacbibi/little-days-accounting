@@ -1,7 +1,7 @@
 'use strict';
 
 const $ = id => document.getElementById(id);
-const APP_VERSION = '1.5.1';
+const APP_VERSION = '1.5.3';
 const DATA_VERSION = 13;
 const VAULT_KEY = 'little_days_bookkeeping_vault_v2';
 const AUTH_KEY = 'little_days_bookkeeping_auth_v2';
@@ -1480,9 +1480,17 @@ function normalizeSecurityMeta(meta,symbol){
   const key=investmentAssetKey(symbol),name=String(meta?.name||meta?.fullName||'').trim(),securityType=meta?.securityType||guessSecurityType(key,name,meta?.sourceType||'');
   return {symbol:key,name:name||key,shortName:String(meta?.shortName||'').trim()||shortenSecurityName(name||key,key),securityType,market:meta?.market||'',source:meta?.source||'',updatedAt:meta?.updatedAt||new Date().toISOString()};
 }
+function securityMetaResolved(meta,symbol){
+  const key=investmentAssetKey(symbol),name=String(meta?.name||meta?.fullName||'').trim();
+  return !!key&&!!name&&name!==key&&meta?.source!=='unresolved';
+}
 function cachedSecurityMeta(symbol){
   const key=investmentAssetKey(symbol); if(!key)return null;
-  const cache=investmentSecurityCache(); return cache[key]?normalizeSecurityMeta(cache[key],key):(SECURITY_SEED[key]?normalizeSecurityMeta({...SECURITY_SEED[key],source:'seed'},key):null);
+  const cache=investmentSecurityCache(),cached=cache[key];
+  if(cached&&securityMetaResolved(cached,key))return normalizeSecurityMeta(cached,key);
+  // 舊版本曾把「查不到名稱」的代號本身寫進快取；這種資料不可當成有效名稱。
+  if(cached&&!securityMetaResolved(cached,key)){delete cache[key];queueSecurityCachePersist();}
+  return SECURITY_SEED[key]?normalizeSecurityMeta({...SECURITY_SEED[key],source:'seed'},key):null;
 }
 function pickField(obj,names){for(const n of names){if(obj&&obj[n]!=null&&String(obj[n]).trim())return String(obj[n]).trim();}return '';}
 function parseSecurityRows(rows,{market='',sourceType='',source='official'}={}){
@@ -1530,8 +1538,12 @@ async function loadSecurityDirectory({force=false}={}){
 }
 async function resolveSecurityMeta(symbol,{force=false}={}){
   const key=investmentAssetKey(symbol);if(!key)return null;
-  const cache=investmentSecurityCache(),seed=SECURITY_SEED[key],cached=cache[key];
-  if(!force&&cached&&securityCacheFresh(cached))return normalizeSecurityMeta(cached,key);
+  const cache=investmentSecurityCache(),seed=SECURITY_SEED[key];
+  let cached=cache[key];
+  // 只有「真正有中文名稱」的快取才允許短路。舊版 unresolved（name===symbol）必須淘汰，
+  // 否則即使 GitHub Pages 主檔已經有 00713/2002，也會被 7 天快取擋住。
+  if(cached&&!securityMetaResolved(cached,key)){delete cache[key];cached=null;queueSecurityCachePersist();}
+  if(!force&&cached&&securityCacheFresh(cached)&&securityMetaResolved(cached,key))return normalizeSecurityMeta(cached,key);
   if(!force&&!cached&&seed){
     const normalized=normalizeSecurityMeta({...seed,source:'seed'},key);
     cache[key]=normalized;queueSecurityCachePersist();return normalized;
