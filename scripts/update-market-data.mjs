@@ -10,6 +10,8 @@ const QUOTES_FILE = path.join(DATA_DIR, 'latest-quotes.json');
 const SOURCES = {
   TWSE: 'https://openapi.twse.com.tw/v1/exchangeReport/STOCK_DAY_ALL',
   TPEx: 'https://www.tpex.org.tw/openapi/v1/tpex_mainboard_daily_close_quotes',
+  TWSE_INDEX: 'https://openapi.twse.com.tw/v1/exchangeReport/FMTQIK',
+  TPEx_INDEX: 'https://www.tpex.org.tw/openapi/v1/tpex_daily_trading_index',
 };
 
 function pick(obj, keys) {
@@ -66,9 +68,11 @@ export function parseTWSE(rows) {
     if (!validSymbol(symbol) || !name) continue;
     const date = normalizeDate(pick(r, ['Date','日期']));
     const close = numeric(pick(r, ['ClosingPrice','收盤價']));
+    const change = numeric(pick(r, ['Change','ChangePrice','漲跌價差','漲跌']));
+    const changePct = numeric(pick(r, ['ChangePercent','ChangePct','漲跌幅','漲跌百分比']));
     out.push({
       symbol, name, market:'TWSE', securityType:securityType(symbol,name),
-      date, close: close > 0 ? close : 0
+      date, close: close > 0 ? close : 0, change, changePct
     });
   }
   return out;
@@ -82,12 +86,44 @@ export function parseTPEx(rows) {
     if (!validSymbol(symbol) || !name) continue;
     const date = normalizeDate(pick(r, ['Date','日期']));
     const close = numeric(pick(r, ['Close','收盤','收盤價']));
+    const change = numeric(pick(r, ['Change','ChangePrice','漲跌價差','漲跌']));
+    const changePct = numeric(pick(r, ['ChangePercent','ChangePct','漲跌幅','漲跌百分比']));
     out.push({
       symbol, name, market:'TPEx', securityType:securityType(symbol,name),
-      date, close: close > 0 ? close : 0
+      date, close: close > 0 ? close : 0, change, changePct
     });
   }
   return out;
+}
+
+
+export function parseTWSEIndex(rows) {
+  const out=[];
+  for(const r of Array.isArray(rows)?rows:[]){
+    const date=normalizeDate(pick(r,['Date','日期']));
+    const value=numeric(pick(r,['TAIEX','Index','IndexValue','發行量加權股價指數','加權指數']));
+    const change=numeric(pick(r,['Change','ChangePoint','漲跌點數','漲跌']));
+    if(!date||!(value>0))continue;
+    const previous=value-change;
+    const changePct=previous>0?change/previous*100:0;
+    out.push({code:'TAIEX',name:'加權指數',market:'TWSE',date,value,change,changePct});
+  }
+  return out.sort((a,b)=>a.date.localeCompare(b.date));
+}
+
+export function parseTPExIndex(rows) {
+  const out=[];
+  for(const r of Array.isArray(rows)?rows:[]){
+    const date=normalizeDate(pick(r,['Date','日期','TradeDate']));
+    const value=numeric(pick(r,['Index','Close','ClosingIndex','IndexValue','TPExIndex','櫃買指數','指數']));
+    const change=numeric(pick(r,['Change','ChangePoint','漲跌點數','漲跌']));
+    if(!date||!(value>0))continue;
+    const explicitPct=numeric(pick(r,['ChangePercent','ChangePct','漲跌幅','漲跌百分比']));
+    const previous=value-change;
+    const changePct=explicitPct|| (previous>0?change/previous*100:0);
+    out.push({code:'OTC',name:'櫃買指數',market:'TPEx',date,value,change,changePct});
+  }
+  return out.sort((a,b)=>a.date.localeCompare(b.date));
 }
 
 async function readJson(file, fallback) {
@@ -134,6 +170,12 @@ export async function buildMarketData({twseRows=null,tpexRows=null, now=new Date
     catch (e) { tpex = []; sourceStatus.TPEx = `error: ${e.message}`; }
   } else sourceStatus.TPEx = 'fixture';
 
+  let twseIndexRows=[],tpexIndexRows=[];
+  try { twseIndexRows = await fetchJson(SOURCES.TWSE_INDEX); sourceStatus.TWSE_INDEX = 'ok'; }
+  catch (e) { sourceStatus.TWSE_INDEX = `error: ${e.message}`; }
+  try { tpexIndexRows = await fetchJson(SOURCES.TPEx_INDEX); sourceStatus.TPEx_INDEX = 'ok'; }
+  catch (e) { sourceStatus.TPEx_INDEX = `error: ${e.message}`; }
+
   const fresh = [...parseTWSE(twse), ...parseTPEx(tpex)];
   if (!fresh.length && !previousMaster?.items?.length) {
     throw new Error('No market data returned and no previous static data exists.');
@@ -158,13 +200,19 @@ export async function buildMarketData({twseRows=null,tpexRows=null, now=new Date
     if (item.date && item.close > 0) {
       const old = quoteMap.get(item.symbol);
       if (!old?.date || item.date >= old.date) {
+        let previousClose=Number(old?.previousClose||0)||0;
+        if(old?.date && item.date>old.date && Number(old.close)>0) previousClose=Number(old.close);
+        const change=Number(item.change||0)||(previousClose>0?item.close-previousClose:0);
+        if(!previousClose && change) previousClose=item.close-change;
+        const changePct=Number(item.changePct||0)||(previousClose>0?change/previousClose*100:0);
         quoteMap.set(item.symbol, {
           symbol:item.symbol,
           name:item.name,
           market:item.market,
           securityType:item.securityType,
           date:item.date,
-          close:item.close
+          close:item.close,
+          previousClose,change,changePct
         });
       }
     }
@@ -177,17 +225,22 @@ export async function buildMarketData({twseRows=null,tpexRows=null, now=new Date
     sourceStatus,
     items:[...masterMap.values()].sort(sortBySymbol)
   };
+  const indices=[];
+  const twseIndices=parseTWSEIndex(twseIndexRows),tpexIndices=parseTPExIndex(tpexIndexRows);
+  if(twseIndices.length)indices.push(twseIndices.at(-1));
+  if(tpexIndices.length)indices.push(tpexIndices.at(-1));
   const quotes = {
     schemaVersion:1,
     generatedAt,
     sourceStatus,
     latestTradeDate:[...quoteMap.values()].map(x=>x.date).filter(Boolean).sort().at(-1)||'',
+    indices,
     items:[...quoteMap.values()].sort(sortBySymbol)
   };
 
   await fs.writeFile(MASTER_FILE, JSON.stringify(master,null,2)+'\n', 'utf8');
   await fs.writeFile(QUOTES_FILE, JSON.stringify(quotes,null,2)+'\n', 'utf8');
-  return {masterCount:master.items.length,quoteCount:quotes.items.length,latestTradeDate:quotes.latestTradeDate,sourceStatus};
+  return {masterCount:master.items.length,quoteCount:quotes.items.length,indexCount:indices.length,latestTradeDate:quotes.latestTradeDate,sourceStatus};
 }
 
 const isMain = process.argv[1] && path.resolve(process.argv[1]) === fileURLToPath(import.meta.url);
