@@ -12,6 +12,8 @@ const SOURCES = {
   TPEx: 'https://www.tpex.org.tw/openapi/v1/tpex_mainboard_daily_close_quotes',
   TWSE_INDEX: 'https://openapi.twse.com.tw/v1/exchangeReport/FMTQIK',
   TPEx_INDEX: 'https://www.tpex.org.tw/openapi/v1/tpex_daily_trading_index',
+  TWSE_ISIN: 'https://isin.twse.com.tw/isin/C_public.jsp?strMode=2',
+  TPEX_ISIN: 'https://isin.twse.com.tw/isin/C_public.jsp?strMode=4',
 };
 
 function pick(obj, keys) {
@@ -46,6 +48,82 @@ export function normalizeDate(value) {
 function numeric(value) {
   const n = Number(String(value ?? '').replace(/,/g, '').trim());
   return Number.isFinite(n) ? n : 0;
+}
+
+function decodeHtmlEntities(input='') {
+  return String(input)
+    .replace(/&nbsp;/gi, ' ')
+    .replace(/&amp;/gi, '&')
+    .replace(/&quot;/gi, '"')
+    .replace(/&#39;|&apos;/gi, "'")
+    .replace(/&lt;/gi, '<')
+    .replace(/&gt;/gi, '>')
+    .replace(/&#(\d+);/g, (_, n) => String.fromCodePoint(Number(n)))
+    .replace(/&#x([0-9a-f]+);/gi, (_, n) => String.fromCodePoint(parseInt(n, 16)));
+}
+
+function cleanHtmlCell(html='') {
+  return decodeHtmlEntities(
+    String(html)
+      .replace(/<br\s*\/?>/gi, ' ')
+      .replace(/<[^>]+>/g, ' ')
+  )
+    .replace(/\u00a0/g, ' ')
+    .replace(/\s+/g, ' ')
+    .trim();
+}
+
+export function parseIsinHtml(html,{market=''}={}) {
+  const out = [];
+  const rowRe = /<tr\b[^>]*>([\s\S]*?)<\/tr>/gi;
+  let rowMatch;
+  while ((rowMatch = rowRe.exec(String(html || '')))) {
+    const cells = [];
+    const cellRe = /<t[dh]\b[^>]*>([\s\S]*?)<\/t[dh]>/gi;
+    let cellMatch;
+    while ((cellMatch = cellRe.exec(rowMatch[1]))) cells.push(cleanHtmlCell(cellMatch[1]));
+    if (cells.length < 2) continue;
+
+    const first = String(cells[0] || '').replace(/\u3000/g, ' ').trim();
+    const m = first.match(/^([0-9A-Z]{4,8})\s+(.+)$/i);
+    if (!m) continue;
+
+    const symbol = String(m[1]).toUpperCase();
+    const name = String(m[2]).trim();
+    const cfi = String(cells[5] || '').toUpperCase();
+
+    if (cfi && !/^(ES|CE)/.test(cfi)) continue;
+    if (!validSymbol(symbol) || !name) continue;
+
+    out.push({
+      symbol,
+      name,
+      market,
+      securityType: securityType(symbol, name),
+    });
+  }
+  return out;
+}
+
+function validateSecurityMaster(items) {
+  const map = new Map((Array.isArray(items) ? items : []).map(x => [String(x?.symbol || '').toUpperCase(), x]));
+  const required = [
+    ['2330', /台積電/],
+    ['2002', /中鋼/],
+    ['00713', /高息低波|高股息低波/],
+    ['00937B', /ESG.*投等債|投等債20/],
+  ];
+  const missing = [];
+  for (const [symbol, nameRe] of required) {
+    const item = map.get(symbol);
+    if (!item || !item.name || !nameRe.test(String(item.name))) missing.push(symbol);
+  }
+  if (missing.length) {
+    throw new Error(`Security master validation failed; missing/invalid canary symbols: ${missing.join(', ')}`);
+  }
+  if (map.size < 1000) {
+    throw new Error(`Security master validation failed; only ${map.size} securities parsed`);
+  }
 }
 
 export function securityType(symbol, name='') {
@@ -149,9 +227,28 @@ async function fetchJson(url, timeoutMs=20000) {
   }
 }
 
+async function fetchBig5Html(url, timeoutMs=20000) {
+  const controller = new AbortController();
+  const timer = setTimeout(() => controller.abort(), timeoutMs);
+  try {
+    const r = await fetch(url, {
+      signal: controller.signal,
+      headers: {
+        'accept': 'text/html,application/xhtml+xml,*/*',
+        'user-agent': 'Mozilla/5.0 little-days-accounting-market-updater/1.5.2'
+      }
+    });
+    if (!r.ok) throw new Error(`HTTP ${r.status}`);
+    const buf = await r.arrayBuffer();
+    return new TextDecoder('big5').decode(buf);
+  } finally {
+    clearTimeout(timer);
+  }
+}
+
 function sortBySymbol(a,b){ return a.symbol.localeCompare(b.symbol, 'en'); }
 
-export async function buildMarketData({twseRows=null,tpexRows=null, now=new Date()}={}) {
+export async function buildMarketData({twseRows=null,tpexRows=null,twseIsinHtml=null,tpexIsinHtml=null, now=new Date()}={}) {
   await fs.mkdir(DATA_DIR, {recursive:true});
   const previousMaster = await readJson(MASTER_FILE, {items:[]});
   const previousQuotes = await readJson(QUOTES_FILE, {items:[]});
@@ -170,6 +267,17 @@ export async function buildMarketData({twseRows=null,tpexRows=null, now=new Date
     catch (e) { tpex = []; sourceStatus.TPEx = `error: ${e.message}`; }
   } else sourceStatus.TPEx = 'fixture';
 
+  let twseMasterHtml = twseIsinHtml;
+  let tpexMasterHtml = tpexIsinHtml;
+  if (twseMasterHtml === null) {
+    try { twseMasterHtml = await fetchBig5Html(SOURCES.TWSE_ISIN); sourceStatus.TWSE_ISIN = 'ok'; }
+    catch (e) { twseMasterHtml = ''; sourceStatus.TWSE_ISIN = `error: ${e.message}`; }
+  } else sourceStatus.TWSE_ISIN = 'fixture';
+  if (tpexMasterHtml === null) {
+    try { tpexMasterHtml = await fetchBig5Html(SOURCES.TPEX_ISIN); sourceStatus.TPEX_ISIN = 'ok'; }
+    catch (e) { tpexMasterHtml = ''; sourceStatus.TPEX_ISIN = `error: ${e.message}`; }
+  } else sourceStatus.TPEX_ISIN = 'fixture';
+
   let twseIndexRows=[],tpexIndexRows=[];
   try { twseIndexRows = await fetchJson(SOURCES.TWSE_INDEX); sourceStatus.TWSE_INDEX = 'ok'; }
   catch (e) { sourceStatus.TWSE_INDEX = `error: ${e.message}`; }
@@ -181,9 +289,22 @@ export async function buildMarketData({twseRows=null,tpexRows=null, now=new Date
     throw new Error('No market data returned and no previous static data exists.');
   }
 
+  const freshMaster = [
+    ...parseIsinHtml(twseMasterHtml, {market:'TWSE'}),
+    ...parseIsinHtml(tpexMasterHtml, {market:'TPEx'}),
+  ];
+
   const masterMap = new Map();
   for (const item of Array.isArray(previousMaster?.items) ? previousMaster.items : []) {
     if (item?.symbol) masterMap.set(String(item.symbol).toUpperCase(), item);
+  }
+  for (const item of freshMaster) {
+    masterMap.set(item.symbol, {
+      symbol:item.symbol,
+      name:item.name,
+      market:item.market,
+      securityType:item.securityType
+    });
   }
   const quoteMap = new Map();
   for (const item of Array.isArray(previousQuotes?.items) ? previousQuotes.items : []) {
@@ -191,12 +312,6 @@ export async function buildMarketData({twseRows=null,tpexRows=null, now=new Date
   }
 
   for (const item of fresh) {
-    masterMap.set(item.symbol, {
-      symbol:item.symbol,
-      name:item.name,
-      market:item.market,
-      securityType:item.securityType
-    });
     if (item.date && item.close > 0) {
       const old = quoteMap.get(item.symbol);
       if (!old?.date || item.date >= old.date) {
@@ -225,6 +340,7 @@ export async function buildMarketData({twseRows=null,tpexRows=null, now=new Date
     sourceStatus,
     items:[...masterMap.values()].sort(sortBySymbol)
   };
+  validateSecurityMaster(master.items);
   const indices=[];
   const twseIndices=parseTWSEIndex(twseIndexRows),tpexIndices=parseTPExIndex(tpexIndexRows);
   if(twseIndices.length)indices.push(twseIndices.at(-1));
