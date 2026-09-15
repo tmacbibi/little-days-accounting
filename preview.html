@@ -4,13 +4,13 @@
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover" />
   <meta name="theme-color" content="#5f7fbc" />
-  <meta name="app-version" content="1.5.3" />
+  <meta name="app-version" content="1.5.4" />
   <meta name="apple-mobile-web-app-capable" content="yes" />
   <meta name="apple-mobile-web-app-status-bar-style" content="default" />
   <meta name="apple-mobile-web-app-title" content="小日子記帳" />
-  <link rel="apple-touch-icon" href="apple-touch-icon.png?v=1.5.3" />
-  <link rel="manifest" href="manifest.json?v=1.5.3" />
-  <link rel="stylesheet" href="styles.css?v=1.5.3" />
+  <link rel="apple-touch-icon" href="apple-touch-icon.png?v=1.5.4" />
+  <link rel="manifest" href="manifest.json?v=1.5.4" />
+  <link rel="stylesheet" href="styles.css?v=1.5.4" />
   <title>小日子記帳</title>
 </head>
 <body class="locked">
@@ -60,7 +60,7 @@
           <div>
             <div class="eyebrow">小日子</div>
             <h1>每日記帳</h1>
-            <p class="version-line">V1.5.3 · 行情總覽與證券主檔修正版</p>
+            <p class="version-line">V1.5.4 · 損益明細與個股總覽版</p>
           </div>
           <button id="openSettingsBtn" class="icon-btn" aria-label="設定">⚙️</button>
         </header>
@@ -202,7 +202,7 @@
         <section class="investment-metric-grid investment-metric-grid-v141 investment-metric-grid-v147">
           <div class="investment-metric-card"><span class="investment-metric-icon">↗</span><div><span>目前未實現損益</span><strong id="invUnrealizedTotal">****</strong></div></div>
           <button id="openInvestmentIncomeAnalysisBtn" class="investment-metric-card investment-click-card" type="button"><span class="investment-metric-icon">$</span><div><span>今年股息＋分紅</span><strong id="invDividendTotal">****</strong></div><span class="metric-chevron">›</span></button>
-          <div class="investment-metric-card"><span class="investment-metric-icon">✓</span><div><span>今年已實現損益</span><strong id="invRealizedTotal">****</strong></div></div>
+          <button id="openInvestmentRealizedBtn" class="investment-metric-card investment-click-card" type="button"><span class="investment-metric-icon">✓</span><div><span>今年已實現損益</span><strong id="invRealizedTotal">****</strong><small>點一下查看每一筆賣出</small></div><span class="metric-chevron">›</span></button>
           <button id="refreshTodayInvestmentPriceBtn" class="investment-metric-card investment-price-card" type="button"><span class="investment-metric-icon">↻</span><div><span>行情更新</span><strong id="investmentIntradayValue">更新股價</strong><small id="investmentIntradayBasis"></small></div><span class="metric-chevron">›</span></button>
         </section>
 
@@ -481,15 +481,63 @@
     </section>
 
     <section id="investmentSecurityDetailScreen" class="sheet hidden" aria-modal="true">
-      <div class="sheet-card investment-security-detail"><div class="sheet-head"><button id="closeInvestmentDetailBtn" class="text-btn">完成</button><h2 id="investmentDetailTitle">持股詳情</h2><button id="investmentDetailAddDividendBtn" class="text-btn strong">＋股息</button></div>
-        <p id="investmentDetailName" class="sheet-note"></p>
-        <div id="investmentDetailStats" class="hero-stat-grid detail-stat-grid investment-detail-stats"></div>
-        <div class="investment-detail-quote"><div><span>正式估值</span><strong id="investmentDetailQuote">尚無收盤價</strong></div><div><span>資料來源</span><strong id="investmentDetailIntraday">每日收盤檔</strong></div><button id="investmentDetailManualQuoteBtn" class="secondary">價格</button></div>
-        <div class="section-head detail-list-head"><div><h2>股息</h2><p>除息與實際入帳紀錄</p></div></div><div id="investmentDetailDividends"></div><div id="investmentDetailDividendEmpty" class="empty-mini">尚無股息紀錄。</div>
-        <div class="section-head detail-list-head"><div><h2>交易</h2><p>歷史買進、賣出與投入</p></div></div><div id="investmentDetailTrades"></div><div id="investmentDetailTradeEmpty" class="empty-mini">尚無交易紀錄。</div>
+      <div class="sheet-card investment-security-detail">
+        <div class="sheet-head"><button id="closeInvestmentDetailBtn" class="text-btn">完成</button><h2 id="investmentDetailTitle">持股詳情</h2><button id="investmentDetailAddDividendBtn" class="text-btn strong">＋股息</button></div>
+        <div class="investment-security-hero">
+          <div><span>總報酬</span><strong id="investmentDetailTotalProfit">****</strong><small id="investmentDetailTotalReturn">含息總報酬率 --</small></div>
+          <div class="investment-security-hero-meta"><span id="investmentDetailHeroShares">0 股</span><span id="investmentDetailHeroAvg">均價 --</span></div>
+        </div>
+        <div class="investment-security-profit-grid">
+          <div><span>未實現損益</span><strong id="investmentDetailUnrealized">****</strong></div>
+          <button id="investmentDetailRealizedCard" type="button"><span>已實現損益</span><strong id="investmentDetailRealized">****</strong><small>查看 FIFO 明細 ›</small></button>
+          <div><span>累積股息</span><strong id="investmentDetailAllDividend">****</strong></div>
+        </div>
+        <div class="investment-detail-tabs" role="tablist" aria-label="個股明細">
+          <button type="button" class="active" data-investment-detail-tab="overview">總覽</button>
+          <button type="button" data-investment-detail-tab="trades">交易</button>
+          <button type="button" data-investment-detail-tab="dividends">股息</button>
+          <button type="button" data-investment-detail-tab="realized">已實現</button>
+        </div>
+        <div id="investmentDetailTabOverview" class="investment-detail-tab-panel">
+          <p id="investmentDetailName" class="sheet-note"></p>
+          <div id="investmentDetailStats" class="hero-stat-grid detail-stat-grid investment-detail-stats"></div>
+          <div class="investment-detail-quote"><div><span>正式估值</span><strong id="investmentDetailQuote">尚無收盤價</strong></div><div><span>資料來源</span><strong id="investmentDetailIntraday">每日收盤檔</strong></div><button id="investmentDetailManualQuoteBtn" class="secondary">價格</button></div>
+        </div>
+        <div id="investmentDetailTabTrades" class="investment-detail-tab-panel hidden">
+          <div class="section-head detail-list-head"><div><h2>交易</h2><p>歷史買進、賣出與投入</p></div></div><div id="investmentDetailTrades"></div><div id="investmentDetailTradeEmpty" class="empty-mini">尚無交易紀錄。</div>
+        </div>
+        <div id="investmentDetailTabDividends" class="investment-detail-tab-panel hidden">
+          <div class="section-head detail-list-head"><div><h2>股息</h2><p>除息與實際入帳紀錄</p></div></div><div id="investmentDetailDividends"></div><div id="investmentDetailDividendEmpty" class="empty-mini">尚無股息紀錄。</div>
+        </div>
+        <div id="investmentDetailTabRealized" class="investment-detail-tab-panel hidden">
+          <div id="investmentDetailRealizedSummary" class="investment-realized-mini-summary"></div>
+          <div class="section-head detail-list-head"><div><h2>已實現交易</h2><p>採 FIFO 先進先出；包含買賣手續費與證交稅</p></div></div>
+          <div id="investmentDetailRealizedList" class="investment-realized-list"></div>
+          <div id="investmentDetailRealizedEmpty" class="empty-mini">目前沒有賣出交易。</div>
+        </div>
       </div>
     </section>
 
+    <section id="investmentRealizedScreen" class="sheet hidden" aria-modal="true">
+      <div class="sheet-card investment-realized-sheet">
+        <div class="sheet-head"><button id="closeInvestmentRealizedBtn" class="text-btn">完成</button><h2>已實現損益</h2><span></span></div>
+        <div class="investment-realized-filters">
+          <select id="investmentRealizedYearInput" aria-label="年份"></select>
+          <select id="investmentRealizedSymbolInput" aria-label="標的"><option value="">全部標的</option></select>
+          <select id="investmentRealizedOutcomeInput" aria-label="結果"><option value="all">全部結果</option><option value="gain">只看獲利</option><option value="loss">只看虧損</option></select>
+        </div>
+        <div class="investment-realized-hero">
+          <div><span id="investmentRealizedHeroLabel">2026 已實現損益</span><strong id="investmentRealizedHeroTotal">****</strong><small id="investmentRealizedHeroMeta">0 筆賣出</small></div>
+          <div class="investment-realized-winrate"><span>勝率</span><strong id="investmentRealizedWinRate">--</strong></div>
+        </div>
+        <div id="investmentRealizedStats" class="investment-realized-stat-grid"></div>
+        <div class="section-head detail-list-head"><div><h2>依標的彙整</h2><p>快速看哪一檔貢獻或拖累已實現損益</p></div></div>
+        <div id="investmentRealizedBySymbol" class="investment-realized-symbol-list"></div>
+        <div class="section-head detail-list-head"><div><h2>每筆賣出</h2><p>可展開查看 FIFO 對應買進批次</p></div></div>
+        <div id="investmentRealizedList" class="investment-realized-list"></div>
+        <div id="investmentRealizedEmpty" class="empty-mini">這個篩選條件下沒有賣出紀錄。</div>
+      </div>
+    </section>
 
     <section id="investmentMarketOverviewScreen" class="sheet hidden" aria-modal="true">
       <div class="sheet-card investment-market-overview-sheet">
@@ -524,7 +572,7 @@
           <div class="setting-card"><h3>⚡ 快速輸入</h3><p>建立常用模板，例如午餐、停車、家庭餐飲或定期投資。</p><button id="manageQuickTemplatesBtn" class="secondary full">管理快速模板</button></div>
           <div class="setting-card"><h3>🔁 週期紀錄</h3><p>支援固定收入、固定支出與定期投資；現在也可從某一筆開始修改後續週期，過去紀錄不受影響。</p><div id="recurringCountText" class="status-pill">0 個啟用中</div><button id="manageRecurringBtn" class="secondary full">管理週期紀錄</button></div>
           <div class="setting-card"><h3>投資交易成本</h3><p>定期定額手續費：1 元／筆<br>一般買賣手續費：牌告 0.1425% × 2.8 折，最低 20 元<br>證交稅：賣出時依股票／ETF／債券 ETF 類型自動判斷</p></div>
-          <div class="setting-card"><h3>版本</h3><p>目前版本 V1.5.3 · 資料結構 V13</p><div id="updateStatus" class="update-status">尚未檢查</div><button id="checkUpdateBtn" class="secondary full">檢查新版本</button><button id="updateNowBtn" class="primary full hidden">立即更新</button><button id="updateHomeBtn" class="secondary full update-home-btn">← 回到首頁</button></div>
+          <div class="setting-card"><h3>版本</h3><p>目前版本 V1.5.4 · 資料結構 V13</p><div id="updateStatus" class="update-status">尚未檢查</div><button id="checkUpdateBtn" class="secondary full">檢查新版本</button><button id="updateNowBtn" class="primary full hidden">立即更新</button><button id="updateHomeBtn" class="secondary full update-home-btn">← 回到首頁</button></div>
           <div class="setting-card backup-card"><h3>🛟 備份與還原</h3><p>備份包含記帳、預算、自訂類別、快速模板、週期設定，以及股票買賣／股息／市價資料。更新前建議先備份。</p><div id="backupStatusText" class="backup-status">尚未建立備份</div><div class="action-list"><button id="exportBtn" class="secondary full">立即匯出 JSON 備份</button><button id="importBtn" class="secondary full">匯入備份還原</button><input id="importFileInput" type="file" accept="application/json" class="hidden" /></div></div>
           <div class="setting-card danger-card"><h3>清除資料</h3><p>清除記帳、預算、自訂類別、快速模板與投資帳本；安全設定保留。</p><button id="wipeBtn" class="danger full">清除所有記帳資料</button></div>
           <button id="settingsHomeBtn" class="settings-home-fixed">⌂ 回到首頁</button>
@@ -638,6 +686,6 @@
   </div>
 
   <div id="toast" class="toast hidden"></div>
-  <script src="app.js?v=1.5.3"></script>
+  <script src="app.js?v=1.5.4"></script>
 </body>
 </html>

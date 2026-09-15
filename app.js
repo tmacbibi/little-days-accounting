@@ -1,7 +1,7 @@
 'use strict';
 
 const $ = id => document.getElementById(id);
-const APP_VERSION = '1.5.3';
+const APP_VERSION = '1.5.4';
 const DATA_VERSION = 13;
 const VAULT_KEY = 'little_days_bookkeeping_vault_v2';
 const AUTH_KEY = 'little_days_bookkeeping_auth_v2';
@@ -106,6 +106,10 @@ let investmentDetailSymbol = null;
 let autoQuoteRefreshInFlight = false;
 let investmentValuesVisible = false;
 let investmentReturnDetailYear = new Date().getFullYear();
+let investmentRealizedYear = new Date().getFullYear();
+let investmentRealizedSymbol = '';
+let investmentRealizedOutcome = 'all';
+let investmentDetailTab = 'overview';
 const investmentBoundaryFetchInFlight = new Map();
 const investmentBoundaryFetchAttempted = new Set();
 
@@ -1300,7 +1304,7 @@ async function unlockWithFace(){
 async function completeUnlock(){ unlocked=true; try{await loadVault(); unlockAppUi();}catch(e){console.error(e);unlocked=false;$('unlockMessage').textContent='資料解鎖失敗，請重新整理再試';} }
 function unlockAppUi(){ document.body.classList.remove('locked'); hide($('lockScreen')); $('app').setAttribute('aria-hidden','false'); $('pinUnlockInput').value=''; updatePinUnlockState(); $('unlockMessage').textContent=''; renderCategoryPicker(); renderSubcategories(); renderAll(); refreshSecurityUi(); showPostUpdateNotice(); }
 function lockApp(reason='background'){
-  if(!unlocked)return; collapseVoiceFab(); stopVoiceSession(); const inInvestmentSub=['investmentHoldingsScreen','investmentIncomeAnalysisScreen','investmentActivityScreen'].some(id=>$(id)&&!$(id).classList.contains('hidden')); if(inInvestmentSub){['investmentHoldingsScreen','investmentIncomeAnalysisScreen','investmentActivityScreen'].forEach(id=>hide($(id)));show($('investmentScreen'));} ['editorScreen','calculatorScreen','voiceSheet','voiceDraftScreen','voiceDraftEditScreen','txnMenuScreen','budgetEditorScreen','investmentTxnEditorScreen','investmentPendingScreen','investmentQuoteEditorScreen','investmentMarketOverviewScreen','dividendEventEditorScreen','annualSummaryEditorScreen','investmentSecurityDetailScreen','investmentHoldingsScreen','investmentIncomeAnalysisScreen','investmentActivityScreen','settingsScreen','securityScreen','quickTemplateManagerScreen','quickTemplateEditorScreen','insightDetailScreen','categoryManagerScreen','categoryEditorScreen','recurringManagerScreen','recurringEditorScreen','recurringDeleteScreen'].forEach(id=>hide($(id))); unlocked=false;vaultLoaded=false;txns=[];budgets={};categories=clone(DEFAULT_CATEGORIES);quickTemplates=clone(DEFAULT_QUICK_TEMPLATES);settings={};recurring=[];investmentLedger=[];investmentQuotes=[];dividendEvents=[];annualIncomeSummaries=[];dividendEventEditingId=null;annualSummaryEditingYear=null;investmentDetailSymbol=null;investmentValuesVisible=false; document.body.classList.add('locked'); show($('lockScreen')); show($('unlockPanel')); hide($('setupPanel')); $('app').setAttribute('aria-hidden','true'); updatePinUnlockState(); refreshLockFaceUi();
+  if(!unlocked)return; collapseVoiceFab(); stopVoiceSession(); const inInvestmentSub=['investmentHoldingsScreen','investmentIncomeAnalysisScreen','investmentActivityScreen'].some(id=>$(id)&&!$(id).classList.contains('hidden')); if(inInvestmentSub){['investmentHoldingsScreen','investmentIncomeAnalysisScreen','investmentActivityScreen'].forEach(id=>hide($(id)));show($('investmentScreen'));} ['editorScreen','calculatorScreen','voiceSheet','voiceDraftScreen','voiceDraftEditScreen','txnMenuScreen','budgetEditorScreen','investmentTxnEditorScreen','investmentPendingScreen','investmentQuoteEditorScreen','investmentMarketOverviewScreen','dividendEventEditorScreen','annualSummaryEditorScreen','investmentSecurityDetailScreen','investmentRealizedScreen','investmentHoldingsScreen','investmentIncomeAnalysisScreen','investmentActivityScreen','settingsScreen','securityScreen','quickTemplateManagerScreen','quickTemplateEditorScreen','insightDetailScreen','categoryManagerScreen','categoryEditorScreen','recurringManagerScreen','recurringEditorScreen','recurringDeleteScreen'].forEach(id=>hide($(id))); unlocked=false;vaultLoaded=false;txns=[];budgets={};categories=clone(DEFAULT_CATEGORIES);quickTemplates=clone(DEFAULT_QUICK_TEMPLATES);settings={};recurring=[];investmentLedger=[];investmentQuotes=[];dividendEvents=[];annualIncomeSummaries=[];dividendEventEditingId=null;annualSummaryEditingYear=null;investmentDetailSymbol=null;investmentValuesVisible=false; document.body.classList.add('locked'); show($('lockScreen')); show($('unlockPanel')); hide($('setupPanel')); $('app').setAttribute('aria-hidden','true'); updatePinUnlockState(); refreshLockFaceUi();
 }
 async function refreshLockFaceUi(){ const yes=!!authConfig.faceEnabled&&!!authConfig.faceCredentialId&&await isFaceAvailable(); $('faceUnlockBtn').classList.toggle('hidden',!yes); $('faceDivider').classList.toggle('hidden',!yes); }
 async function refreshSecurityUi(){ if(!$('faceStatusText'))return; const avail=await isFaceAvailable(); if(authConfig.faceEnabled&&authConfig.faceCredentialId){$('faceStatusText').textContent='已啟用。離開 App 後，回來可用 Face ID 重新解鎖。';$('toggleFaceBtn').textContent='重新設定 Face ID';}else{$('faceStatusText').textContent=avail?'尚未啟用。':'此裝置／瀏覽器目前無法使用平台生物辨識。';$('toggleFaceBtn').textContent='啟用 Face ID';$('toggleFaceBtn').disabled=!avail;} }
@@ -1682,10 +1686,10 @@ function investmentYearInvestStats(year){
   return {amount:ntd(rows.reduce((sum,t)=>sum+investmentTxnCash(t),0)),count:rows.length,symbols:new Set(rows.map(t=>t.symbol).filter(Boolean)).size,rows};
 }
 function cumulativeRealizedAsOf(asOf){
-  const p=investmentPortfolio(asOf);if(p.positions.some(x=>x.costIncomplete))return null;return ntd(p.positions.reduce((sum,x)=>sum+Number(x.realized||0),0));
+  const rows=investmentRealizedTransactions({asOf});if(rows.some(x=>x.incomplete))return null;return ntd(rows.reduce((sum,x)=>sum+Number(x.realized||0),0));
 }
 function investmentRealizedForYear(year){
-  const y=Number(year),today=dateKey(new Date()),end=`${y}-12-31`<today?`${y}-12-31`:today,before=`${y-1}-12-31`,a=cumulativeRealizedAsOf(before),b=cumulativeRealizedAsOf(end);return a==null||b==null?null:ntd(b-a);
+  const rows=investmentRealizedTransactions({year:Number(year)});if(rows.some(x=>x.incomplete))return null;return ntd(rows.reduce((sum,x)=>sum+Number(x.realized||0),0));
 }
 function investmentVisibilitySvg(visible){
   return visible
@@ -1915,58 +1919,81 @@ function investmentFallbackPrice(symbol,asOf=dateKey(new Date())){
   const t=investmentSortedLedger(asOf).filter(x=>x.symbol===investmentAssetKey(symbol)&&['initial','buy','sell'].includes(x.kind)&&Number(x.price)>0).pop();
   return t?{price:Number(t.price)||0,date:t.date,source:'trade'}:{price:0,date:'',source:'none'};
 }
-function investmentPortfolio(asOf=dateKey(new Date())){
-  const map=new Map();
+function investmentFifoState(asOf=dateKey(new Date())){
+  const map=new Map(),realizations=[];
   let unresolvedContributions=0;
+  const ensurePosition=t=>{
+    const key=investmentAssetKey(t.symbol);
+    if(!map.has(key))map.set(key,{symbol:key,name:t.name||key,shortName:t.shortName||shortenSecurityName(t.name||key,key),securityType:t.securityType||guessSecurityType(key,t.name),lots:[],dividends:0,totalBuyCost:0,realized:0,realizedIncomplete:false,lastTradeDate:'',lastTradePrice:0,issues:[]});
+    const p=map.get(key);if(t.name)p.name=t.name;if(t.shortName)p.shortName=t.shortName;if(t.securityType)p.securityType=t.securityType;return p;
+  };
   for(const t of investmentSortedLedger(asOf)){
-    if(t.kind==='contribution'){ unresolvedContributions+=investmentTxnCash(t); continue; }
-    const key=t.symbol; if(!key)continue;
-    if(!map.has(key))map.set(key,{symbol:key,name:t.name||key,shortName:t.shortName||shortenSecurityName(t.name||key,key),securityType:t.securityType||guessSecurityType(key,t.name),quantity:0,cost:0,realized:0,dividends:0,totalBuyCost:0,lastTradeDate:'',lastTradePrice:0,costIncomplete:false,incompleteCostQuantity:0});
-    const p=map.get(key); if(t.name)p.name=t.name;if(t.shortName)p.shortName=t.shortName;if(t.securityType)p.securityType=t.securityType;
+    if(t.kind==='contribution'){unresolvedContributions+=investmentTxnCash(t);continue;}
+    if(!t.symbol)continue;
+    const p=ensurePosition(t),q=Math.max(0,Number(t.quantity)||0);
     if(t.kind==='initial'||t.kind==='buy'){
-      const q=Math.max(0,Number(t.quantity)||0), pending=Boolean(t.costPending);
-      p.quantity+=q;
-      if(pending){
-        p.costIncomplete=true;p.incompleteCostQuantity+=q;
-      }else{
-        const c=t.kind==='buy'?investmentTxnCash(t):ntd(q*Math.max(0,Number(t.price)||0));
-        p.cost+=c;p.totalBuyCost+=c;
-      }
+      const pending=Boolean(t.costPending);
+      const lotCost=pending?null:(t.kind==='buy'?investmentTxnCash(t):ntd(q*Math.max(0,Number(t.price)||0)));
+      p.lots.push({id:t.id,date:t.date,kind:t.kind,quantity:q,remainingQuantity:q,cost:lotCost,remainingCost:lotCost,price:Number(t.price)||0,fee:Number(t.fee)||0,costPending:pending});
+      if(lotCost!=null)p.totalBuyCost+=lotCost;
       p.lastTradeDate=t.date;if(Number(t.price)>0)p.lastTradePrice=Number(t.price)||0;
-    }else if(t.kind==='sell'){
-      const q=Math.max(0,Number(t.quantity)||0);
-      if(q>p.quantity+1e-8){p.issues=(p.issues||[]).concat({type:'oversell',id:t.id,date:t.date,requested:q,available:p.quantity});continue;}
-      const proceeds=ntd(q*Math.max(0,Number(t.price)||0)-Math.max(0,Number(t.fee)||0)-Math.max(0,Number(t.tax)||0));
-      if(p.costIncomplete){
-        // 成本未補時仍正確扣股數，但禁止製造看似精準的實現損益/剩餘成本。
-        p.quantity=Math.max(0,p.quantity-q);
-        p.performanceIncomplete=true;
-        p.incompleteCostQuantity=Math.min(p.quantity,p.incompleteCostQuantity);
-      }else{
-        const avg=p.quantity>0?p.cost/p.quantity:0, removed=ntd(avg*q);
-        p.quantity=Math.max(0,p.quantity-q);p.cost=Math.max(0,p.cost-removed);p.realized+=proceeds-removed;
+      continue;
+    }
+    if(t.kind==='sell'){
+      const available=p.lots.reduce((sum,l)=>sum+Math.max(0,Number(l.remainingQuantity)||0),0);
+      if(q>available+1e-8){p.issues.push({type:'oversell',id:t.id,date:t.date,requested:q,available});continue;}
+      const gross=ntd(q*Math.max(0,Number(t.price)||0)),fee=ntd(Math.max(0,Number(t.fee)||0)),tax=ntd(Math.max(0,Number(t.tax)||0)),proceeds=ntd(gross-fee-tax);
+      let remaining=q,costBasis=0,incomplete=false;const matches=[];
+      for(const lot of p.lots){
+        if(remaining<=1e-8)break;
+        const availableLot=Math.max(0,Number(lot.remainingQuantity)||0);if(availableLot<=1e-8)continue;
+        const take=Math.min(remaining,availableLot);
+        let allocatedCost=null;
+        if(lot.costPending||lot.remainingCost==null){incomplete=true;}
+        else{
+          allocatedCost=Math.abs(take-availableLot)<1e-8?ntd(lot.remainingCost):ntd(Number(lot.remainingCost)*(take/availableLot));
+          lot.remainingCost=Math.max(0,ntd(Number(lot.remainingCost)-allocatedCost));costBasis+=allocatedCost;
+        }
+        lot.remainingQuantity=Math.max(0,availableLot-take);remaining-=take;
+        matches.push({lotId:lot.id,date:lot.date,kind:lot.kind,quantity:take,unitCost:allocatedCost==null?null:(take>0?allocatedCost/take:0),costBasis:allocatedCost,sourcePrice:lot.price,costPending:allocatedCost==null});
       }
+      const realized=incomplete?null:ntd(proceeds-costBasis);
+      if(realized==null)p.realizedIncomplete=true;else p.realized+=realized;
+      realizations.push({id:`realized-${t.id}`,sellId:t.id,symbol:p.symbol,name:p.name,shortName:p.shortName,securityType:p.securityType,date:t.date,quantity:q,sellPrice:Number(t.price)||0,gross,fee,tax,proceeds,costBasis:incomplete?null:ntd(costBasis),realized,returnRate:(!incomplete&&costBasis>0)?realized/costBasis:null,incomplete,matches});
       p.lastTradeDate=t.date;p.lastTradePrice=Number(t.price)||0;
-    }else if(t.kind==='dividend')p.dividends+=ntd(Math.max(0,Number(t.amount)||0));
+      continue;
+    }
+    if(t.kind==='dividend')p.dividends+=ntd(Math.max(0,Number(t.amount)||0));
   }
   const positions=[...map.values()].map(p=>{
-    const qp=investmentFallbackPrice(p.symbol,asOf), currentPrice=qp.price||p.lastTradePrice||0, marketValue=ntd(p.quantity*currentPrice);
-    const incomplete=Boolean(p.costIncomplete||p.performanceIncomplete);
-    const unrealized=incomplete?null:ntd(marketValue-p.cost), totalProfit=incomplete?null:ntd(p.realized+p.dividends+unrealized);
-    return {...p,costIncomplete:incomplete,currentPrice,quoteDate:qp.date,priceSource:qp.source,marketValue,unrealized,totalProfit,roi:(!incomplete&&p.totalBuyCost>0)?totalProfit/p.totalBuyCost:null,avgCost:(!incomplete&&p.quantity>0)?p.cost/p.quantity:null};
+    const quantity=p.lots.reduce((sum,l)=>sum+Math.max(0,Number(l.remainingQuantity)||0),0);
+    const remainingPending=p.lots.some(l=>Number(l.remainingQuantity)>1e-8&&(l.costPending||l.remainingCost==null));
+    const cost=remainingPending?null:ntd(p.lots.reduce((sum,l)=>sum+(Number(l.remainingCost)||0),0));
+    const qp=investmentFallbackPrice(p.symbol,asOf),currentPrice=qp.price||p.lastTradePrice||0,marketValue=ntd(quantity*currentPrice);
+    const costIncomplete=Boolean(remainingPending||p.realizedIncomplete);
+    const unrealized=remainingPending?null:ntd(marketValue-(cost||0));
+    const totalProfit=(unrealized==null||p.realizedIncomplete)?null:ntd(p.realized+p.dividends+unrealized);
+    return {symbol:p.symbol,name:p.name,shortName:p.shortName,securityType:p.securityType,quantity,cost,costIncomplete,realized:p.realized,realizedIncomplete:p.realizedIncomplete,dividends:p.dividends,totalBuyCost:p.totalBuyCost,lastTradeDate:p.lastTradeDate,lastTradePrice:p.lastTradePrice,currentPrice,quoteDate:qp.date,priceSource:qp.source,marketValue,unrealized,totalProfit,roi:(totalProfit!=null&&p.totalBuyCost>0)?totalProfit/p.totalBuyCost:null,avgCost:(cost!=null&&quantity>0)?cost/quantity:null,issues:p.issues||[]};
   });
-  const active=positions.filter(p=>p.quantity>0.0000001);
+  return {positions,realizations,unresolvedContributions};
+}
+function investmentRealizedTransactions({year=null,symbol='',asOf=dateKey(new Date())}={}){
+  const key=investmentAssetKey(symbol),state=investmentFifoState(asOf);
+  return state.realizations.filter(r=>(year==null||Number(String(r.date).slice(0,4))===Number(year))&&(!key||r.symbol===key)).sort((a,b)=>String(b.date).localeCompare(String(a.date))||String(b.sellId).localeCompare(String(a.sellId)));
+}
+function investmentPortfolio(asOf=dateKey(new Date())){
+  const state=investmentFifoState(asOf),positions=state.positions,active=positions.filter(p=>p.quantity>0.0000001);
   const incompletePerformance=positions.some(p=>p.costIncomplete);
   const complete=positions.filter(p=>!p.costIncomplete);
-  const totals=complete.reduce((a,p)=>({cost:a.cost+p.cost,marketValue:a.marketValue+p.marketValue,realized:a.realized+p.realized,dividends:a.dividends+p.dividends,totalBuyCost:a.totalBuyCost+p.totalBuyCost,unrealized:a.unrealized+(p.unrealized||0),totalProfit:a.totalProfit+(p.totalProfit||0)}),{cost:0,marketValue:0,realized:0,dividends:0,totalBuyCost:0,unrealized:0,totalProfit:0});
+  const totals=complete.reduce((a,p)=>({cost:a.cost+(p.cost||0),marketValue:a.marketValue+p.marketValue,realized:a.realized+p.realized,dividends:a.dividends+p.dividends,totalBuyCost:a.totalBuyCost+p.totalBuyCost,unrealized:a.unrealized+(p.unrealized||0),totalProfit:a.totalProfit+(p.totalProfit||0)}),{cost:0,marketValue:0,realized:0,dividends:0,totalBuyCost:0,unrealized:0,totalProfit:0});
   totals.marketValue=positions.reduce((sum,p)=>sum+p.marketValue,0);
   totals.dividends=positions.reduce((sum,p)=>sum+p.dividends,0);
-  totals.unresolvedContributions=unresolvedContributions;
+  totals.unresolvedContributions=state.unresolvedContributions;
   totals.costIncomplete=incompletePerformance;
   totals.roi=incompletePerformance?null:(totals.totalBuyCost>0?totals.totalProfit/totals.totalBuyCost:null);
   if(incompletePerformance){totals.cost=null;totals.realized=null;totals.unrealized=null;totals.totalProfit=null;}
   const issues=investmentHealthIssues();
-  return {positions,active,totals,issues};
+  return {positions,active,totals,issues,realizations:state.realizations};
 }
 function investmentValueAsOf(d){return investmentPortfolio(d).active.reduce((s,p)=>s+p.marketValue,0);}
 function investmentXirr(flows){
@@ -2471,16 +2498,74 @@ function renderInvestmentReturnDetail(){
 async function refreshInvestmentBoundaryPrices(){
   toast('正在取得年末收盤價…',1400);const changed=await ensureYearBoundaryPrices(investmentReturnDetailYear,{force:true});renderInvestmentReturnDetail();renderInvestment();toast(changed?'年末收盤價已更新':'已檢查年末收盤價',1800);
 }
-function openInvestmentSecurityDetail(symbol){investmentDetailSymbol=investmentAssetKey(symbol);renderInvestmentSecurityDetail();show($('investmentSecurityDetailScreen'));}
+function investmentToneClass(value){
+  if(!Number.isFinite(Number(value))||Number(value)===0)return'';return Number(value)>0?'investment-gain':'investment-loss';
+}
+function investmentRealizedCardHtml(r){
+  const label=investmentDisplayLabel(r.symbol,r.name,r.shortName),tone=investmentToneClass(r.realized),ret=investmentPrivatePct(r.returnRate);
+  const fifo=r.matches.map(m=>`<div class="fifo-match-row"><span>${escapeHtml(m.date)} · ${Number(m.quantity||0).toLocaleString('zh-TW',{maximumFractionDigits:4})} 股</span><b>${m.costBasis==null?'成本待補':investmentPrivateMoney(m.costBasis)}</b></div>`).join('');
+  return `<details class="investment-realized-card ${r.realized>0?'is-gain':r.realized<0?'is-loss':''}"><summary><div><span>${escapeHtml(label)}</span><strong>賣出 ${Number(r.quantity||0).toLocaleString('zh-TW',{maximumFractionDigits:4})} 股 @ ${investmentPrice(r.sellPrice)}</strong><small>${escapeHtml(r.date)} · 淨回收 ${investmentPrivateMoney(r.proceeds)}</small></div><div class="investment-realized-card-result"><strong class="${tone}">${r.realized==null?'成本待補':investmentPrivateMoney(r.realized)}</strong><small class="${tone}">${ret}</small></div></summary><div class="investment-realized-breakdown"><div><span>賣出總額</span><b>${investmentPrivateMoney(r.gross)}</b></div><div><span>手續費</span><b>${investmentPrivateMoney(r.fee)}</b></div><div><span>證交稅</span><b>${investmentPrivateMoney(r.tax)}</b></div><div><span>FIFO 取得成本</span><b>${r.costBasis==null?'成本待補':investmentPrivateMoney(r.costBasis)}</b></div><div class="fifo-title">FIFO 成本來源</div>${fifo||'<div class="fifo-match-row"><span>無成本批次</span><b>--</b></div>'}</div></details>`;
+}
+function setInvestmentDetailTab(tab='overview'){
+  investmentDetailTab=['overview','trades','dividends','realized'].includes(tab)?tab:'overview';
+  document.querySelectorAll('[data-investment-detail-tab]').forEach(b=>b.classList.toggle('active',b.dataset.investmentDetailTab===investmentDetailTab));
+  const panels={overview:'investmentDetailTabOverview',trades:'investmentDetailTabTrades',dividends:'investmentDetailTabDividends',realized:'investmentDetailTabRealized'};
+  Object.entries(panels).forEach(([key,id])=>$(id)?.classList.toggle('hidden',key!==investmentDetailTab));
+}
+function renderInvestmentSecurityRealized(symbol){
+  const rows=investmentRealizedTransactions({symbol}),box=$('investmentDetailRealizedList'),empty=$('investmentDetailRealizedEmpty'),summary=$('investmentDetailRealizedSummary');
+  if(!box)return;box.innerHTML=rows.map(investmentRealizedCardHtml).join('');empty?.classList.toggle('hidden',rows.length>0);
+  const complete=rows.filter(r=>!r.incomplete),total=complete.length===rows.length?ntd(complete.reduce((s,r)=>s+Number(r.realized||0),0)):null,wins=complete.filter(r=>r.realized>0).length;
+  if(summary)summary.innerHTML=`<div><span>累計已實現</span><strong class="${investmentToneClass(total)}">${total==null?'成本待補':investmentPrivateMoney(total)}</strong></div><div><span>賣出交易</span><strong>${rows.length} 筆</strong></div><div><span>勝率</span><strong>${complete.length?`${(wins/complete.length*100).toFixed(1)}%`:'--'}</strong></div>`;
+}
+function investmentRealizedYears(){
+  const years=new Set(investmentRealizedTransactions().map(r=>Number(String(r.date).slice(0,4))));years.add(new Date().getFullYear());return [...years].filter(Number.isFinite).sort((a,b)=>b-a);
+}
+function openInvestmentRealizedDetail(year=new Date().getFullYear(),symbol=''){
+  investmentRealizedYear=Number(year)||new Date().getFullYear();investmentRealizedSymbol=investmentAssetKey(symbol);investmentRealizedOutcome='all';renderInvestmentRealizedDetail();show($('investmentRealizedScreen'));window.scrollTo({top:0,behavior:'auto'});
+}
+function renderInvestmentRealizedDetail(){
+  const years=investmentRealizedYears(),ys=$('investmentRealizedYearInput');if(!ys)return;
+  ys.innerHTML=years.map(y=>`<option value="${y}">${y}${y===new Date().getFullYear()?'（今年）':''}</option>`).join('');ys.value=String(years.includes(investmentRealizedYear)?investmentRealizedYear:years[0]);investmentRealizedYear=Number(ys.value);
+  const yearRows=investmentRealizedTransactions({year:investmentRealizedYear}),symbols=[...new Map(yearRows.map(r=>[r.symbol,investmentDisplayLabel(r.symbol,r.name,r.shortName)])).entries()].sort((a,b)=>a[0].localeCompare(b[0]));
+  const ss=$('investmentRealizedSymbolInput'),previous=investmentRealizedSymbol;ss.innerHTML='<option value="">全部標的</option>'+symbols.map(([s,n])=>`<option value="${escapeHtml(s)}">${escapeHtml(n)}</option>`).join('');ss.value=symbols.some(([s])=>s===previous)?previous:'';investmentRealizedSymbol=ss.value;
+  $('investmentRealizedOutcomeInput').value=investmentRealizedOutcome;
+  let rows=yearRows.filter(r=>!investmentRealizedSymbol||r.symbol===investmentRealizedSymbol);
+  if(investmentRealizedOutcome==='gain')rows=rows.filter(r=>r.realized>0);else if(investmentRealizedOutcome==='loss')rows=rows.filter(r=>r.realized<0);
+  const complete=rows.filter(r=>!r.incomplete),incomplete=rows.some(r=>r.incomplete),total=incomplete?null:ntd(complete.reduce((s,r)=>s+Number(r.realized||0),0)),wins=complete.filter(r=>r.realized>0).length,losses=complete.filter(r=>r.realized<0).length,winRate=complete.length?wins/complete.length:null;
+  $('investmentRealizedHeroLabel').textContent=`${investmentRealizedYear} 已實現損益`;
+  $('investmentRealizedHeroTotal').textContent=total==null?'待補成本':investmentPrivateMoney(total);$('investmentRealizedHeroTotal').className=investmentToneClass(total);
+  $('investmentRealizedHeroMeta').textContent=`${rows.length} 筆賣出${investmentRealizedSymbol?` · ${investmentRealizedSymbol}`:''}`;
+  $('investmentRealizedWinRate').textContent=winRate==null?'--':investmentPrivatePct(winRate);
+  const best=complete.slice().sort((a,b)=>Number(b.realized)-Number(a.realized))[0],worst=complete.slice().sort((a,b)=>Number(a.realized)-Number(b.realized))[0];
+  $('investmentRealizedStats').innerHTML=[['獲利交易',`${wins} 筆`,''],['虧損交易',`${losses} 筆`,''],['最大獲利',best&&best.realized>0?investmentPrivateMoney(best.realized):'$0','investment-gain'],['最大虧損',worst&&worst.realized<0?investmentPrivateMoney(worst.realized):'$0','investment-loss']].map(([k,v,c])=>`<div><span>${k}</span><strong class="${c}">${v}</strong></div>`).join('');
+  const grouped=new Map();for(const r of rows){if(!grouped.has(r.symbol))grouped.set(r.symbol,{symbol:r.symbol,name:r.name,shortName:r.shortName,total:0,incomplete:false,count:0});const g=grouped.get(r.symbol);g.count++;if(r.incomplete)g.incomplete=true;else g.total+=Number(r.realized||0);}
+  $('investmentRealizedBySymbol').innerHTML=[...grouped.values()].sort((a,b)=>Math.abs(b.total)-Math.abs(a.total)).map(g=>`<button type="button" class="investment-realized-symbol-row" data-realized-symbol="${escapeHtml(g.symbol)}"><div><strong>${escapeHtml(investmentDisplayLabel(g.symbol,g.name,g.shortName))}</strong><small>${g.count} 筆賣出</small></div><b class="${investmentToneClass(g.total)}">${g.incomplete?'待補成本':investmentPrivateMoney(g.total)}</b><span>›</span></button>`).join('');
+  $('investmentRealizedBySymbol').querySelectorAll('[data-realized-symbol]').forEach(b=>b.onclick=()=>{investmentRealizedSymbol=b.dataset.realizedSymbol;renderInvestmentRealizedDetail();});
+  $('investmentRealizedList').innerHTML=rows.map(investmentRealizedCardHtml).join('');$('investmentRealizedEmpty').classList.toggle('hidden',rows.length>0);
+}
+
+function openInvestmentSecurityDetail(symbol){investmentDetailSymbol=investmentAssetKey(symbol);investmentDetailTab='overview';renderInvestmentSecurityDetail();show($('investmentSecurityDetailScreen'));setInvestmentDetailTab('overview');}
 function renderInvestmentSecurityDetail(){
-  const symbol=investmentDetailSymbol;if(!symbol)return;const today=dateKey(new Date()),p=investmentPortfolio(today).positions.find(x=>x.symbol===symbol),meta=cachedSecurityMeta(symbol),name=p?.name||meta?.name||symbol,shortName=p?.shortName||meta?.shortName||name,perf=investmentSecurityCumulativePerformance(symbol,today);$('investmentDetailTitle').textContent=investmentDisplayLabel(symbol,name,shortName);$('investmentDetailName').textContent='純報酬率不含股息；含息總報酬率會把已領股息一起算入。';
-  const year=new Date().getFullYear(),divs=investmentLedger.filter(t=>t.kind==='dividend'&&t.symbol===symbol),yearDiv=divs.filter(t=>Number(String(t.date).slice(0,4))===year).reduce((a,t)=>a+investmentTxnCash(t),0),allDiv=divs.reduce((a,t)=>a+investmentTxnCash(t),0),xirrLabel=perf.xirrIncomplete?'待補年末價':investmentPrivatePct(perf.xirr);
-  const detailStats=[['目前股數',p?`${p.quantity.toLocaleString('zh-TW',{maximumFractionDigits:4})} 股`:'0 股',''],['平均成本',p?(p.costIncomplete?'成本待補':investmentValuesVisible?investmentPrice(p.avgCost):'****'):'--',''],['目前市值',p?investmentPrivateMoney(p.marketValue):'$0',''],['未實現損益',p?(p.costIncomplete?'成本待補':investmentPrivateMoney(p.unrealized)):'$0',p?.unrealized>0?'investment-gain':p?.unrealized<0?'investment-loss':''],['純報酬率',investmentPrivatePct(perf.priceReturn),perf.priceReturn>0?'investment-gain':perf.priceReturn<0?'investment-loss':''],['含息總報酬率',investmentPrivatePct(perf.totalReturn),perf.totalReturn>0?'investment-gain':perf.totalReturn<0?'investment-loss':''],['年化 XIRR',xirrLabel,perf.xirr>0?'investment-gain':perf.xirr<0?'investment-loss':''],[`${year} 已領股息`,investmentPrivateMoney(yearDiv),''],['累積股息',investmentPrivateMoney(allDiv),'']];
+  const symbol=investmentDetailSymbol;if(!symbol)return;
+  const today=dateKey(new Date()),p=investmentPortfolio(today).positions.find(x=>x.symbol===symbol),meta=cachedSecurityMeta(symbol),name=p?.name||meta?.name||symbol,shortName=p?.shortName||meta?.shortName||name,perf=investmentSecurityCumulativePerformance(symbol,today);
+  $('investmentDetailTitle').textContent=investmentDisplayLabel(symbol,name,shortName);$('investmentDetailName').textContent='總報酬＝已實現＋未實現＋已領股息；已實現損益採 FIFO 先進先出。';
+  const year=new Date().getFullYear(),divs=investmentLedger.filter(t=>!t.voided&&t.kind==='dividend'&&t.symbol===symbol),yearDiv=divs.filter(t=>Number(String(t.date).slice(0,4))===year).reduce((a,t)=>a+investmentTxnCash(t),0),allDiv=divs.reduce((a,t)=>a+investmentTxnCash(t),0),xirrLabel=perf.xirrIncomplete?'待補年末價':investmentPrivatePct(perf.xirr);
+  const allRealizedRows=investmentRealizedTransactions({symbol}),realizedIncomplete=allRealizedRows.some(r=>r.incomplete),allRealized=realizedIncomplete?null:ntd(allRealizedRows.reduce((s,r)=>s+Number(r.realized||0),0)),totalProfit=(p?.unrealized==null||allRealized==null)?null:ntd(Number(p?.unrealized||0)+allRealized+allDiv);
+  $('investmentDetailTotalProfit').textContent=totalProfit==null?'待補成本':investmentPrivateMoney(totalProfit);$('investmentDetailTotalProfit').className=investmentToneClass(totalProfit);
+  $('investmentDetailTotalReturn').textContent=`含息總報酬率 ${investmentPrivatePct(perf.totalReturn)}`;$('investmentDetailTotalReturn').className=investmentToneClass(perf.totalReturn);
+  $('investmentDetailHeroShares').textContent=`${Number(p?.quantity||0).toLocaleString('zh-TW',{maximumFractionDigits:4})} 股`;
+  $('investmentDetailHeroAvg').textContent=p?.costIncomplete?'均價待補':`均價 ${p?.avgCost==null?'--':(investmentValuesVisible?investmentPrice(p.avgCost):'****')}`;
+  $('investmentDetailUnrealized').textContent=p?.unrealized==null?'成本待補':investmentPrivateMoney(p.unrealized);$('investmentDetailUnrealized').className=investmentToneClass(p?.unrealized);
+  $('investmentDetailRealized').textContent=allRealized==null?'成本待補':investmentPrivateMoney(allRealized);$('investmentDetailRealized').className=investmentToneClass(allRealized);
+  $('investmentDetailAllDividend').textContent=investmentPrivateMoney(allDiv);
+  const detailStats=[['目前市值',p?investmentPrivateMoney(p.marketValue):'$0',''],['平均成本',p?(p.costIncomplete?'成本待補':investmentValuesVisible?investmentPrice(p.avgCost):'****'):'--',''],['純報酬率',investmentPrivatePct(perf.priceReturn),investmentToneClass(perf.priceReturn)],['含息總報酬率',investmentPrivatePct(perf.totalReturn),investmentToneClass(perf.totalReturn)],['年化 XIRR',xirrLabel,investmentToneClass(perf.xirr)],[`${year} 已領股息`,investmentPrivateMoney(yearDiv),'']];
   $('investmentDetailStats').innerHTML=detailStats.map(([k,v,c])=>`<div><span>${k}</span><strong class="${c}">${v}</strong></div>`).join('');
   if(perf.xirrIncomplete&&perf.trackingStart){const y=Number(perf.trackingStart.slice(0,4));setTimeout(()=>ensureYearBoundaryPrices(y).then(changed=>{if(changed&&investmentDetailSymbol===symbol)renderInvestmentSecurityDetail();}),0);}
   const dbox=$('investmentDetailDividends');dbox.innerHTML='';const events=dividendEvents.filter(e=>e.symbol===symbol).map(e=>dividendDerived(e)).sort((a,b)=>String(b.actualPayDate||b.expectedPayDate||b.exDate).localeCompare(String(a.actualPayDate||a.expectedPayDate||a.exDate)));events.forEach(e=>{const b=document.createElement('button');b.type='button';b.className='detail-mini-row';const amt=e.status==='paid'?e.actualAmount:e.estimatedAmount;b.innerHTML=`<span>${dividendStatusIcon(e.status)}</span><div><strong>${escapeHtml(dividendStatusLabel(e.status))}</strong><small>除息 ${escapeHtml(e.exDate||'--')} · ${e.actualPayDate?`入帳 ${escapeHtml(e.actualPayDate)}`:`預計 ${escapeHtml(e.expectedPayDate||'--')}`}</small></div><b>${amt==null?'--':investmentPrivateMoney(amt)}</b>`;b.onclick=()=>openDividendEventEditor(e.id);dbox.appendChild(b);});$('investmentDetailDividendEmpty').classList.toggle('hidden',events.length>0);
   const tbox=$('investmentDetailTrades');tbox.innerHTML='';const trades=investmentLedger.filter(t=>!t.voided&&t.symbol===symbol&&t.kind!=='dividend').slice().sort((a,b)=>b.date.localeCompare(a.date));trades.forEach(t=>{const b=document.createElement('button');b.type='button';b.className='detail-mini-row';const detail=t.costPending?` · ${Number(t.quantity||0).toLocaleString('zh-TW',{maximumFractionDigits:4})} 股 · 成本待補`:['initial','buy','sell'].includes(t.kind)?` · ${Number(t.quantity||0).toLocaleString('zh-TW',{maximumFractionDigits:4})} 股 @ ${investmentPrice(t.price)}`:'';b.innerHTML=`<span>${investmentKindIcon(t.kind)}</span><div><strong>${investmentKindLabel(t.kind)}${t.costPending?' · 成本待補':''}</strong><small>${escapeHtml(t.date)}${t.datePending?' · 日期待補':''}${detail}</small></div><b>${t.costPending?'待補':investmentPrivateMoney(investmentTxnCash(t))}</b>`;b.onclick=()=>openInvestmentTxnEditor(t.id);tbox.appendChild(b);});$('investmentDetailTradeEmpty').classList.toggle('hidden',trades.length>0);
-  const q=investmentLatestQuote(symbol);$('investmentDetailQuote').textContent=q?`${investmentPrice(q.price)} · ${q.date} 收盤`:'尚無收盤價';$('investmentDetailIntraday').textContent='GitHub Pages 每日收盤檔';
+  renderInvestmentSecurityRealized(symbol);
+  const q=investmentLatestQuote(symbol);$('investmentDetailQuote').textContent=q?`${investmentPrice(q.price)} · ${q.date} 收盤`:'尚無收盤價';$('investmentDetailIntraday').textContent='GitHub Pages 每日收盤檔';setInvestmentDetailTab(investmentDetailTab);
 }
 
 function returnHomeFromSettings(){
@@ -2563,10 +2648,10 @@ function bindEvents(){
   $('analysisPrevYearBtn').onclick=()=>{analysisYear--;renderAnalysis();}; $('analysisNextYearBtn').onclick=()=>{analysisYear++;renderAnalysis();}; $('analysisYearModeBtn').onclick=()=>{analysisMode='year';renderAnalysis();}; $('analysisMonthModeBtn').onclick=()=>{analysisMode='month';renderAnalysis();}; $('analysisMonthSelect').onchange=e=>{analysisMonth=Number(e.target.value);renderAnalysis();};
   $('manageRecurringBtn').onclick=openRecurringManager; $('closeRecurringManagerBtn').onclick=()=>hide($('recurringManagerScreen')); $('addRecurringBtn').onclick=()=>openRecurringEditor(); $('cancelRecurringEditBtn').onclick=()=>{recurringSplitSourceId=null;recurringSplitEffectiveDate='';$('recurringStartDateInput').disabled=false;hide($('recurringEditorScreen'));}; $('saveRecurringBtn').onclick=saveRecurring; $('recurringExpenseTypeBtn').onclick=()=>setRecurringType('expense'); $('recurringIncomeTypeBtn').onclick=()=>setRecurringType('income'); $('recurringInvestmentTypeBtn').onclick=()=>setRecurringType('investment'); $('recurringFrequencyInput').onchange=updateRecurringFrequencyFields; $('recurringAddMonthlyDayBtn').onclick=addRecurringMonthlyDay; $('recurringMonthlyDayInput').addEventListener('keydown',e=>{if(e.key==='Enter'){e.preventDefault();addRecurringMonthlyDay();}}); $('recurringCategoryInput').onchange=()=>renderRecurringSubcategories(); document.querySelectorAll('[data-recurring-payment]').forEach(b=>b.onclick=()=>setRecurringPayment(b.dataset.recurringPayment));
     $('addInvestmentTxnBtn').onclick=()=>openInvestmentTxnEditor(); $('investmentAddHoldingBtn').onclick=()=>openInvestmentTxnEditor(); $('cancelInvestmentTxnBtn').onclick=()=>hide($('investmentTxnEditorScreen')); $('saveInvestmentTxnBtn').onclick=saveInvestmentTxn; $('deleteInvestmentTxnBtn').onclick=deleteInvestmentTxn; $('investmentTxnKindInput').onchange=syncInvestmentTxnFields; $('investmentSymbolInput').addEventListener('input',scheduleInvestmentSymbolLookup); $('investmentSymbolInput').addEventListener('blur',()=>refreshInvestmentSymbolMeta(false)); $('bookkeepingInvestmentSymbolInput').addEventListener('input',()=>scheduleSimpleSecurityMeta('bookkeepingInvestmentSymbolInput','bookkeepingInvestmentMetaStatus')); $('bookkeepingInvestmentSymbolInput').addEventListener('blur',()=>refreshSimpleSecurityMeta('bookkeepingInvestmentSymbolInput','bookkeepingInvestmentMetaStatus')); $('recurringInvestmentSymbolInput').addEventListener('input',()=>scheduleSimpleSecurityMeta('recurringInvestmentSymbolInput','recurringInvestmentMetaStatus')); $('recurringInvestmentSymbolInput').addEventListener('blur',()=>refreshSimpleSecurityMeta('recurringInvestmentSymbolInput','recurringInvestmentMetaStatus')); ['investmentQuantityInput','investmentTxnPriceInput','investmentTxnDateInput'].forEach(id=>$(id).addEventListener('input',syncInvestmentAutoCosts)); $('investmentCostManualInput').onchange=syncInvestmentCostManualState; $('updateInvestmentPriceBtn').onclick=()=>openInvestmentQuoteEditor(); $('refreshTodayInvestmentPriceBtn').onclick=openInvestmentMarketOverview; if($('toggleInvestmentVisibilityBtn'))$('toggleInvestmentVisibilityBtn').onclick=toggleInvestmentValuesVisible; $('investmentQuoteSymbolInput').addEventListener('blur',refreshInvestmentQuoteSymbolMeta); $('cancelInvestmentQuoteBtn').onclick=()=>hide($('investmentQuoteEditorScreen')); $('saveInvestmentQuoteBtn').onclick=saveInvestmentQuote; if($('closeInvestmentMarketOverviewBtn'))$('closeInvestmentMarketOverviewBtn').onclick=()=>hide($('investmentMarketOverviewScreen')); if($('refreshInvestmentMarketOverviewBtn'))$('refreshInvestmentMarketOverviewBtn').onclick=async()=>{await fetchIntradayQuotes();await renderInvestmentMarketOverview({force:true});};
-    $('investmentAllocationCard').onclick=openInvestmentHoldingsOverview; $('investmentAllocationCard').onkeydown=e=>{if(e.key==='Enter'||e.key===' '){e.preventDefault();openInvestmentHoldingsOverview();}}; $('closeInvestmentHoldingsBtn').onclick=closeInvestmentHoldingsOverview; if($('investmentSyncNotice')){$('investmentSyncNotice').onclick=openInvestmentPendingList;$('investmentSyncNotice').onkeydown=e=>{if(e.key==='Enter'||e.key===' '){e.preventDefault();openInvestmentPendingList();}};} if($('closeInvestmentPendingBtn'))$('closeInvestmentPendingBtn').onclick=()=>hide($('investmentPendingScreen')); $('openInvestmentIncomeAnalysisBtn').onclick=openInvestmentIncomeAnalysis; $('investmentIncomeAnalysisShortcutBtn').onclick=openInvestmentIncomeAnalysis; $('closeInvestmentIncomeAnalysisBtn').onclick=closeInvestmentIncomeAnalysis; $('applyInvestmentIncomeRangeBtn').onclick=renderInvestmentIncomeRange; $('investmentIncomeStartMonth').onchange=renderInvestmentIncomeRange; $('investmentIncomeEndMonth').onchange=renderInvestmentIncomeRange; $('openInvestmentActivityBtn').onclick=openInvestmentActivity; $('closeInvestmentActivityBtn').onclick=closeInvestmentActivity; $('investmentActivityYearInput').onchange=renderInvestmentActivity; if($('openInvestmentReturnDetailBtn'))$('openInvestmentReturnDetailBtn').onclick=()=>openInvestmentReturnDetail(new Date().getFullYear()); if($('closeInvestmentReturnDetailBtn'))$('closeInvestmentReturnDetailBtn').onclick=closeInvestmentReturnDetail; if($('refreshInvestmentBoundaryPricesBtn'))$('refreshInvestmentBoundaryPricesBtn').onclick=refreshInvestmentBoundaryPrices;
+    $('investmentAllocationCard').onclick=openInvestmentHoldingsOverview; $('investmentAllocationCard').onkeydown=e=>{if(e.key==='Enter'||e.key===' '){e.preventDefault();openInvestmentHoldingsOverview();}}; $('closeInvestmentHoldingsBtn').onclick=closeInvestmentHoldingsOverview; if($('investmentSyncNotice')){$('investmentSyncNotice').onclick=openInvestmentPendingList;$('investmentSyncNotice').onkeydown=e=>{if(e.key==='Enter'||e.key===' '){e.preventDefault();openInvestmentPendingList();}};} if($('closeInvestmentPendingBtn'))$('closeInvestmentPendingBtn').onclick=()=>hide($('investmentPendingScreen')); $('openInvestmentIncomeAnalysisBtn').onclick=openInvestmentIncomeAnalysis; $('investmentIncomeAnalysisShortcutBtn').onclick=openInvestmentIncomeAnalysis; $('closeInvestmentIncomeAnalysisBtn').onclick=closeInvestmentIncomeAnalysis; $('applyInvestmentIncomeRangeBtn').onclick=renderInvestmentIncomeRange; $('investmentIncomeStartMonth').onchange=renderInvestmentIncomeRange; $('investmentIncomeEndMonth').onchange=renderInvestmentIncomeRange; $('openInvestmentActivityBtn').onclick=openInvestmentActivity; $('closeInvestmentActivityBtn').onclick=closeInvestmentActivity; $('investmentActivityYearInput').onchange=renderInvestmentActivity; if($('openInvestmentReturnDetailBtn'))$('openInvestmentReturnDetailBtn').onclick=()=>openInvestmentReturnDetail(new Date().getFullYear()); if($('closeInvestmentReturnDetailBtn'))$('closeInvestmentReturnDetailBtn').onclick=closeInvestmentReturnDetail; if($('refreshInvestmentBoundaryPricesBtn'))$('refreshInvestmentBoundaryPricesBtn').onclick=refreshInvestmentBoundaryPrices; if($('openInvestmentRealizedBtn'))$('openInvestmentRealizedBtn').onclick=()=>openInvestmentRealizedDetail(new Date().getFullYear()); if($('closeInvestmentRealizedBtn'))$('closeInvestmentRealizedBtn').onclick=()=>hide($('investmentRealizedScreen')); if($('investmentRealizedYearInput'))$('investmentRealizedYearInput').onchange=e=>{investmentRealizedYear=Number(e.target.value);investmentRealizedSymbol='';renderInvestmentRealizedDetail();}; if($('investmentRealizedSymbolInput'))$('investmentRealizedSymbolInput').onchange=e=>{investmentRealizedSymbol=e.target.value;renderInvestmentRealizedDetail();}; if($('investmentRealizedOutcomeInput'))$('investmentRealizedOutcomeInput').onchange=e=>{investmentRealizedOutcome=e.target.value;renderInvestmentRealizedDetail();};
     $('addDividendEventBtn').onclick=()=>openDividendEventEditor(); $('cancelDividendEventBtn').onclick=()=>hide($('dividendEventEditorScreen')); $('saveDividendEventBtn').onclick=saveDividendEvent; $('deleteDividendEventBtn').onclick=deleteDividendEvent; $('dividendSymbolInput').addEventListener('blur',refreshDividendSymbolMeta); ['dividendSymbolInput','dividendExDateInput','dividendPerShareInput'].forEach(id=>$(id).addEventListener('input',renderDividendEditorPreview));
     $('addAnnualSummaryBtn').onclick=()=>openAnnualSummaryEditor(); $('cancelAnnualSummaryBtn').onclick=()=>hide($('annualSummaryEditorScreen')); $('saveAnnualSummaryBtn').onclick=saveAnnualSummary; $('deleteAnnualSummaryBtn').onclick=deleteAnnualSummary;
-    $('closeInvestmentDetailBtn').onclick=()=>hide($('investmentSecurityDetailScreen')); $('investmentDetailAddDividendBtn').onclick=()=>openDividendEventEditor(null,investmentDetailSymbol); $('investmentDetailManualQuoteBtn').onclick=()=>openInvestmentQuoteEditor(investmentDetailSymbol,cachedSecurityMeta(investmentDetailSymbol)?.name||'');
+    $('closeInvestmentDetailBtn').onclick=()=>hide($('investmentSecurityDetailScreen')); $('investmentDetailAddDividendBtn').onclick=()=>openDividendEventEditor(null,investmentDetailSymbol); $('investmentDetailManualQuoteBtn').onclick=()=>openInvestmentQuoteEditor(investmentDetailSymbol,cachedSecurityMeta(investmentDetailSymbol)?.name||''); document.querySelectorAll('[data-investment-detail-tab]').forEach(b=>b.onclick=()=>setInvestmentDetailTab(b.dataset.investmentDetailTab)); if($('investmentDetailRealizedCard'))$('investmentDetailRealizedCard').onclick=()=>setInvestmentDetailTab('realized');
   $('manageSecurityBtn').onclick=()=>{show($('securityScreen'));refreshSecurityUi();}; $('closeSecurityBtn').onclick=()=>hide($('securityScreen')); $('changePinBtn').onclick=changePin; $('toggleFaceBtn').onclick=async()=>{try{await registerFaceId();refreshSecurityUi();toast('Face ID 已啟用');}catch(e){console.warn(e);toast(e.message||'Face ID 設定未完成',2600);}};
   $('finishSetupBtn').onclick=finishInitialSetup; $('pinUnlockBtn').onclick=unlockWithPin; $('faceUnlockBtn').onclick=unlockWithFace; $('pinUnlockInput').addEventListener('keydown',e=>{if(e.key==='Enter'&&validPin(normalizePin(e.currentTarget.value)))unlockWithPin();});
   for(const id of ['setupPinInput','setupPinConfirmInput','pinUnlockInput'])$(id).addEventListener('input',e=>{e.target.value=normalizePin(e.target.value); if(e.target.id==='pinUnlockInput')updatePinUnlockState();});
