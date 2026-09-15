@@ -1,10 +1,10 @@
 {
   "schemaVersion": 1,
-  "generatedAt": "2026-09-15T06:22:20.711Z",
+  "generatedAt": "2026-09-15T13:43:20.138Z",
   "sourceStatus": {
     "TWSE": "ok",
-    "TPEx": "ok",
-    "TWSE_ISIN": "ok",
+    "TPEx": "error: terminated",
+    "TWSE_ISIN": "error: This operation was aborted",
     "TPEX_ISIN": "ok",
     "TWSE_INDEX": "ok",
     "TPEx_INDEX": "ok"
@@ -5851,6 +5851,12 @@
     {
       "symbol": "2937",
       "name": "集雅社",
+      "market": "TPEx",
+      "securityType": "stock"
+    },
+    {
+      "symbol": "2938",
+      "name": "床的世界",
       "market": "TPEx",
       "securityType": "stock"
     },

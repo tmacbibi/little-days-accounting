@@ -1,10 +1,10 @@
 {
   "schemaVersion": 1,
-  "generatedAt": "2026-09-15T06:22:20.711Z",
+  "generatedAt": "2026-09-15T13:43:20.138Z",
   "sourceStatus": {
     "TWSE": "ok",
-    "TPEx": "ok",
-    "TWSE_ISIN": "ok",
+    "TPEx": "error: terminated",
+    "TWSE_ISIN": "error: This operation was aborted",
     "TPEX_ISIN": "ok",
     "TWSE_INDEX": "ok",
     "TPEx_INDEX": "ok"
@@ -24,10 +24,10 @@
       "code": "OTC",
       "name": "櫃買指數",
       "market": "TPEx",
-      "date": "2026-09-14",
-      "value": 394.67,
-      "change": -0.85,
-      "changePct": -0.21490695792880254
+      "date": "2026-09-15",
+      "value": 388.73,
+      "change": -5.94,
+      "changePct": -1.5050548559556085
     }
   ],
   "items": [
