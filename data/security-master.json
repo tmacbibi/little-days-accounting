@@ -1,9 +1,11 @@
 {
   "schemaVersion": 1,
-  "generatedAt": "2026-09-15T06:06:18.560Z",
+  "generatedAt": "2026-09-15T06:22:20.711Z",
   "sourceStatus": {
     "TWSE": "ok",
-    "TPEx": "error: This operation was aborted",
+    "TPEx": "ok",
+    "TWSE_ISIN": "ok",
+    "TPEX_ISIN": "ok",
     "TWSE_INDEX": "ok",
     "TPEx_INDEX": "ok"
   },
@@ -75,6 +77,12 @@
       "securityType": "etf"
     },
     {
+      "symbol": "00411A",
+      "name": "主動統一前沿科技",
+      "market": "TPEx",
+      "securityType": "etf"
+    },
+    {
       "symbol": "0050",
       "name": "元大台灣50",
       "market": "TWSE",
@@ -120,6 +128,12 @@
       "symbol": "0061",
       "name": "元大寶滬深",
       "market": "TWSE",
+      "securityType": "etf"
+    },
+    {
+      "symbol": "006201",
+      "name": "元大富櫃50",
+      "market": "TPEx",
       "securityType": "etf"
     },
     {
@@ -435,6 +449,12 @@
       "securityType": "etf"
     },
     {
+      "symbol": "00679B",
+      "name": "元大美債20年",
+      "market": "TPEx",
+      "securityType": "etf"
+    },
+    {
       "symbol": "00680L",
       "name": "元大美債20正2",
       "market": "TWSE",
@@ -477,6 +497,18 @@
       "securityType": "etf"
     },
     {
+      "symbol": "00687B",
+      "name": "國泰20年美債",
+      "market": "TPEx",
+      "securityType": "etf"
+    },
+    {
+      "symbol": "00687C",
+      "name": "國泰20年美債+櫃U",
+      "market": "TPEx",
+      "securityType": "etf"
+    },
+    {
       "symbol": "00688L",
       "name": "國泰20年美債正2",
       "market": "TWSE",
@@ -504,6 +536,30 @@
       "symbol": "00693U",
       "name": "期街口S&P黃豆",
       "market": "TWSE",
+      "securityType": "etf"
+    },
+    {
+      "symbol": "00694B",
+      "name": "富邦美債1-3年",
+      "market": "TPEx",
+      "securityType": "etf"
+    },
+    {
+      "symbol": "00695B",
+      "name": "富邦美債7-10年",
+      "market": "TPEx",
+      "securityType": "etf"
+    },
+    {
+      "symbol": "00696B",
+      "name": "富邦美債20年",
+      "market": "TPEx",
+      "securityType": "etf"
+    },
+    {
+      "symbol": "00697B",
+      "name": "元大美債7-10",
+      "market": "TPEx",
       "securityType": "etf"
     },
     {
@@ -586,7 +642,7 @@
     },
     {
       "symbol": "00715L",
-      "name": "期街口布蘭特正2",
+      "name": "期街口S&P布蘭特油正2",
       "market": "TWSE",
       "securityType": "etf"
     },
@@ -595,6 +651,54 @@
       "name": "富邦美國特別股",
       "market": "TWSE",
       "securityType": "etf"
+    },
+    {
+      "symbol": "00719B",
+      "name": "元大美債1-3",
+      "market": "TPEx",
+      "securityType": "etf"
+    },
+    {
+      "symbol": "00720B",
+      "name": "元大投資級公司債",
+      "market": "TPEx",
+      "securityType": "bond-etf"
+    },
+    {
+      "symbol": "00722B",
+      "name": "群益投資級電信債",
+      "market": "TPEx",
+      "securityType": "etf"
+    },
+    {
+      "symbol": "00723B",
+      "name": "群益投資級科技債",
+      "market": "TPEx",
+      "securityType": "etf"
+    },
+    {
+      "symbol": "00724B",
+      "name": "群益投資級金融債",
+      "market": "TPEx",
+      "securityType": "etf"
+    },
+    {
+      "symbol": "00725B",
+      "name": "國泰投資級公司債",
+      "market": "TPEx",
+      "securityType": "bond-etf"
+    },
+    {
+      "symbol": "00726B",
+      "name": "國泰新興投等債",
+      "market": "TPEx",
+      "securityType": "bond-etf"
+    },
+    {
+      "symbol": "00727B",
+      "name": "國泰優選非投等債",
+      "market": "TPEx",
+      "securityType": "bond-etf"
     },
     {
       "symbol": "00728",
@@ -618,6 +722,12 @@
       "symbol": "00733",
       "name": "富邦臺灣中小",
       "market": "TWSE",
+      "securityType": "etf"
+    },
+    {
+      "symbol": "00734B",
+      "name": "台新JPM新興債",
+      "market": "TPEx",
       "securityType": "etf"
     },
     {
@@ -651,6 +761,42 @@
       "securityType": "etf"
     },
     {
+      "symbol": "00740B",
+      "name": "富邦全球投等債",
+      "market": "TPEx",
+      "securityType": "bond-etf"
+    },
+    {
+      "symbol": "00741B",
+      "name": "富邦全球非投等債",
+      "market": "TPEx",
+      "securityType": "bond-etf"
+    },
+    {
+      "symbol": "00746B",
+      "name": "富邦A級公司債",
+      "market": "TPEx",
+      "securityType": "bond-etf"
+    },
+    {
+      "symbol": "00749B",
+      "name": "凱基新興債10+",
+      "market": "TPEx",
+      "securityType": "etf"
+    },
+    {
+      "symbol": "00750B",
+      "name": "凱基科技債10+",
+      "market": "TPEx",
+      "securityType": "etf"
+    },
+    {
+      "symbol": "00751B",
+      "name": "元大AAA至A公司債",
+      "market": "TPEx",
+      "securityType": "bond-etf"
+    },
+    {
       "symbol": "00752",
       "name": "中信中國50",
       "market": "TWSE",
@@ -663,10 +809,52 @@
       "securityType": "etf"
     },
     {
+      "symbol": "00754B",
+      "name": "群益AAA-AA公司債",
+      "market": "TPEx",
+      "securityType": "bond-etf"
+    },
+    {
+      "symbol": "00755B",
+      "name": "群益投資級公用債",
+      "market": "TPEx",
+      "securityType": "etf"
+    },
+    {
+      "symbol": "00756B",
+      "name": "群益投等新興公債",
+      "market": "TPEx",
+      "securityType": "bond-etf"
+    },
+    {
       "symbol": "00757",
       "name": "統一FANG+",
       "market": "TWSE",
       "securityType": "etf"
+    },
+    {
+      "symbol": "00758B",
+      "name": "復華能源債",
+      "market": "TPEx",
+      "securityType": "etf"
+    },
+    {
+      "symbol": "00759B",
+      "name": "復華製藥債",
+      "market": "TPEx",
+      "securityType": "etf"
+    },
+    {
+      "symbol": "00760B",
+      "name": "復華新興企業債",
+      "market": "TPEx",
+      "securityType": "etf"
+    },
+    {
+      "symbol": "00761B",
+      "name": "國泰A級公司債",
+      "market": "TPEx",
+      "securityType": "bond-etf"
     },
     {
       "symbol": "00762",
@@ -678,6 +866,18 @@
       "symbol": "00763U",
       "name": "期街口道瓊銅",
       "market": "TWSE",
+      "securityType": "etf"
+    },
+    {
+      "symbol": "00764B",
+      "name": "群益25年美債",
+      "market": "TPEx",
+      "securityType": "etf"
+    },
+    {
+      "symbol": "00768B",
+      "name": "復華20年美債",
+      "market": "TPEx",
       "securityType": "etf"
     },
     {
@@ -693,10 +893,58 @@
       "securityType": "etf"
     },
     {
+      "symbol": "00772B",
+      "name": "中信高評級公司債",
+      "market": "TPEx",
+      "securityType": "bond-etf"
+    },
+    {
+      "symbol": "00773B",
+      "name": "中信優先金融債",
+      "market": "TPEx",
+      "securityType": "etf"
+    },
+    {
       "symbol": "00775B",
       "name": "台新投等債15+",
       "market": "TWSE",
       "securityType": "bond-etf"
+    },
+    {
+      "symbol": "00777B",
+      "name": "凱基AAA至A公司債",
+      "market": "TPEx",
+      "securityType": "bond-etf"
+    },
+    {
+      "symbol": "00778B",
+      "name": "凱基金融債20+",
+      "market": "TPEx",
+      "securityType": "etf"
+    },
+    {
+      "symbol": "00779B",
+      "name": "凱基美債25+",
+      "market": "TPEx",
+      "securityType": "etf"
+    },
+    {
+      "symbol": "00780B",
+      "name": "國泰A級金融債",
+      "market": "TPEx",
+      "securityType": "etf"
+    },
+    {
+      "symbol": "00781B",
+      "name": "國泰A級科技債",
+      "market": "TPEx",
+      "securityType": "etf"
+    },
+    {
+      "symbol": "00782B",
+      "name": "國泰A級公用債",
+      "market": "TPEx",
+      "securityType": "etf"
     },
     {
       "symbol": "00783",
@@ -705,9 +953,141 @@
       "securityType": "etf"
     },
     {
+      "symbol": "00785B",
+      "name": "富邦金融投等債",
+      "market": "TPEx",
+      "securityType": "bond-etf"
+    },
+    {
+      "symbol": "00786B",
+      "name": "元大10年IG銀行債",
+      "market": "TPEx",
+      "securityType": "etf"
+    },
+    {
+      "symbol": "00787B",
+      "name": "元大10年IG醫療債",
+      "market": "TPEx",
+      "securityType": "etf"
+    },
+    {
+      "symbol": "00788B",
+      "name": "元大10年IG電能債",
+      "market": "TPEx",
+      "securityType": "etf"
+    },
+    {
+      "symbol": "00789B",
+      "name": "復華公司債A3",
+      "market": "TPEx",
+      "securityType": "bond-etf"
+    },
+    {
+      "symbol": "00791B",
+      "name": "復華信用債1-5",
+      "market": "TPEx",
+      "securityType": "etf"
+    },
+    {
+      "symbol": "00792B",
+      "name": "群益A級公司債",
+      "market": "TPEx",
+      "securityType": "bond-etf"
+    },
+    {
+      "symbol": "00793B",
+      "name": "群益AAA-A醫療債",
+      "market": "TPEx",
+      "securityType": "etf"
+    },
+    {
+      "symbol": "00795B",
+      "name": "中信美國公債20年",
+      "market": "TPEx",
+      "securityType": "bond-etf"
+    },
+    {
+      "symbol": "00799B",
+      "name": "國泰A級醫療債",
+      "market": "TPEx",
+      "securityType": "etf"
+    },
+    {
       "symbol": "00830",
       "name": "國泰費城半導體",
       "market": "TWSE",
+      "securityType": "etf"
+    },
+    {
+      "symbol": "00834B",
+      "name": "第一金金融債10+",
+      "market": "TPEx",
+      "securityType": "etf"
+    },
+    {
+      "symbol": "00836B",
+      "name": "永豐10年A公司債",
+      "market": "TPEx",
+      "securityType": "bond-etf"
+    },
+    {
+      "symbol": "00838B",
+      "name": "永豐7-10年中國債",
+      "market": "TPEx",
+      "securityType": "etf"
+    },
+    {
+      "symbol": "00840B",
+      "name": "凱基IG精選15+",
+      "market": "TPEx",
+      "securityType": "etf"
+    },
+    {
+      "symbol": "00841B",
+      "name": "凱基AAA-AA公司債",
+      "market": "TPEx",
+      "securityType": "bond-etf"
+    },
+    {
+      "symbol": "00842B",
+      "name": "台新美元銀行債",
+      "market": "TPEx",
+      "securityType": "etf"
+    },
+    {
+      "symbol": "00844B",
+      "name": "台新15年IG金融債",
+      "market": "TPEx",
+      "securityType": "etf"
+    },
+    {
+      "symbol": "00845B",
+      "name": "富邦新興投等債",
+      "market": "TPEx",
+      "securityType": "bond-etf"
+    },
+    {
+      "symbol": "00846B",
+      "name": "富邦歐洲銀行債",
+      "market": "TPEx",
+      "securityType": "etf"
+    },
+    {
+      "symbol": "00847B",
+      "name": "中信美國市政債",
+      "market": "TPEx",
+      "securityType": "etf"
+    },
+    {
+      "symbol": "00848B",
+      "name": "中信新興亞洲債",
+      "market": "TPEx",
+      "securityType": "etf"
+    },
+    {
+      "symbol": "00849B",
+      "name": "中信EM主權債0-5",
+      "market": "TPEx",
       "securityType": "etf"
     },
     {
@@ -729,16 +1109,82 @@
       "securityType": "etf"
     },
     {
+      "symbol": "00853B",
+      "name": "統一美債10年Aa-A",
+      "market": "TPEx",
+      "securityType": "etf"
+    },
+    {
+      "symbol": "00856B",
+      "name": "永豐1-3年美公債",
+      "market": "TPEx",
+      "securityType": "bond-etf"
+    },
+    {
+      "symbol": "00857B",
+      "name": "永豐20年美公債",
+      "market": "TPEx",
+      "securityType": "bond-etf"
+    },
+    {
+      "symbol": "00858",
+      "name": "永豐美國500大",
+      "market": "TPEx",
+      "securityType": "etf"
+    },
+    {
+      "symbol": "00859B",
+      "name": "群益0-1年美債",
+      "market": "TPEx",
+      "securityType": "etf"
+    },
+    {
+      "symbol": "00860B",
+      "name": "群益1-5Y投資級債",
+      "market": "TPEx",
+      "securityType": "etf"
+    },
+    {
       "symbol": "00861",
       "name": "元大全球未來通訊",
       "market": "TWSE",
       "securityType": "etf"
     },
     {
+      "symbol": "00862B",
+      "name": "中信投資級公司債",
+      "market": "TPEx",
+      "securityType": "bond-etf"
+    },
+    {
+      "symbol": "00863B",
+      "name": "中信全球電信債",
+      "market": "TPEx",
+      "securityType": "etf"
+    },
+    {
+      "symbol": "00864B",
+      "name": "中信美國公債0-1",
+      "market": "TPEx",
+      "securityType": "bond-etf"
+    },
+    {
       "symbol": "00865B",
       "name": "國泰US短期公債",
       "market": "TWSE",
       "securityType": "bond-etf"
+    },
+    {
+      "symbol": "00867B",
+      "name": "台新A-BBB電信債",
+      "market": "TPEx",
+      "securityType": "etf"
+    },
+    {
+      "symbol": "00870B",
+      "name": "元大15年EM主權債",
+      "market": "TPEx",
+      "securityType": "etf"
     },
     {
       "symbol": "00875",
@@ -750,6 +1196,12 @@
       "symbol": "00876",
       "name": "元大全球5G",
       "market": "TWSE",
+      "securityType": "etf"
+    },
+    {
+      "symbol": "00877",
+      "name": "復華中國5G",
+      "market": "TPEx",
       "securityType": "etf"
     },
     {
@@ -771,9 +1223,39 @@
       "securityType": "etf"
     },
     {
+      "symbol": "00884B",
+      "name": "中信低碳新興債",
+      "market": "TPEx",
+      "securityType": "etf"
+    },
+    {
       "symbol": "00885",
       "name": "富邦越南",
       "market": "TWSE",
+      "securityType": "etf"
+    },
+    {
+      "symbol": "00886",
+      "name": "永豐美國科技",
+      "market": "TPEx",
+      "securityType": "etf"
+    },
+    {
+      "symbol": "00887",
+      "name": "永豐中國科技50大",
+      "market": "TPEx",
+      "securityType": "etf"
+    },
+    {
+      "symbol": "00888",
+      "name": "永豐台灣ESG",
+      "market": "TPEx",
+      "securityType": "etf"
+    },
+    {
+      "symbol": "00890B",
+      "name": "凱基ESG BBB 債 15+",
+      "market": "TPEx",
       "securityType": "etf"
     },
     {
@@ -862,7 +1344,7 @@
     },
     {
       "symbol": "00905",
-      "name": "FT臺灣Smart",
+      "name": "FT臺灣SMART",
       "market": "TWSE",
       "securityType": "etf"
     },
@@ -981,6 +1463,12 @@
       "securityType": "etf"
     },
     {
+      "symbol": "00928",
+      "name": "中信上櫃ESG 30",
+      "market": "TPEx",
+      "securityType": "etf"
+    },
+    {
       "symbol": "00929",
       "name": "復華台灣科技優息",
       "market": "TWSE",
@@ -993,9 +1481,21 @@
       "securityType": "etf"
     },
     {
+      "symbol": "00931B",
+      "name": "統一美債20年",
+      "market": "TPEx",
+      "securityType": "etf"
+    },
+    {
       "symbol": "00932",
       "name": "兆豐永續高息等權",
       "market": "TWSE",
+      "securityType": "etf"
+    },
+    {
+      "symbol": "00933B",
+      "name": "國泰10Y+金融債",
+      "market": "TPEx",
       "securityType": "etf"
     },
     {
@@ -1015,6 +1515,12 @@
       "name": "台新永續高息中小",
       "market": "TWSE",
       "securityType": "etf"
+    },
+    {
+      "symbol": "00937B",
+      "name": "群益ESG投等債20+",
+      "market": "TPEx",
+      "securityType": "bond-etf"
     },
     {
       "symbol": "00938",
@@ -1039,6 +1545,12 @@
       "name": "中信上游半導體",
       "market": "TWSE",
       "securityType": "etf"
+    },
+    {
+      "symbol": "00942B",
+      "name": "台新美A公司債20+",
+      "market": "TPEx",
+      "securityType": "bond-etf"
     },
     {
       "symbol": "00943",
@@ -1071,10 +1583,22 @@
       "securityType": "etf"
     },
     {
+      "symbol": "00948B",
+      "name": "中信優息投資級債",
+      "market": "TPEx",
+      "securityType": "etf"
+    },
+    {
       "symbol": "00949",
       "name": "復華日本龍頭",
       "market": "TWSE",
       "securityType": "etf"
+    },
+    {
+      "symbol": "00950B",
+      "name": "凱基A級公司債",
+      "market": "TPEx",
+      "securityType": "bond-etf"
     },
     {
       "symbol": "00951",
@@ -1101,9 +1625,33 @@
       "securityType": "etf"
     },
     {
+      "symbol": "00955",
+      "name": "中信日本商社",
+      "market": "TPEx",
+      "securityType": "etf"
+    },
+    {
       "symbol": "00956",
       "name": "中信日經高股息",
       "market": "TWSE",
+      "securityType": "etf"
+    },
+    {
+      "symbol": "00957B",
+      "name": "兆豐US優選投等債",
+      "market": "TPEx",
+      "securityType": "bond-etf"
+    },
+    {
+      "symbol": "00958B",
+      "name": "永豐ESG銀行債15+",
+      "market": "TPEx",
+      "securityType": "etf"
+    },
+    {
+      "symbol": "00959B",
+      "name": "大華投等美債15Y+",
+      "market": "TPEx",
       "securityType": "etf"
     },
     {
@@ -1141,6 +1689,36 @@
       "name": "元大航太防衛科技",
       "market": "TWSE",
       "securityType": "etf"
+    },
+    {
+      "symbol": "00966B",
+      "name": "統一ESG投等債15+",
+      "market": "TPEx",
+      "securityType": "bond-etf"
+    },
+    {
+      "symbol": "00967B",
+      "name": "元大優息美債",
+      "market": "TPEx",
+      "securityType": "etf"
+    },
+    {
+      "symbol": "00968B",
+      "name": "元大優息投等債",
+      "market": "TPEx",
+      "securityType": "bond-etf"
+    },
+    {
+      "symbol": "00969B",
+      "name": "元大零息超長美債",
+      "market": "TPEx",
+      "securityType": "etf"
+    },
+    {
+      "symbol": "00970B",
+      "name": "台新BBB投等債20+",
+      "market": "TPEx",
+      "securityType": "bond-etf"
     },
     {
       "symbol": "00971",
@@ -1191,6 +1769,18 @@
       "securityType": "etf"
     },
     {
+      "symbol": "009806",
+      "name": "台新標普500",
+      "market": "TPEx",
+      "securityType": "etf"
+    },
+    {
+      "symbol": "009807",
+      "name": "台新標普科技精選",
+      "market": "TPEx",
+      "securityType": "etf"
+    },
+    {
       "symbol": "009808",
       "name": "華南永昌優選50",
       "market": "TWSE",
@@ -1206,6 +1796,24 @@
       "symbol": "00980A",
       "name": "主動野村臺灣優選",
       "market": "TWSE",
+      "securityType": "etf"
+    },
+    {
+      "symbol": "00980B",
+      "name": "台新特選IG債10+",
+      "market": "TPEx",
+      "securityType": "etf"
+    },
+    {
+      "symbol": "00980D",
+      "name": "主動聯博投等入息",
+      "market": "TPEx",
+      "securityType": "etf"
+    },
+    {
+      "symbol": "00980T",
+      "name": "平衡凱基美國TOP",
+      "market": "TPEx",
       "securityType": "etf"
     },
     {
@@ -1230,6 +1838,18 @@
       "symbol": "009813",
       "name": "貝萊德標普卓越50",
       "market": "TWSE",
+      "securityType": "etf"
+    },
+    {
+      "symbol": "009814",
+      "name": "富邦標普500",
+      "market": "TPEx",
+      "securityType": "etf"
+    },
+    {
+      "symbol": "009815",
+      "name": "大華美國MAG7+",
+      "market": "TPEx",
       "securityType": "etf"
     },
     {
@@ -1263,6 +1883,18 @@
       "securityType": "etf"
     },
     {
+      "symbol": "00981B",
+      "name": "第一金優選非投債",
+      "market": "TPEx",
+      "securityType": "etf"
+    },
+    {
+      "symbol": "00981D",
+      "name": "主動中信非投等債",
+      "market": "TPEx",
+      "securityType": "bond-etf"
+    },
+    {
       "symbol": "00981T",
       "name": "平衡凱基雙核收息",
       "market": "TWSE",
@@ -1281,9 +1913,27 @@
       "securityType": "etf"
     },
     {
+      "symbol": "009822",
+      "name": "華南永昌未來金融",
+      "market": "TPEx",
+      "securityType": "etf"
+    },
+    {
+      "symbol": "009823",
+      "name": "群益S&P500",
+      "market": "TPEx",
+      "securityType": "etf"
+    },
+    {
       "symbol": "009824",
       "name": "群益美國科技巨頭",
       "market": "TWSE",
+      "securityType": "etf"
+    },
+    {
+      "symbol": "009825",
+      "name": "聯邦美國金融創新",
+      "market": "TPEx",
       "securityType": "etf"
     },
     {
@@ -1317,6 +1967,12 @@
       "securityType": "etf"
     },
     {
+      "symbol": "00982B",
+      "name": "FT投資級債20+",
+      "market": "TPEx",
+      "securityType": "etf"
+    },
+    {
       "symbol": "00982D",
       "name": "主動富邦動態入息",
       "market": "TWSE",
@@ -1335,6 +1991,12 @@
       "securityType": "etf"
     },
     {
+      "symbol": "00983B",
+      "name": "大華優利美公債20",
+      "market": "TPEx",
+      "securityType": "bond-etf"
+    },
+    {
       "symbol": "00983D",
       "name": "主動富邦複合收益",
       "market": "TWSE",
@@ -1344,6 +2006,12 @@
       "symbol": "00984A",
       "name": "主動安聯台灣高息",
       "market": "TWSE",
+      "securityType": "etf"
+    },
+    {
+      "symbol": "00984B",
+      "name": "大華優利美A債15",
+      "market": "TPEx",
       "securityType": "etf"
     },
     {
@@ -1365,9 +2033,27 @@
       "securityType": "bond-etf"
     },
     {
+      "symbol": "00985D",
+      "name": "主動貝萊德優投等",
+      "market": "TPEx",
+      "securityType": "etf"
+    },
+    {
       "symbol": "00986A",
       "name": "主動台新龍頭成長",
       "market": "TWSE",
+      "securityType": "etf"
+    },
+    {
+      "symbol": "00986B",
+      "name": "FT金融債10+",
+      "market": "TPEx",
+      "securityType": "etf"
+    },
+    {
+      "symbol": "00986D",
+      "name": "主動復華金融債息",
+      "market": "TPEx",
       "securityType": "etf"
     },
     {
@@ -1377,9 +2063,27 @@
       "securityType": "etf"
     },
     {
+      "symbol": "00987B",
+      "name": "野村10+澳洲公債",
+      "market": "TPEx",
+      "securityType": "bond-etf"
+    },
+    {
+      "symbol": "00987D",
+      "name": "主動統一美債量化",
+      "market": "TPEx",
+      "securityType": "etf"
+    },
+    {
       "symbol": "00988A",
       "name": "主動統一全球創新",
       "market": "TWSE",
+      "securityType": "etf"
+    },
+    {
+      "symbol": "00988B",
+      "name": "玉山嚴選非投債",
+      "market": "TPEx",
       "securityType": "etf"
     },
     {
@@ -1389,10 +2093,22 @@
       "securityType": "etf"
     },
     {
+      "symbol": "00989B",
+      "name": "台新美國非投等債",
+      "market": "TPEx",
+      "securityType": "bond-etf"
+    },
+    {
       "symbol": "00990A",
       "name": "主動元大AI新經濟",
       "market": "TWSE",
       "securityType": "etf"
+    },
+    {
+      "symbol": "00990B",
+      "name": "國泰收益非投等債",
+      "market": "TPEx",
+      "securityType": "bond-etf"
     },
     {
       "symbol": "00991A",
@@ -1440,6 +2156,12 @@
       "symbol": "00997A",
       "name": "主動群益美國增長",
       "market": "TWSE",
+      "securityType": "etf"
+    },
+    {
+      "symbol": "00998A",
+      "name": "主動復華金融股息",
+      "market": "TPEx",
       "securityType": "etf"
     },
     {
@@ -1737,9 +2459,45 @@
       "securityType": "stock"
     },
     {
+      "symbol": "1240",
+      "name": "茂生農經",
+      "market": "TPEx",
+      "securityType": "stock"
+    },
+    {
       "symbol": "1256",
       "name": "鮮活果汁-KY",
       "market": "TWSE",
+      "securityType": "stock"
+    },
+    {
+      "symbol": "1259",
+      "name": "安心",
+      "market": "TPEx",
+      "securityType": "stock"
+    },
+    {
+      "symbol": "1264",
+      "name": "德麥",
+      "market": "TPEx",
+      "securityType": "stock"
+    },
+    {
+      "symbol": "1268",
+      "name": "漢來美食",
+      "market": "TPEx",
+      "securityType": "stock"
+    },
+    {
+      "symbol": "1294",
+      "name": "漢田生技",
+      "market": "TPEx",
+      "securityType": "stock"
+    },
+    {
+      "symbol": "1295",
+      "name": "生合",
+      "market": "TPEx",
       "securityType": "stock"
     },
     {
@@ -1860,6 +2618,12 @@
       "symbol": "1326",
       "name": "台化",
       "market": "TWSE",
+      "securityType": "stock"
+    },
+    {
+      "symbol": "1336",
+      "name": "台翰",
+      "market": "TPEx",
       "securityType": "stock"
     },
     {
@@ -2391,9 +3155,33 @@
       "securityType": "stock"
     },
     {
+      "symbol": "1565",
+      "name": "精華",
+      "market": "TPEx",
+      "securityType": "stock"
+    },
+    {
       "symbol": "1568",
       "name": "倉佑",
       "market": "TWSE",
+      "securityType": "stock"
+    },
+    {
+      "symbol": "1569",
+      "name": "濱川",
+      "market": "TPEx",
+      "securityType": "stock"
+    },
+    {
+      "symbol": "1570",
+      "name": "力肯",
+      "market": "TPEx",
+      "securityType": "stock"
+    },
+    {
+      "symbol": "1580",
+      "name": "新麥",
+      "market": "TPEx",
       "securityType": "stock"
     },
     {
@@ -2409,8 +3197,26 @@
       "securityType": "stock"
     },
     {
+      "symbol": "1584",
+      "name": "精剛",
+      "market": "TPEx",
+      "securityType": "stock"
+    },
+    {
+      "symbol": "1586",
+      "name": "和勤",
+      "market": "TPEx",
+      "securityType": "stock"
+    },
+    {
       "symbol": "1587",
       "name": "吉茂",
+      "market": "TWSE",
+      "securityType": "stock"
+    },
+    {
+      "symbol": "1589",
+      "name": "永冠-KY",
       "market": "TWSE",
       "securityType": "stock"
     },
@@ -2418,6 +3224,24 @@
       "symbol": "1590",
       "name": "亞德客-KY",
       "market": "TWSE",
+      "securityType": "stock"
+    },
+    {
+      "symbol": "1591",
+      "name": "駿吉-KY",
+      "market": "TPEx",
+      "securityType": "stock"
+    },
+    {
+      "symbol": "1593",
+      "name": "祺驊",
+      "market": "TPEx",
+      "securityType": "stock"
+    },
+    {
+      "symbol": "1595",
+      "name": "川寶",
+      "market": "TPEx",
       "securityType": "stock"
     },
     {
@@ -2430,6 +3254,12 @@
       "symbol": "1598",
       "name": "岱宇",
       "market": "TWSE",
+      "securityType": "stock"
+    },
+    {
+      "symbol": "1599",
+      "name": "宏佳騰",
+      "market": "TPEx",
       "securityType": "stock"
     },
     {
@@ -2673,6 +3503,12 @@
       "securityType": "stock"
     },
     {
+      "symbol": "1742",
+      "name": "台蠟",
+      "market": "TPEx",
+      "securityType": "stock"
+    },
+    {
       "symbol": "1752",
       "name": "南光",
       "market": "TWSE",
@@ -2703,15 +3539,51 @@
       "securityType": "stock"
     },
     {
+      "symbol": "1777",
+      "name": "生泰",
+      "market": "TPEx",
+      "securityType": "stock"
+    },
+    {
+      "symbol": "1780",
+      "name": "立弘",
+      "market": "TPEx",
+      "securityType": "stock"
+    },
+    {
+      "symbol": "1781",
+      "name": "合世",
+      "market": "TPEx",
+      "securityType": "stock"
+    },
+    {
       "symbol": "1783",
       "name": "和康生",
       "market": "TWSE",
       "securityType": "stock"
     },
     {
+      "symbol": "1784",
+      "name": "訊聯",
+      "market": "TPEx",
+      "securityType": "stock"
+    },
+    {
+      "symbol": "1785",
+      "name": "光洋科",
+      "market": "TPEx",
+      "securityType": "stock"
+    },
+    {
       "symbol": "1786",
       "name": "科妍",
       "market": "TWSE",
+      "securityType": "stock"
+    },
+    {
+      "symbol": "1788",
+      "name": "杏昌",
+      "market": "TPEx",
       "securityType": "stock"
     },
     {
@@ -2724,6 +3596,18 @@
       "symbol": "1795",
       "name": "美時",
       "market": "TWSE",
+      "securityType": "stock"
+    },
+    {
+      "symbol": "1796",
+      "name": "金穎生技",
+      "market": "TPEx",
+      "securityType": "stock"
+    },
+    {
+      "symbol": "1799",
+      "name": "易威",
+      "market": "TPEx",
       "securityType": "stock"
     },
     {
@@ -2760,6 +3644,18 @@
       "symbol": "1810",
       "name": "和成",
       "market": "TWSE",
+      "securityType": "stock"
+    },
+    {
+      "symbol": "1813",
+      "name": "寶利徠",
+      "market": "TPEx",
+      "securityType": "stock"
+    },
+    {
+      "symbol": "1815",
+      "name": "富喬",
+      "market": "TPEx",
       "securityType": "stock"
     },
     {
@@ -2955,6 +3851,12 @@
       "securityType": "stock"
     },
     {
+      "symbol": "2035",
+      "name": "唐榮",
+      "market": "TPEx",
+      "securityType": "stock"
+    },
+    {
       "symbol": "2038",
       "name": "海光",
       "market": "TWSE",
@@ -2973,9 +3875,45 @@
       "securityType": "stock"
     },
     {
+      "symbol": "2061",
+      "name": "風青",
+      "market": "TPEx",
+      "securityType": "stock"
+    },
+    {
       "symbol": "2062",
       "name": "橋椿",
       "market": "TWSE",
+      "securityType": "stock"
+    },
+    {
+      "symbol": "2063",
+      "name": "世鎧",
+      "market": "TPEx",
+      "securityType": "stock"
+    },
+    {
+      "symbol": "2064",
+      "name": "晉椿",
+      "market": "TPEx",
+      "securityType": "stock"
+    },
+    {
+      "symbol": "2065",
+      "name": "世豐",
+      "market": "TPEx",
+      "securityType": "stock"
+    },
+    {
+      "symbol": "2066",
+      "name": "世德",
+      "market": "TPEx",
+      "securityType": "stock"
+    },
+    {
+      "symbol": "2067",
+      "name": "嘉鋼",
+      "market": "TPEx",
       "securityType": "stock"
     },
     {
@@ -2985,9 +3923,21 @@
       "securityType": "stock"
     },
     {
+      "symbol": "2070",
+      "name": "精湛",
+      "market": "TPEx",
+      "securityType": "stock"
+    },
+    {
       "symbol": "2072",
       "name": "世紀風電",
       "market": "TWSE",
+      "securityType": "stock"
+    },
+    {
+      "symbol": "2073",
+      "name": "雄順",
+      "market": "TPEx",
       "securityType": "stock"
     },
     {
@@ -3093,6 +4043,12 @@
       "securityType": "stock"
     },
     {
+      "symbol": "2221",
+      "name": "大甲",
+      "market": "TPEx",
+      "securityType": "stock"
+    },
+    {
       "symbol": "2227",
       "name": "裕日車",
       "market": "TWSE",
@@ -3105,6 +4061,12 @@
       "securityType": "stock"
     },
     {
+      "symbol": "2230",
+      "name": "泰茂",
+      "market": "TPEx",
+      "securityType": "stock"
+    },
+    {
       "symbol": "2231",
       "name": "為升",
       "market": "TWSE",
@@ -3114,6 +4076,12 @@
       "symbol": "2233",
       "name": "宇隆",
       "market": "TWSE",
+      "securityType": "stock"
+    },
+    {
+      "symbol": "2235",
+      "name": "謚源",
+      "market": "TPEx",
       "securityType": "stock"
     },
     {
@@ -3233,6 +4201,12 @@
     {
       "symbol": "2317",
       "name": "鴻海",
+      "market": "TWSE",
+      "securityType": "stock"
+    },
+    {
+      "symbol": "2321",
+      "name": "東訊",
       "market": "TWSE",
       "securityType": "stock"
     },
@@ -4155,6 +5129,12 @@
       "securityType": "stock"
     },
     {
+      "symbol": "2596",
+      "name": "綠意",
+      "market": "TPEx",
+      "securityType": "stock"
+    },
+    {
       "symbol": "2597",
       "name": "潤弘",
       "market": "TWSE",
@@ -4287,9 +5267,27 @@
       "securityType": "stock"
     },
     {
+      "symbol": "2640",
+      "name": "大車隊",
+      "market": "TPEx",
+      "securityType": "stock"
+    },
+    {
+      "symbol": "2641",
+      "name": "正德",
+      "market": "TPEx",
+      "securityType": "stock"
+    },
+    {
       "symbol": "2642",
       "name": "宅配通",
       "market": "TWSE",
+      "securityType": "stock"
+    },
+    {
+      "symbol": "2643",
+      "name": "捷迅",
+      "market": "TPEx",
       "securityType": "stock"
     },
     {
@@ -4347,6 +5345,18 @@
       "securityType": "stock"
     },
     {
+      "symbol": "2718",
+      "name": "全心投控",
+      "market": "TPEx",
+      "securityType": "stock"
+    },
+    {
+      "symbol": "2719",
+      "name": "燦星旅",
+      "market": "TPEx",
+      "securityType": "stock"
+    },
+    {
       "symbol": "2722",
       "name": "夏都",
       "market": "TWSE",
@@ -4359,9 +5369,27 @@
       "securityType": "stock"
     },
     {
+      "symbol": "2724",
+      "name": "藝舍-KY",
+      "market": "TPEx",
+      "securityType": "stock"
+    },
+    {
+      "symbol": "2726",
+      "name": "雅茗-KY",
+      "market": "TPEx",
+      "securityType": "stock"
+    },
+    {
       "symbol": "2727",
       "name": "王品",
       "market": "TWSE",
+      "securityType": "stock"
+    },
+    {
+      "symbol": "2729",
+      "name": "瓦城",
+      "market": "TPEx",
       "securityType": "stock"
     },
     {
@@ -4371,9 +5399,45 @@
       "securityType": "stock"
     },
     {
+      "symbol": "2732",
+      "name": "六角",
+      "market": "TPEx",
+      "securityType": "stock"
+    },
+    {
+      "symbol": "2734",
+      "name": "易飛網",
+      "market": "TPEx",
+      "securityType": "stock"
+    },
+    {
+      "symbol": "2736",
+      "name": "富野",
+      "market": "TPEx",
+      "securityType": "stock"
+    },
+    {
       "symbol": "2739",
       "name": "寒舍",
       "market": "TWSE",
+      "securityType": "stock"
+    },
+    {
+      "symbol": "2740",
+      "name": "華軒",
+      "market": "TPEx",
+      "securityType": "stock"
+    },
+    {
+      "symbol": "2743",
+      "name": "山富",
+      "market": "TPEx",
+      "securityType": "stock"
+    },
+    {
+      "symbol": "2745",
+      "name": "五福",
+      "market": "TPEx",
       "securityType": "stock"
     },
     {
@@ -4383,9 +5447,39 @@
       "securityType": "stock"
     },
     {
+      "symbol": "2751",
+      "name": "王座",
+      "market": "TPEx",
+      "securityType": "stock"
+    },
+    {
+      "symbol": "2752",
+      "name": "豆府",
+      "market": "TPEx",
+      "securityType": "stock"
+    },
+    {
       "symbol": "2753",
       "name": "八方雲集",
       "market": "TWSE",
+      "securityType": "stock"
+    },
+    {
+      "symbol": "2754",
+      "name": "亞洲藏壽司",
+      "market": "TPEx",
+      "securityType": "stock"
+    },
+    {
+      "symbol": "2755",
+      "name": "揚秦",
+      "market": "TPEx",
+      "securityType": "stock"
+    },
+    {
+      "symbol": "2756",
+      "name": "聯發國際",
+      "market": "TPEx",
       "securityType": "stock"
     },
     {
@@ -4725,9 +5819,27 @@
       "securityType": "stock"
     },
     {
+      "symbol": "2916",
+      "name": "滿心",
+      "market": "TPEx",
+      "securityType": "stock"
+    },
+    {
       "symbol": "2923",
       "name": "鼎固-KY",
       "market": "TWSE",
+      "securityType": "stock"
+    },
+    {
+      "symbol": "2924",
+      "name": "宏太-KY",
+      "market": "TPEx",
+      "securityType": "stock"
+    },
+    {
+      "symbol": "2926",
+      "name": "誠品生活",
+      "market": "TPEx",
       "securityType": "stock"
     },
     {
@@ -4737,15 +5849,45 @@
       "securityType": "stock"
     },
     {
+      "symbol": "2937",
+      "name": "集雅社",
+      "market": "TPEx",
+      "securityType": "stock"
+    },
+    {
       "symbol": "2939",
       "name": "永邑-KY",
       "market": "TWSE",
       "securityType": "stock"
     },
     {
+      "symbol": "2941",
+      "name": "米斯特",
+      "market": "TPEx",
+      "securityType": "stock"
+    },
+    {
       "symbol": "2945",
       "name": "三商家購",
       "market": "TWSE",
+      "securityType": "stock"
+    },
+    {
+      "symbol": "2947",
+      "name": "振宇五金",
+      "market": "TPEx",
+      "securityType": "stock"
+    },
+    {
+      "symbol": "2948",
+      "name": "寶陞",
+      "market": "TPEx",
+      "securityType": "stock"
+    },
+    {
+      "symbol": "2949",
+      "name": "欣新網",
+      "market": "TPEx",
       "securityType": "stock"
     },
     {
@@ -5073,6 +6215,72 @@
       "securityType": "stock"
     },
     {
+      "symbol": "3064",
+      "name": "泰偉",
+      "market": "TPEx",
+      "securityType": "stock"
+    },
+    {
+      "symbol": "3066",
+      "name": "李洲",
+      "market": "TPEx",
+      "securityType": "stock"
+    },
+    {
+      "symbol": "3067",
+      "name": "全域",
+      "market": "TPEx",
+      "securityType": "stock"
+    },
+    {
+      "symbol": "3071",
+      "name": "協禧",
+      "market": "TPEx",
+      "securityType": "stock"
+    },
+    {
+      "symbol": "3073",
+      "name": "天方能源",
+      "market": "TPEx",
+      "securityType": "stock"
+    },
+    {
+      "symbol": "3078",
+      "name": "僑威",
+      "market": "TPEx",
+      "securityType": "stock"
+    },
+    {
+      "symbol": "3081",
+      "name": "聯亞",
+      "market": "TPEx",
+      "securityType": "stock"
+    },
+    {
+      "symbol": "3083",
+      "name": "網龍",
+      "market": "TPEx",
+      "securityType": "stock"
+    },
+    {
+      "symbol": "3085",
+      "name": "新零售",
+      "market": "TPEx",
+      "securityType": "stock"
+    },
+    {
+      "symbol": "3086",
+      "name": "華義*",
+      "market": "TPEx",
+      "securityType": "stock"
+    },
+    {
+      "symbol": "3088",
+      "name": "艾訊",
+      "market": "TPEx",
+      "securityType": "stock"
+    },
+    {
       "symbol": "3090",
       "name": "日電貿",
       "market": "TWSE",
@@ -5085,15 +6293,69 @@
       "securityType": "stock"
     },
     {
+      "symbol": "3093",
+      "name": "港建*",
+      "market": "TPEx",
+      "securityType": "stock"
+    },
+    {
       "symbol": "3094",
       "name": "聯傑",
       "market": "TWSE",
       "securityType": "stock"
     },
     {
+      "symbol": "3095",
+      "name": "及成",
+      "market": "TPEx",
+      "securityType": "stock"
+    },
+    {
+      "symbol": "3105",
+      "name": "穩懋",
+      "market": "TPEx",
+      "securityType": "stock"
+    },
+    {
+      "symbol": "3114",
+      "name": "好德",
+      "market": "TPEx",
+      "securityType": "stock"
+    },
+    {
+      "symbol": "3115",
+      "name": "富榮綱",
+      "market": "TPEx",
+      "securityType": "stock"
+    },
+    {
+      "symbol": "3118",
+      "name": "進階",
+      "market": "TPEx",
+      "securityType": "stock"
+    },
+    {
+      "symbol": "3122",
+      "name": "笙泉",
+      "market": "TPEx",
+      "securityType": "stock"
+    },
+    {
+      "symbol": "3128",
+      "name": "昇銳",
+      "market": "TPEx",
+      "securityType": "stock"
+    },
+    {
       "symbol": "3130",
       "name": "一零四",
       "market": "TWSE",
+      "securityType": "stock"
+    },
+    {
+      "symbol": "3131",
+      "name": "弘塑",
+      "market": "TPEx",
       "securityType": "stock"
     },
     {
@@ -5109,6 +6371,18 @@
       "securityType": "stock"
     },
     {
+      "symbol": "3141",
+      "name": "晶宏",
+      "market": "TPEx",
+      "securityType": "stock"
+    },
+    {
+      "symbol": "3147",
+      "name": "大綜",
+      "market": "TPEx",
+      "securityType": "stock"
+    },
+    {
       "symbol": "3149",
       "name": "正達",
       "market": "TWSE",
@@ -5118,6 +6392,30 @@
       "symbol": "3150",
       "name": "鈺寶-創",
       "market": "TWSE",
+      "securityType": "stock"
+    },
+    {
+      "symbol": "3152",
+      "name": "璟德",
+      "market": "TPEx",
+      "securityType": "stock"
+    },
+    {
+      "symbol": "3158",
+      "name": "嘉實",
+      "market": "TPEx",
+      "securityType": "stock"
+    },
+    {
+      "symbol": "3162",
+      "name": "精確",
+      "market": "TPEx",
+      "securityType": "stock"
+    },
+    {
+      "symbol": "3163",
+      "name": "波若威",
+      "market": "TPEx",
       "securityType": "stock"
     },
     {
@@ -5139,9 +6437,63 @@
       "securityType": "stock"
     },
     {
+      "symbol": "3169",
+      "name": "亞信",
+      "market": "TPEx",
+      "securityType": "stock"
+    },
+    {
+      "symbol": "3171",
+      "name": "炎洲流通",
+      "market": "TPEx",
+      "securityType": "stock"
+    },
+    {
+      "symbol": "3176",
+      "name": "基亞",
+      "market": "TPEx",
+      "securityType": "stock"
+    },
+    {
+      "symbol": "3178",
+      "name": "公準",
+      "market": "TPEx",
+      "securityType": "stock"
+    },
+    {
+      "symbol": "3188",
+      "name": "鑫龍騰",
+      "market": "TPEx",
+      "securityType": "stock"
+    },
+    {
       "symbol": "3189",
       "name": "景碩",
       "market": "TWSE",
+      "securityType": "stock"
+    },
+    {
+      "symbol": "3191",
+      "name": "雲嘉南",
+      "market": "TPEx",
+      "securityType": "stock"
+    },
+    {
+      "symbol": "3205",
+      "name": "佰研",
+      "market": "TPEx",
+      "securityType": "stock"
+    },
+    {
+      "symbol": "3206",
+      "name": "志豐",
+      "market": "TPEx",
+      "securityType": "stock"
+    },
+    {
+      "symbol": "3207",
+      "name": "耀勝",
+      "market": "TPEx",
       "securityType": "stock"
     },
     {
@@ -5151,9 +6503,75 @@
       "securityType": "stock"
     },
     {
+      "symbol": "3211",
+      "name": "順達",
+      "market": "TPEx",
+      "securityType": "stock"
+    },
+    {
+      "symbol": "3213",
+      "name": "茂訊",
+      "market": "TPEx",
+      "securityType": "stock"
+    },
+    {
+      "symbol": "3217",
+      "name": "優群",
+      "market": "TPEx",
+      "securityType": "stock"
+    },
+    {
+      "symbol": "3218",
+      "name": "大學光",
+      "market": "TPEx",
+      "securityType": "stock"
+    },
+    {
+      "symbol": "3219",
+      "name": "倚強科",
+      "market": "TPEx",
+      "securityType": "stock"
+    },
+    {
+      "symbol": "3221",
+      "name": "台嘉碩",
+      "market": "TPEx",
+      "securityType": "stock"
+    },
+    {
+      "symbol": "3224",
+      "name": "三顧",
+      "market": "TPEx",
+      "securityType": "stock"
+    },
+    {
+      "symbol": "3226",
+      "name": "龍鋒",
+      "market": "TPEx",
+      "securityType": "stock"
+    },
+    {
+      "symbol": "3227",
+      "name": "原相",
+      "market": "TPEx",
+      "securityType": "stock"
+    },
+    {
+      "symbol": "3228",
+      "name": "金麗科",
+      "market": "TPEx",
+      "securityType": "stock"
+    },
+    {
       "symbol": "3229",
       "name": "晟鈦",
       "market": "TWSE",
+      "securityType": "stock"
+    },
+    {
+      "symbol": "3230",
+      "name": "錦明",
+      "market": "TPEx",
       "securityType": "stock"
     },
     {
@@ -5163,9 +6581,57 @@
       "securityType": "stock"
     },
     {
+      "symbol": "3232",
+      "name": "昱捷",
+      "market": "TPEx",
+      "securityType": "stock"
+    },
+    {
+      "symbol": "3234",
+      "name": "光環",
+      "market": "TPEx",
+      "securityType": "stock"
+    },
+    {
+      "symbol": "3236",
+      "name": "千如",
+      "market": "TPEx",
+      "securityType": "stock"
+    },
+    {
+      "symbol": "3252",
+      "name": "海灣",
+      "market": "TPEx",
+      "securityType": "stock"
+    },
+    {
       "symbol": "3257",
       "name": "虹冠電",
       "market": "TWSE",
+      "securityType": "stock"
+    },
+    {
+      "symbol": "3259",
+      "name": "鑫創",
+      "market": "TPEx",
+      "securityType": "stock"
+    },
+    {
+      "symbol": "3260",
+      "name": "威剛",
+      "market": "TPEx",
+      "securityType": "stock"
+    },
+    {
+      "symbol": "3264",
+      "name": "欣銓",
+      "market": "TPEx",
+      "securityType": "stock"
+    },
+    {
+      "symbol": "3265",
+      "name": "台星科",
+      "market": "TPEx",
       "securityType": "stock"
     },
     {
@@ -5175,9 +6641,87 @@
       "securityType": "stock"
     },
     {
+      "symbol": "3268",
+      "name": "海德威",
+      "market": "TPEx",
+      "securityType": "stock"
+    },
+    {
+      "symbol": "3272",
+      "name": "東碩",
+      "market": "TPEx",
+      "securityType": "stock"
+    },
+    {
+      "symbol": "3276",
+      "name": "宇環",
+      "market": "TPEx",
+      "securityType": "stock"
+    },
+    {
+      "symbol": "3284",
+      "name": "太普高",
+      "market": "TPEx",
+      "securityType": "stock"
+    },
+    {
+      "symbol": "3285",
+      "name": "微端",
+      "market": "TPEx",
+      "securityType": "stock"
+    },
+    {
+      "symbol": "3287",
+      "name": "廣寰科",
+      "market": "TPEx",
+      "securityType": "stock"
+    },
+    {
+      "symbol": "3288",
+      "name": "點晶",
+      "market": "TPEx",
+      "securityType": "stock"
+    },
+    {
+      "symbol": "3289",
+      "name": "宜特",
+      "market": "TPEx",
+      "securityType": "stock"
+    },
+    {
+      "symbol": "3290",
+      "name": "東浦",
+      "market": "TPEx",
+      "securityType": "stock"
+    },
+    {
+      "symbol": "3293",
+      "name": "鈊象",
+      "market": "TPEx",
+      "securityType": "stock"
+    },
+    {
+      "symbol": "3294",
+      "name": "英濟",
+      "market": "TPEx",
+      "securityType": "stock"
+    },
+    {
       "symbol": "3296",
       "name": "勝德",
       "market": "TWSE",
+      "securityType": "stock"
+    },
+    {
+      "symbol": "3297",
+      "name": "杭特",
+      "market": "TPEx",
+      "securityType": "stock"
+    },
+    {
+      "symbol": "3303",
+      "name": "岱稜",
+      "market": "TPEx",
       "securityType": "stock"
     },
     {
@@ -5187,9 +6731,21 @@
       "securityType": "stock"
     },
     {
+      "symbol": "3306",
+      "name": "鼎天",
+      "market": "TPEx",
+      "securityType": "stock"
+    },
+    {
       "symbol": "3308",
       "name": "聯德",
       "market": "TWSE",
+      "securityType": "stock"
+    },
+    {
+      "symbol": "3310",
+      "name": "佳穎",
+      "market": "TPEx",
       "securityType": "stock"
     },
     {
@@ -5205,9 +6761,51 @@
       "securityType": "stock"
     },
     {
+      "symbol": "3313",
+      "name": "斐成",
+      "market": "TPEx",
+      "securityType": "stock"
+    },
+    {
+      "symbol": "3317",
+      "name": "尼克森",
+      "market": "TPEx",
+      "securityType": "stock"
+    },
+    {
       "symbol": "3321",
       "name": "同泰",
       "market": "TWSE",
+      "securityType": "stock"
+    },
+    {
+      "symbol": "3322",
+      "name": "建舜電",
+      "market": "TPEx",
+      "securityType": "stock"
+    },
+    {
+      "symbol": "3323",
+      "name": "加百裕",
+      "market": "TPEx",
+      "securityType": "stock"
+    },
+    {
+      "symbol": "3324",
+      "name": "雙鴻",
+      "market": "TPEx",
+      "securityType": "stock"
+    },
+    {
+      "symbol": "3325",
+      "name": "旭品",
+      "market": "TPEx",
+      "securityType": "stock"
+    },
+    {
+      "symbol": "3332",
+      "name": "幸康",
+      "market": "TPEx",
       "securityType": "stock"
     },
     {
@@ -5217,9 +6815,75 @@
       "securityType": "stock"
     },
     {
+      "symbol": "3339",
+      "name": "泰谷",
+      "market": "TPEx",
+      "securityType": "stock"
+    },
+    {
       "symbol": "3346",
       "name": "麗清",
       "market": "TWSE",
+      "securityType": "stock"
+    },
+    {
+      "symbol": "3349",
+      "name": "寶德",
+      "market": "TPEx",
+      "securityType": "stock"
+    },
+    {
+      "symbol": "3354",
+      "name": "律勝",
+      "market": "TPEx",
+      "securityType": "stock"
+    },
+    {
+      "symbol": "3356",
+      "name": "奇偶",
+      "market": "TWSE",
+      "securityType": "stock"
+    },
+    {
+      "symbol": "3357",
+      "name": "臺慶科",
+      "market": "TPEx",
+      "securityType": "stock"
+    },
+    {
+      "symbol": "3360",
+      "name": "尚立",
+      "market": "TPEx",
+      "securityType": "stock"
+    },
+    {
+      "symbol": "3362",
+      "name": "先進光",
+      "market": "TPEx",
+      "securityType": "stock"
+    },
+    {
+      "symbol": "3363",
+      "name": "上詮",
+      "market": "TPEx",
+      "securityType": "stock"
+    },
+    {
+      "symbol": "3372",
+      "name": "典範",
+      "market": "TPEx",
+      "securityType": "stock"
+    },
+    {
+      "symbol": "3373",
+      "name": "熱映",
+      "market": "TPEx",
+      "securityType": "stock"
+    },
+    {
+      "symbol": "3374",
+      "name": "精材",
+      "market": "TPEx",
       "securityType": "stock"
     },
     {
@@ -5229,9 +6893,33 @@
       "securityType": "stock"
     },
     {
+      "symbol": "3379",
+      "name": "彬台",
+      "market": "TPEx",
+      "securityType": "stock"
+    },
+    {
       "symbol": "3380",
       "name": "明泰",
       "market": "TWSE",
+      "securityType": "stock"
+    },
+    {
+      "symbol": "3388",
+      "name": "崇越電",
+      "market": "TPEx",
+      "securityType": "stock"
+    },
+    {
+      "symbol": "3390",
+      "name": "旭軟",
+      "market": "TPEx",
+      "securityType": "stock"
+    },
+    {
+      "symbol": "3402",
+      "name": "漢科",
+      "market": "TPEx",
       "securityType": "stock"
     },
     {
@@ -5259,9 +6947,21 @@
       "securityType": "stock"
     },
     {
+      "symbol": "3430",
+      "name": "奇鈦科",
+      "market": "TPEx",
+      "securityType": "stock"
+    },
+    {
       "symbol": "3432",
       "name": "台端",
       "market": "TWSE",
+      "securityType": "stock"
+    },
+    {
+      "symbol": "3434",
+      "name": "哲固",
+      "market": "TPEx",
       "securityType": "stock"
     },
     {
@@ -5271,9 +6971,27 @@
       "securityType": "stock"
     },
     {
+      "symbol": "3438",
+      "name": "類比科",
+      "market": "TPEx",
+      "securityType": "stock"
+    },
+    {
+      "symbol": "3441",
+      "name": "聯一光",
+      "market": "TPEx",
+      "securityType": "stock"
+    },
+    {
       "symbol": "3443",
       "name": "創意",
       "market": "TWSE",
+      "securityType": "stock"
+    },
+    {
+      "symbol": "3444",
+      "name": "利機",
+      "market": "TPEx",
       "securityType": "stock"
     },
     {
@@ -5289,15 +7007,99 @@
       "securityType": "stock"
     },
     {
+      "symbol": "3455",
+      "name": "由田",
+      "market": "TPEx",
+      "securityType": "stock"
+    },
+    {
+      "symbol": "3465",
+      "name": "進泰電子",
+      "market": "TPEx",
+      "securityType": "stock"
+    },
+    {
+      "symbol": "3466",
+      "name": "德晉",
+      "market": "TPEx",
+      "securityType": "stock"
+    },
+    {
+      "symbol": "3467",
+      "name": "台灣精材",
+      "market": "TPEx",
+      "securityType": "stock"
+    },
+    {
+      "symbol": "3479",
+      "name": "安勤",
+      "market": "TPEx",
+      "securityType": "stock"
+    },
+    {
       "symbol": "3481",
       "name": "群創",
       "market": "TWSE",
       "securityType": "stock"
     },
     {
+      "symbol": "3483",
+      "name": "力致",
+      "market": "TPEx",
+      "securityType": "stock"
+    },
+    {
+      "symbol": "3484",
+      "name": "崧騰",
+      "market": "TPEx",
+      "securityType": "stock"
+    },
+    {
+      "symbol": "3485",
+      "name": "敘豐",
+      "market": "TPEx",
+      "securityType": "stock"
+    },
+    {
+      "symbol": "3489",
+      "name": "森寶",
+      "market": "TPEx",
+      "securityType": "stock"
+    },
+    {
+      "symbol": "3490",
+      "name": "單井",
+      "market": "TPEx",
+      "securityType": "stock"
+    },
+    {
+      "symbol": "3491",
+      "name": "昇達科",
+      "market": "TPEx",
+      "securityType": "stock"
+    },
+    {
+      "symbol": "3492",
+      "name": "長盛",
+      "market": "TPEx",
+      "securityType": "stock"
+    },
+    {
       "symbol": "3494",
       "name": "誠研",
       "market": "TWSE",
+      "securityType": "stock"
+    },
+    {
+      "symbol": "3498",
+      "name": "陽程",
+      "market": "TPEx",
+      "securityType": "stock"
+    },
+    {
+      "symbol": "3499",
+      "name": "環天科",
+      "market": "TPEx",
       "securityType": "stock"
     },
     {
@@ -5313,9 +7115,33 @@
       "securityType": "stock"
     },
     {
+      "symbol": "3508",
+      "name": "位速",
+      "market": "TPEx",
+      "securityType": "stock"
+    },
+    {
+      "symbol": "3511",
+      "name": "矽瑪",
+      "market": "TPEx",
+      "securityType": "stock"
+    },
+    {
+      "symbol": "3512",
+      "name": "皇龍",
+      "market": "TPEx",
+      "securityType": "stock"
+    },
+    {
       "symbol": "3515",
       "name": "華擎",
       "market": "TWSE",
+      "securityType": "stock"
+    },
+    {
+      "symbol": "3516",
+      "name": "亞帝歐",
+      "market": "TPEx",
       "securityType": "stock"
     },
     {
@@ -5325,15 +7151,63 @@
       "securityType": "stock"
     },
     {
+      "symbol": "3520",
+      "name": "華盈",
+      "market": "TPEx",
+      "securityType": "stock"
+    },
+    {
+      "symbol": "3521",
+      "name": "台鋼建設",
+      "market": "TPEx",
+      "securityType": "stock"
+    },
+    {
+      "symbol": "3522",
+      "name": "御嵿",
+      "market": "TPEx",
+      "securityType": "stock"
+    },
+    {
+      "symbol": "3523",
+      "name": "迎輝",
+      "market": "TPEx",
+      "securityType": "stock"
+    },
+    {
+      "symbol": "3526",
+      "name": "凡甲",
+      "market": "TPEx",
+      "securityType": "stock"
+    },
+    {
+      "symbol": "3527",
+      "name": "聚積",
+      "market": "TPEx",
+      "securityType": "stock"
+    },
+    {
       "symbol": "3528",
       "name": "安馳",
       "market": "TWSE",
       "securityType": "stock"
     },
     {
+      "symbol": "3529",
+      "name": "力旺",
+      "market": "TPEx",
+      "securityType": "stock"
+    },
+    {
       "symbol": "3530",
       "name": "晶相光",
       "market": "TWSE",
+      "securityType": "stock"
+    },
+    {
+      "symbol": "3531",
+      "name": "先益",
+      "market": "TPEx",
       "securityType": "stock"
     },
     {
@@ -5355,6 +7229,24 @@
       "securityType": "stock"
     },
     {
+      "symbol": "3537",
+      "name": "堡達",
+      "market": "TPEx",
+      "securityType": "stock"
+    },
+    {
+      "symbol": "3540",
+      "name": "曜越",
+      "market": "TPEx",
+      "securityType": "stock"
+    },
+    {
+      "symbol": "3541",
+      "name": "西柏",
+      "market": "TPEx",
+      "securityType": "stock"
+    },
+    {
       "symbol": "3543",
       "name": "州巧",
       "market": "TWSE",
@@ -5367,9 +7259,45 @@
       "securityType": "stock"
     },
     {
+      "symbol": "3546",
+      "name": "宇峻",
+      "market": "TPEx",
+      "securityType": "stock"
+    },
+    {
+      "symbol": "3548",
+      "name": "兆利",
+      "market": "TPEx",
+      "securityType": "stock"
+    },
+    {
       "symbol": "3550",
       "name": "聯穎",
       "market": "TWSE",
+      "securityType": "stock"
+    },
+    {
+      "symbol": "3551",
+      "name": "世禾",
+      "market": "TPEx",
+      "securityType": "stock"
+    },
+    {
+      "symbol": "3552",
+      "name": "同致",
+      "market": "TPEx",
+      "securityType": "stock"
+    },
+    {
+      "symbol": "3555",
+      "name": "博士旺",
+      "market": "TPEx",
+      "securityType": "stock"
+    },
+    {
+      "symbol": "3556",
+      "name": "禾瑞亞",
+      "market": "TPEx",
       "securityType": "stock"
     },
     {
@@ -5379,9 +7307,33 @@
       "securityType": "stock"
     },
     {
+      "symbol": "3558",
+      "name": "神準",
+      "market": "TPEx",
+      "securityType": "stock"
+    },
+    {
       "symbol": "3563",
       "name": "牧德",
       "market": "TWSE",
+      "securityType": "stock"
+    },
+    {
+      "symbol": "3564",
+      "name": "其陽",
+      "market": "TPEx",
+      "securityType": "stock"
+    },
+    {
+      "symbol": "3567",
+      "name": "逸昌",
+      "market": "TPEx",
+      "securityType": "stock"
+    },
+    {
+      "symbol": "3570",
+      "name": "大塚",
+      "market": "TPEx",
       "securityType": "stock"
     },
     {
@@ -5391,14 +7343,44 @@
       "securityType": "stock"
     },
     {
+      "symbol": "3577",
+      "name": "泓格",
+      "market": "TPEx",
+      "securityType": "stock"
+    },
+    {
+      "symbol": "3580",
+      "name": "友威科",
+      "market": "TPEx",
+      "securityType": "stock"
+    },
+    {
+      "symbol": "3581",
+      "name": "博磊",
+      "market": "TPEx",
+      "securityType": "stock"
+    },
+    {
       "symbol": "3583",
       "name": "辛耘",
       "market": "TWSE",
       "securityType": "stock"
     },
     {
+      "symbol": "3587",
+      "name": "閎康",
+      "market": "TPEx",
+      "securityType": "stock"
+    },
+    {
       "symbol": "3588",
       "name": "通嘉",
+      "market": "TWSE",
+      "securityType": "stock"
+    },
+    {
+      "symbol": "3591",
+      "name": "艾笛森",
       "market": "TWSE",
       "securityType": "stock"
     },
@@ -5415,9 +7397,21 @@
       "securityType": "stock"
     },
     {
+      "symbol": "3594",
+      "name": "磐儀",
+      "market": "TPEx",
+      "securityType": "stock"
+    },
+    {
       "symbol": "3596",
       "name": "智易",
       "market": "TWSE",
+      "securityType": "stock"
+    },
+    {
+      "symbol": "3597",
+      "name": "映興",
+      "market": "TPEx",
       "securityType": "stock"
     },
     {
@@ -5433,6 +7427,24 @@
       "securityType": "stock"
     },
     {
+      "symbol": "3609",
+      "name": "三一東林",
+      "market": "TPEx",
+      "securityType": "stock"
+    },
+    {
+      "symbol": "3611",
+      "name": "鼎翰",
+      "market": "TPEx",
+      "securityType": "stock"
+    },
+    {
+      "symbol": "3615",
+      "name": "安可",
+      "market": "TPEx",
+      "securityType": "stock"
+    },
+    {
       "symbol": "3617",
       "name": "碩天",
       "market": "TWSE",
@@ -5445,9 +7457,63 @@
       "securityType": "stock"
     },
     {
+      "symbol": "3623",
+      "name": "富晶通",
+      "market": "TPEx",
+      "securityType": "stock"
+    },
+    {
+      "symbol": "3624",
+      "name": "光頡",
+      "market": "TPEx",
+      "securityType": "stock"
+    },
+    {
+      "symbol": "3625",
+      "name": "西勝",
+      "market": "TPEx",
+      "securityType": "stock"
+    },
+    {
+      "symbol": "3628",
+      "name": "盈正",
+      "market": "TPEx",
+      "securityType": "stock"
+    },
+    {
+      "symbol": "3629",
+      "name": "地心引力",
+      "market": "TPEx",
+      "securityType": "stock"
+    },
+    {
+      "symbol": "3630",
+      "name": "新鉅科",
+      "market": "TPEx",
+      "securityType": "stock"
+    },
+    {
+      "symbol": "3631",
+      "name": "晟楠",
+      "market": "TPEx",
+      "securityType": "stock"
+    },
+    {
+      "symbol": "3632",
+      "name": "研勤",
+      "market": "TPEx",
+      "securityType": "stock"
+    },
+    {
       "symbol": "3645",
       "name": "達邁",
       "market": "TWSE",
+      "securityType": "stock"
+    },
+    {
+      "symbol": "3646",
+      "name": "艾恩特",
+      "market": "TPEx",
       "securityType": "stock"
     },
     {
@@ -5469,9 +7535,27 @@
       "securityType": "stock"
     },
     {
+      "symbol": "3663",
+      "name": "鑫科",
+      "market": "TPEx",
+      "securityType": "stock"
+    },
+    {
+      "symbol": "3664",
+      "name": "安瑞-KY",
+      "market": "TPEx",
+      "securityType": "stock"
+    },
+    {
       "symbol": "3665",
       "name": "貿聯-KY",
       "market": "TWSE",
+      "securityType": "stock"
+    },
+    {
+      "symbol": "3666",
+      "name": "光耀",
+      "market": "TPEx",
       "securityType": "stock"
     },
     {
@@ -5481,9 +7565,21 @@
       "securityType": "stock"
     },
     {
+      "symbol": "3672",
+      "name": "康聯訊",
+      "market": "TPEx",
+      "securityType": "stock"
+    },
+    {
       "symbol": "3673",
       "name": "TPK-KY",
       "market": "TWSE",
+      "securityType": "stock"
+    },
+    {
+      "symbol": "3675",
+      "name": "德微",
+      "market": "TPEx",
       "securityType": "stock"
     },
     {
@@ -5493,9 +7589,51 @@
       "securityType": "stock"
     },
     {
+      "symbol": "3680",
+      "name": "家登",
+      "market": "TPEx",
+      "securityType": "stock"
+    },
+    {
+      "symbol": "3684",
+      "name": "榮昌",
+      "market": "TPEx",
+      "securityType": "stock"
+    },
+    {
+      "symbol": "3685",
+      "name": "元創精密",
+      "market": "TPEx",
+      "securityType": "stock"
+    },
+    {
       "symbol": "3686",
       "name": "達能",
       "market": "TWSE",
+      "securityType": "stock"
+    },
+    {
+      "symbol": "3687",
+      "name": "歐買尬",
+      "market": "TPEx",
+      "securityType": "stock"
+    },
+    {
+      "symbol": "3689",
+      "name": "湧德",
+      "market": "TPEx",
+      "securityType": "stock"
+    },
+    {
+      "symbol": "3691",
+      "name": "碩禾",
+      "market": "TPEx",
+      "securityType": "stock"
+    },
+    {
+      "symbol": "3693",
+      "name": "營邦",
+      "market": "TPEx",
       "securityType": "stock"
     },
     {
@@ -5541,9 +7679,27 @@
       "securityType": "stock"
     },
     {
+      "symbol": "3707",
+      "name": "漢磊",
+      "market": "TPEx",
+      "securityType": "stock"
+    },
+    {
       "symbol": "3708",
       "name": "上緯投控",
       "market": "TWSE",
+      "securityType": "stock"
+    },
+    {
+      "symbol": "3709",
+      "name": "鑫聯大投控",
+      "market": "TPEx",
+      "securityType": "stock"
+    },
+    {
+      "symbol": "3710",
+      "name": "連展投控",
+      "market": "TPEx",
       "securityType": "stock"
     },
     {
@@ -5556,6 +7712,12 @@
       "symbol": "3712",
       "name": "永崴投控",
       "market": "TWSE",
+      "securityType": "stock"
+    },
+    {
+      "symbol": "3713",
+      "name": "新晶投控",
+      "market": "TPEx",
       "securityType": "stock"
     },
     {
@@ -5583,9 +7745,27 @@
       "securityType": "stock"
     },
     {
+      "symbol": "3718",
+      "name": "中光電投控",
+      "market": "TPEx",
+      "securityType": "stock"
+    },
+    {
+      "symbol": "4102",
+      "name": "永日",
+      "market": "TPEx",
+      "securityType": "stock"
+    },
+    {
       "symbol": "4104",
       "name": "佳醫",
       "market": "TWSE",
+      "securityType": "stock"
+    },
+    {
+      "symbol": "4105",
+      "name": "東洋",
+      "market": "TPEx",
       "securityType": "stock"
     },
     {
@@ -5595,15 +7775,99 @@
       "securityType": "stock"
     },
     {
+      "symbol": "4107",
+      "name": "邦特",
+      "market": "TPEx",
+      "securityType": "stock"
+    },
+    {
       "symbol": "4108",
       "name": "懷特",
       "market": "TWSE",
       "securityType": "stock"
     },
     {
+      "symbol": "4109",
+      "name": "加捷生醫",
+      "market": "TPEx",
+      "securityType": "stock"
+    },
+    {
+      "symbol": "4111",
+      "name": "濟生",
+      "market": "TPEx",
+      "securityType": "stock"
+    },
+    {
+      "symbol": "4113",
+      "name": "聯上",
+      "market": "TPEx",
+      "securityType": "stock"
+    },
+    {
+      "symbol": "4114",
+      "name": "健喬",
+      "market": "TPEx",
+      "securityType": "stock"
+    },
+    {
+      "symbol": "4116",
+      "name": "明基醫",
+      "market": "TPEx",
+      "securityType": "stock"
+    },
+    {
       "symbol": "4119",
       "name": "旭富",
       "market": "TWSE",
+      "securityType": "stock"
+    },
+    {
+      "symbol": "4120",
+      "name": "友華",
+      "market": "TPEx",
+      "securityType": "stock"
+    },
+    {
+      "symbol": "4121",
+      "name": "優盛",
+      "market": "TPEx",
+      "securityType": "stock"
+    },
+    {
+      "symbol": "4123",
+      "name": "晟德",
+      "market": "TPEx",
+      "securityType": "stock"
+    },
+    {
+      "symbol": "4126",
+      "name": "太醫",
+      "market": "TPEx",
+      "securityType": "stock"
+    },
+    {
+      "symbol": "4127",
+      "name": "天良",
+      "market": "TPEx",
+      "securityType": "stock"
+    },
+    {
+      "symbol": "4128",
+      "name": "中天",
+      "market": "TPEx",
+      "securityType": "stock"
+    },
+    {
+      "symbol": "4129",
+      "name": "聯合",
+      "market": "TPEx",
+      "securityType": "stock"
+    },
+    {
+      "symbol": "4131",
+      "name": "浩泰",
+      "market": "TPEx",
       "securityType": "stock"
     },
     {
@@ -5619,9 +7883,27 @@
       "securityType": "stock"
     },
     {
+      "symbol": "4138",
+      "name": "曜亞",
+      "market": "TPEx",
+      "securityType": "stock"
+    },
+    {
+      "symbol": "4139",
+      "name": "馬光-KY",
+      "market": "TPEx",
+      "securityType": "stock"
+    },
+    {
       "symbol": "4142",
       "name": "國光生",
       "market": "TWSE",
+      "securityType": "stock"
+    },
+    {
+      "symbol": "4147",
+      "name": "中裕",
+      "market": "TPEx",
       "securityType": "stock"
     },
     {
@@ -5631,9 +7913,51 @@
       "securityType": "stock"
     },
     {
+      "symbol": "4153",
+      "name": "鈺緯",
+      "market": "TPEx",
+      "securityType": "stock"
+    },
+    {
+      "symbol": "4154",
+      "name": "樂威科-KY",
+      "market": "TPEx",
+      "securityType": "stock"
+    },
+    {
       "symbol": "4155",
       "name": "訊映",
       "market": "TWSE",
+      "securityType": "stock"
+    },
+    {
+      "symbol": "4157",
+      "name": "太景*-KY",
+      "market": "TPEx",
+      "securityType": "stock"
+    },
+    {
+      "symbol": "4160",
+      "name": "訊聯基因",
+      "market": "TPEx",
+      "securityType": "stock"
+    },
+    {
+      "symbol": "4161",
+      "name": "聿新科",
+      "market": "TPEx",
+      "securityType": "stock"
+    },
+    {
+      "symbol": "4162",
+      "name": "智擎",
+      "market": "TPEx",
+      "securityType": "stock"
+    },
+    {
+      "symbol": "4163",
+      "name": "鐿鈦",
+      "market": "TPEx",
       "securityType": "stock"
     },
     {
@@ -5643,9 +7967,51 @@
       "securityType": "stock"
     },
     {
+      "symbol": "4166",
+      "name": "友霖",
+      "market": "TPEx",
+      "securityType": "stock"
+    },
+    {
+      "symbol": "4167",
+      "name": "松瑞藥",
+      "market": "TPEx",
+      "securityType": "stock"
+    },
+    {
+      "symbol": "4168",
+      "name": "醣聯",
+      "market": "TPEx",
+      "securityType": "stock"
+    },
+    {
       "symbol": "4169",
       "name": "泰宗",
       "market": "TWSE",
+      "securityType": "stock"
+    },
+    {
+      "symbol": "4171",
+      "name": "瑞基",
+      "market": "TPEx",
+      "securityType": "stock"
+    },
+    {
+      "symbol": "4173",
+      "name": "久裕",
+      "market": "TPEx",
+      "securityType": "stock"
+    },
+    {
+      "symbol": "4174",
+      "name": "浩鼎",
+      "market": "TPEx",
+      "securityType": "stock"
+    },
+    {
+      "symbol": "4175",
+      "name": "杏一",
+      "market": "TPEx",
       "securityType": "stock"
     },
     {
@@ -5655,9 +8021,27 @@
       "securityType": "stock"
     },
     {
+      "symbol": "4183",
+      "name": "福永生技",
+      "market": "TPEx",
+      "securityType": "stock"
+    },
+    {
+      "symbol": "4188",
+      "name": "安克",
+      "market": "TPEx",
+      "securityType": "stock"
+    },
+    {
       "symbol": "4190",
       "name": "佐登-KY",
       "market": "TWSE",
+      "securityType": "stock"
+    },
+    {
+      "symbol": "4192",
+      "name": "杏國",
+      "market": "TPEx",
       "securityType": "stock"
     },
     {
@@ -5667,9 +8051,69 @@
       "securityType": "stock"
     },
     {
+      "symbol": "4198",
+      "name": "欣大健康",
+      "market": "TPEx",
+      "securityType": "stock"
+    },
+    {
+      "symbol": "4205",
+      "name": "中華食",
+      "market": "TPEx",
+      "securityType": "stock"
+    },
+    {
+      "symbol": "4207",
+      "name": "環泰",
+      "market": "TPEx",
+      "securityType": "stock"
+    },
+    {
+      "symbol": "4303",
+      "name": "信立",
+      "market": "TPEx",
+      "securityType": "stock"
+    },
+    {
+      "symbol": "4304",
+      "name": "勝昱",
+      "market": "TPEx",
+      "securityType": "stock"
+    },
+    {
+      "symbol": "4305",
+      "name": "世坤",
+      "market": "TPEx",
+      "securityType": "stock"
+    },
+    {
       "symbol": "4306",
       "name": "炎洲",
       "market": "TWSE",
+      "securityType": "stock"
+    },
+    {
+      "symbol": "4401",
+      "name": "東隆興",
+      "market": "TPEx",
+      "securityType": "stock"
+    },
+    {
+      "symbol": "4402",
+      "name": "郡都開發",
+      "market": "TPEx",
+      "securityType": "stock"
+    },
+    {
+      "symbol": "4406",
+      "name": "新昕纖",
+      "market": "TPEx",
+      "securityType": "stock"
+    },
+    {
+      "symbol": "4413",
+      "name": "飛寶企業",
+      "market": "TPEx",
       "securityType": "stock"
     },
     {
@@ -5679,9 +8123,51 @@
       "securityType": "stock"
     },
     {
+      "symbol": "4416",
+      "name": "三圓",
+      "market": "TPEx",
+      "securityType": "stock"
+    },
+    {
+      "symbol": "4417",
+      "name": "金洲",
+      "market": "TPEx",
+      "securityType": "stock"
+    },
+    {
+      "symbol": "4419",
+      "name": "皇家美食",
+      "market": "TPEx",
+      "securityType": "stock"
+    },
+    {
+      "symbol": "4420",
+      "name": "光明",
+      "market": "TPEx",
+      "securityType": "stock"
+    },
+    {
       "symbol": "4426",
       "name": "利勤",
       "market": "TWSE",
+      "securityType": "stock"
+    },
+    {
+      "symbol": "4430",
+      "name": "耀億",
+      "market": "TPEx",
+      "securityType": "stock"
+    },
+    {
+      "symbol": "4432",
+      "name": "銘旺實",
+      "market": "TPEx",
+      "securityType": "stock"
+    },
+    {
+      "symbol": "4433",
+      "name": "興采",
+      "market": "TPEx",
       "securityType": "stock"
     },
     {
@@ -5709,9 +8195,75 @@
       "securityType": "stock"
     },
     {
+      "symbol": "4442",
+      "name": "竣邦-KY",
+      "market": "TPEx",
+      "securityType": "stock"
+    },
+    {
+      "symbol": "4502",
+      "name": "健信",
+      "market": "TPEx",
+      "securityType": "stock"
+    },
+    {
+      "symbol": "4503",
+      "name": "金雨",
+      "market": "TPEx",
+      "securityType": "stock"
+    },
+    {
+      "symbol": "4506",
+      "name": "崇友",
+      "market": "TPEx",
+      "securityType": "stock"
+    },
+    {
+      "symbol": "4510",
+      "name": "高鋒",
+      "market": "TPEx",
+      "securityType": "stock"
+    },
+    {
+      "symbol": "4513",
+      "name": "福裕",
+      "market": "TPEx",
+      "securityType": "stock"
+    },
+    {
+      "symbol": "4523",
+      "name": "永彰",
+      "market": "TPEx",
+      "securityType": "stock"
+    },
+    {
       "symbol": "4526",
       "name": "東台",
       "market": "TWSE",
+      "securityType": "stock"
+    },
+    {
+      "symbol": "4527",
+      "name": "方土霖",
+      "market": "TPEx",
+      "securityType": "stock"
+    },
+    {
+      "symbol": "4528",
+      "name": "江興鍛",
+      "market": "TPEx",
+      "securityType": "stock"
+    },
+    {
+      "symbol": "4529",
+      "name": "淳紳",
+      "market": "TPEx",
+      "securityType": "stock"
+    },
+    {
+      "symbol": "4530",
+      "name": "天意能創",
+      "market": "TPEx",
       "securityType": "stock"
     },
     {
@@ -5721,9 +8273,33 @@
       "securityType": "stock"
     },
     {
+      "symbol": "4533",
+      "name": "協易機",
+      "market": "TPEx",
+      "securityType": "stock"
+    },
+    {
+      "symbol": "4534",
+      "name": "慶騰",
+      "market": "TPEx",
+      "securityType": "stock"
+    },
+    {
+      "symbol": "4535",
+      "name": "至興",
+      "market": "TPEx",
+      "securityType": "stock"
+    },
+    {
       "symbol": "4536",
       "name": "拓凱",
       "market": "TWSE",
+      "securityType": "stock"
+    },
+    {
+      "symbol": "4538",
+      "name": "大詠城",
+      "market": "TPEx",
       "securityType": "stock"
     },
     {
@@ -5733,9 +8309,39 @@
       "securityType": "stock"
     },
     {
+      "symbol": "4541",
+      "name": "晟田",
+      "market": "TPEx",
+      "securityType": "stock"
+    },
+    {
+      "symbol": "4542",
+      "name": "科嶠",
+      "market": "TPEx",
+      "securityType": "stock"
+    },
+    {
+      "symbol": "4543",
+      "name": "萬在",
+      "market": "TPEx",
+      "securityType": "stock"
+    },
+    {
       "symbol": "4545",
       "name": "銘鈺",
       "market": "TWSE",
+      "securityType": "stock"
+    },
+    {
+      "symbol": "4549",
+      "name": "桓達",
+      "market": "TPEx",
+      "securityType": "stock"
+    },
+    {
+      "symbol": "4550",
+      "name": "長佳",
+      "market": "TPEx",
       "securityType": "stock"
     },
     {
@@ -5751,9 +8357,21 @@
       "securityType": "stock"
     },
     {
+      "symbol": "4554",
+      "name": "橙的",
+      "market": "TPEx",
+      "securityType": "stock"
+    },
+    {
       "symbol": "4555",
       "name": "氣立",
       "market": "TWSE",
+      "securityType": "stock"
+    },
+    {
+      "symbol": "4556",
+      "name": "旭然",
+      "market": "TPEx",
       "securityType": "stock"
     },
     {
@@ -5763,15 +8381,33 @@
       "securityType": "stock"
     },
     {
+      "symbol": "4558",
+      "name": "寶緯",
+      "market": "TPEx",
+      "securityType": "stock"
+    },
+    {
       "symbol": "4560",
       "name": "強信-KY",
       "market": "TWSE",
       "securityType": "stock"
     },
     {
+      "symbol": "4561",
+      "name": "健椿",
+      "market": "TPEx",
+      "securityType": "stock"
+    },
+    {
       "symbol": "4562",
       "name": "穎漢",
       "market": "TWSE",
+      "securityType": "stock"
+    },
+    {
+      "symbol": "4563",
+      "name": "百德",
+      "market": "TPEx",
       "securityType": "stock"
     },
     {
@@ -5784,6 +8420,12 @@
       "symbol": "4566",
       "name": "時碩工業",
       "market": "TWSE",
+      "securityType": "stock"
+    },
+    {
+      "symbol": "4568",
+      "name": "科際精密",
+      "market": "TPEx",
       "securityType": "stock"
     },
     {
@@ -5811,6 +8453,18 @@
       "securityType": "stock"
     },
     {
+      "symbol": "4577",
+      "name": "達航科技",
+      "market": "TPEx",
+      "securityType": "stock"
+    },
+    {
+      "symbol": "4580",
+      "name": "捷流閥業",
+      "market": "TPEx",
+      "securityType": "stock"
+    },
+    {
       "symbol": "4581",
       "name": "光隆精密-KY",
       "market": "TWSE",
@@ -5826,6 +8480,12 @@
       "symbol": "4583",
       "name": "台灣精銳",
       "market": "TWSE",
+      "securityType": "stock"
+    },
+    {
+      "symbol": "4584",
+      "name": "君帆",
+      "market": "TPEx",
       "securityType": "stock"
     },
     {
@@ -5847,15 +8507,87 @@
       "securityType": "stock"
     },
     {
+      "symbol": "4609",
+      "name": "唐鋒",
+      "market": "TPEx",
+      "securityType": "stock"
+    },
+    {
+      "symbol": "4702",
+      "name": "中美實",
+      "market": "TPEx",
+      "securityType": "stock"
+    },
+    {
+      "symbol": "4706",
+      "name": "大恭",
+      "market": "TPEx",
+      "securityType": "stock"
+    },
+    {
+      "symbol": "4707",
+      "name": "磐亞",
+      "market": "TPEx",
+      "securityType": "stock"
+    },
+    {
+      "symbol": "4711",
+      "name": "永純",
+      "market": "TPEx",
+      "securityType": "stock"
+    },
+    {
+      "symbol": "4714",
+      "name": "永捷",
+      "market": "TPEx",
+      "securityType": "stock"
+    },
+    {
+      "symbol": "4716",
+      "name": "大立",
+      "market": "TPEx",
+      "securityType": "stock"
+    },
+    {
       "symbol": "4720",
       "name": "德淵",
       "market": "TWSE",
       "securityType": "stock"
     },
     {
+      "symbol": "4721",
+      "name": "美琪瑪",
+      "market": "TPEx",
+      "securityType": "stock"
+    },
+    {
       "symbol": "4722",
       "name": "國精化",
       "market": "TWSE",
+      "securityType": "stock"
+    },
+    {
+      "symbol": "4726",
+      "name": "永昕",
+      "market": "TPEx",
+      "securityType": "stock"
+    },
+    {
+      "symbol": "4728",
+      "name": "雙美",
+      "market": "TPEx",
+      "securityType": "stock"
+    },
+    {
+      "symbol": "4729",
+      "name": "熒茂",
+      "market": "TPEx",
+      "securityType": "stock"
+    },
+    {
+      "symbol": "4735",
+      "name": "豪展",
+      "market": "TPEx",
       "securityType": "stock"
     },
     {
@@ -5877,15 +8609,63 @@
       "securityType": "stock"
     },
     {
+      "symbol": "4741",
+      "name": "泓瀚",
+      "market": "TPEx",
+      "securityType": "stock"
+    },
+    {
+      "symbol": "4743",
+      "name": "合一",
+      "market": "TPEx",
+      "securityType": "stock"
+    },
+    {
+      "symbol": "4744",
+      "name": "皇將",
+      "market": "TPEx",
+      "securityType": "stock"
+    },
+    {
+      "symbol": "4745",
+      "name": "合富-KY",
+      "market": "TPEx",
+      "securityType": "stock"
+    },
+    {
       "symbol": "4746",
       "name": "台耀",
       "market": "TWSE",
       "securityType": "stock"
     },
     {
+      "symbol": "4747",
+      "name": "強生*",
+      "market": "TPEx",
+      "securityType": "stock"
+    },
+    {
+      "symbol": "4749",
+      "name": "新應材",
+      "market": "TPEx",
+      "securityType": "stock"
+    },
+    {
+      "symbol": "4754",
+      "name": "國碳科",
+      "market": "TPEx",
+      "securityType": "stock"
+    },
+    {
       "symbol": "4755",
       "name": "三福化",
       "market": "TWSE",
+      "securityType": "stock"
+    },
+    {
+      "symbol": "4760",
+      "name": "勤凱",
+      "market": "TPEx",
       "securityType": "stock"
     },
     {
@@ -5907,6 +8687,18 @@
       "securityType": "stock"
     },
     {
+      "symbol": "4767",
+      "name": "誠泰科技",
+      "market": "TPEx",
+      "securityType": "stock"
+    },
+    {
+      "symbol": "4768",
+      "name": "晶呈科技",
+      "market": "TPEx",
+      "securityType": "stock"
+    },
+    {
       "symbol": "4770",
       "name": "上品",
       "market": "TWSE",
@@ -5919,9 +8711,33 @@
       "securityType": "stock"
     },
     {
+      "symbol": "4772",
+      "name": "台特化",
+      "market": "TPEx",
+      "securityType": "stock"
+    },
+    {
+      "symbol": "4804",
+      "name": "大略-KY",
+      "market": "TPEx",
+      "securityType": "stock"
+    },
+    {
+      "symbol": "4806",
+      "name": "桂田文創",
+      "market": "TPEx",
+      "securityType": "stock"
+    },
+    {
       "symbol": "4807",
       "name": "日成-KY",
       "market": "TWSE",
+      "securityType": "stock"
+    },
+    {
+      "symbol": "4903",
+      "name": "聯光通",
+      "market": "TPEx",
       "securityType": "stock"
     },
     {
@@ -5931,9 +8747,39 @@
       "securityType": "stock"
     },
     {
+      "symbol": "4905",
+      "name": "台聯電",
+      "market": "TPEx",
+      "securityType": "stock"
+    },
+    {
       "symbol": "4906",
       "name": "正文",
       "market": "TWSE",
+      "securityType": "stock"
+    },
+    {
+      "symbol": "4907",
+      "name": "富宇",
+      "market": "TPEx",
+      "securityType": "stock"
+    },
+    {
+      "symbol": "4908",
+      "name": "前鼎",
+      "market": "TPEx",
+      "securityType": "stock"
+    },
+    {
+      "symbol": "4909",
+      "name": "新復興",
+      "market": "TPEx",
+      "securityType": "stock"
+    },
+    {
+      "symbol": "4911",
+      "name": "德英",
+      "market": "TPEx",
       "securityType": "stock"
     },
     {
@@ -5961,6 +8807,18 @@
       "securityType": "stock"
     },
     {
+      "symbol": "4923",
+      "name": "力士",
+      "market": "TPEx",
+      "securityType": "stock"
+    },
+    {
+      "symbol": "4924",
+      "name": "欣厚-KY",
+      "market": "TPEx",
+      "securityType": "stock"
+    },
+    {
       "symbol": "4927",
       "name": "泰鼎-KY",
       "market": "TWSE",
@@ -5970,6 +8828,18 @@
       "symbol": "4930",
       "name": "燦星網",
       "market": "TWSE",
+      "securityType": "stock"
+    },
+    {
+      "symbol": "4931",
+      "name": "新盛力",
+      "market": "TPEx",
+      "securityType": "stock"
+    },
+    {
+      "symbol": "4933",
+      "name": "友輝",
+      "market": "TPEx",
       "securityType": "stock"
     },
     {
@@ -5991,6 +8861,12 @@
       "securityType": "stock"
     },
     {
+      "symbol": "4939",
+      "name": "亞電",
+      "market": "TPEx",
+      "securityType": "stock"
+    },
+    {
       "symbol": "4942",
       "name": "嘉彰",
       "market": "TWSE",
@@ -6003,15 +8879,39 @@
       "securityType": "stock"
     },
     {
+      "symbol": "4946",
+      "name": "辣椒",
+      "market": "TPEx",
+      "securityType": "stock"
+    },
+    {
       "symbol": "4949",
       "name": "有成精密",
       "market": "TWSE",
       "securityType": "stock"
     },
     {
+      "symbol": "4950",
+      "name": "金耘國際",
+      "market": "TPEx",
+      "securityType": "stock"
+    },
+    {
+      "symbol": "4951",
+      "name": "精拓科",
+      "market": "TPEx",
+      "securityType": "stock"
+    },
+    {
       "symbol": "4952",
       "name": "凌通",
       "market": "TWSE",
+      "securityType": "stock"
+    },
+    {
+      "symbol": "4953",
+      "name": "緯致",
+      "market": "TPEx",
       "securityType": "stock"
     },
     {
@@ -6039,6 +8939,12 @@
       "securityType": "stock"
     },
     {
+      "symbol": "4966",
+      "name": "譜瑞-KY",
+      "market": "TPEx",
+      "securityType": "stock"
+    },
+    {
       "symbol": "4967",
       "name": "十銓",
       "market": "TWSE",
@@ -6048,6 +8954,30 @@
       "symbol": "4968",
       "name": "立積",
       "market": "TWSE",
+      "securityType": "stock"
+    },
+    {
+      "symbol": "4971",
+      "name": "IET-KY",
+      "market": "TPEx",
+      "securityType": "stock"
+    },
+    {
+      "symbol": "4972",
+      "name": "湯石照明",
+      "market": "TPEx",
+      "securityType": "stock"
+    },
+    {
+      "symbol": "4973",
+      "name": "廣穎",
+      "market": "TPEx",
+      "securityType": "stock"
+    },
+    {
+      "symbol": "4974",
+      "name": "亞泰",
+      "market": "TPEx",
       "securityType": "stock"
     },
     {
@@ -6063,15 +8993,33 @@
       "securityType": "stock"
     },
     {
+      "symbol": "4979",
+      "name": "華星光",
+      "market": "TPEx",
+      "securityType": "stock"
+    },
+    {
       "symbol": "4989",
       "name": "榮科",
       "market": "TWSE",
       "securityType": "stock"
     },
     {
+      "symbol": "4991",
+      "name": "環宇-KY",
+      "market": "TPEx",
+      "securityType": "stock"
+    },
+    {
       "symbol": "4994",
       "name": "傳奇",
       "market": "TWSE",
+      "securityType": "stock"
+    },
+    {
+      "symbol": "4995",
+      "name": "晶達",
+      "market": "TPEx",
       "securityType": "stock"
     },
     {
@@ -6087,9 +9035,99 @@
       "securityType": "stock"
     },
     {
+      "symbol": "5009",
+      "name": "榮剛",
+      "market": "TPEx",
+      "securityType": "stock"
+    },
+    {
+      "symbol": "5011",
+      "name": "久陽",
+      "market": "TPEx",
+      "securityType": "stock"
+    },
+    {
+      "symbol": "5013",
+      "name": "強新",
+      "market": "TPEx",
+      "securityType": "stock"
+    },
+    {
+      "symbol": "5014",
+      "name": "建錩",
+      "market": "TPEx",
+      "securityType": "stock"
+    },
+    {
+      "symbol": "5015",
+      "name": "華祺",
+      "market": "TPEx",
+      "securityType": "stock"
+    },
+    {
+      "symbol": "5016",
+      "name": "松和",
+      "market": "TPEx",
+      "securityType": "stock"
+    },
+    {
+      "symbol": "5201",
+      "name": "凱衛",
+      "market": "TPEx",
+      "securityType": "stock"
+    },
+    {
+      "symbol": "5202",
+      "name": "力新",
+      "market": "TPEx",
+      "securityType": "stock"
+    },
+    {
       "symbol": "5203",
       "name": "訊連",
       "market": "TWSE",
+      "securityType": "stock"
+    },
+    {
+      "symbol": "5205",
+      "name": "中茂",
+      "market": "TPEx",
+      "securityType": "stock"
+    },
+    {
+      "symbol": "5206",
+      "name": "坤悅",
+      "market": "TPEx",
+      "securityType": "stock"
+    },
+    {
+      "symbol": "5209",
+      "name": "新鼎",
+      "market": "TPEx",
+      "securityType": "stock"
+    },
+    {
+      "symbol": "5210",
+      "name": "寶碩",
+      "market": "TPEx",
+      "securityType": "stock"
+    },
+    {
+      "symbol": "5211",
+      "name": "蒙恬",
+      "market": "TPEx",
+      "securityType": "stock"
+    },
+    {
+      "symbol": "5212",
+      "name": "凌網",
+      "market": "TPEx",
+      "securityType": "stock"
+    },
+    {
+      "symbol": "5213",
+      "name": "亞昕",
+      "market": "TPEx",
       "securityType": "stock"
     },
     {
@@ -6099,15 +9137,45 @@
       "securityType": "stock"
     },
     {
+      "symbol": "5220",
+      "name": "萬達光電",
+      "market": "TPEx",
+      "securityType": "stock"
+    },
+    {
       "symbol": "5222",
       "name": "全訊",
       "market": "TWSE",
       "securityType": "stock"
     },
     {
+      "symbol": "5223",
+      "name": "安力-KY",
+      "market": "TPEx",
+      "securityType": "stock"
+    },
+    {
       "symbol": "5225",
       "name": "東科-KY",
       "market": "TWSE",
+      "securityType": "stock"
+    },
+    {
+      "symbol": "5227",
+      "name": "立凱-KY",
+      "market": "TPEx",
+      "securityType": "stock"
+    },
+    {
+      "symbol": "5228",
+      "name": "鈺鎧",
+      "market": "TPEx",
+      "securityType": "stock"
+    },
+    {
+      "symbol": "5230",
+      "name": "雷笛克光學",
+      "market": "TPEx",
       "securityType": "stock"
     },
     {
@@ -6135,15 +9203,57 @@
       "securityType": "stock"
     },
     {
+      "symbol": "5245",
+      "name": "智晶",
+      "market": "TPEx",
+      "securityType": "stock"
+    },
+    {
+      "symbol": "5251",
+      "name": "天鉞電",
+      "market": "TPEx",
+      "securityType": "stock"
+    },
+    {
       "symbol": "5258",
       "name": "虹堡",
       "market": "TWSE",
       "securityType": "stock"
     },
     {
+      "symbol": "5263",
+      "name": "智崴",
+      "market": "TPEx",
+      "securityType": "stock"
+    },
+    {
       "symbol": "5269",
       "name": "祥碩",
       "market": "TWSE",
+      "securityType": "stock"
+    },
+    {
+      "symbol": "5272",
+      "name": "笙科",
+      "market": "TPEx",
+      "securityType": "stock"
+    },
+    {
+      "symbol": "5274",
+      "name": "信驊",
+      "market": "TPEx",
+      "securityType": "stock"
+    },
+    {
+      "symbol": "5276",
+      "name": "達輝-KY",
+      "market": "TPEx",
+      "securityType": "stock"
+    },
+    {
+      "symbol": "5278",
+      "name": "尚凡*",
+      "market": "TPEx",
       "securityType": "stock"
     },
     {
@@ -6165,9 +9275,27 @@
       "securityType": "stock"
     },
     {
+      "symbol": "5287",
+      "name": "數字",
+      "market": "TPEx",
+      "securityType": "stock"
+    },
+    {
       "symbol": "5288",
       "name": "豐祥-KY",
       "market": "TWSE",
+      "securityType": "stock"
+    },
+    {
+      "symbol": "5289",
+      "name": "宜鼎",
+      "market": "TPEx",
+      "securityType": "stock"
+    },
+    {
+      "symbol": "5291",
+      "name": "邑昇",
+      "market": "TPEx",
       "securityType": "stock"
     },
     {
@@ -6177,9 +9305,147 @@
       "securityType": "stock"
     },
     {
+      "symbol": "5299",
+      "name": "杰力",
+      "market": "TPEx",
+      "securityType": "stock"
+    },
+    {
+      "symbol": "5301",
+      "name": "寶得利",
+      "market": "TPEx",
+      "securityType": "stock"
+    },
+    {
+      "symbol": "5302",
+      "name": "太欣",
+      "market": "TPEx",
+      "securityType": "stock"
+    },
+    {
       "symbol": "5306",
       "name": "桂盟",
       "market": "TWSE",
+      "securityType": "stock"
+    },
+    {
+      "symbol": "5309",
+      "name": "系統電",
+      "market": "TPEx",
+      "securityType": "stock"
+    },
+    {
+      "symbol": "5310",
+      "name": "天剛",
+      "market": "TPEx",
+      "securityType": "stock"
+    },
+    {
+      "symbol": "5312",
+      "name": "寶島科",
+      "market": "TPEx",
+      "securityType": "stock"
+    },
+    {
+      "symbol": "5314",
+      "name": "世紀*",
+      "market": "TPEx",
+      "securityType": "stock"
+    },
+    {
+      "symbol": "5315",
+      "name": "光聯",
+      "market": "TPEx",
+      "securityType": "stock"
+    },
+    {
+      "symbol": "5321",
+      "name": "美而快",
+      "market": "TPEx",
+      "securityType": "stock"
+    },
+    {
+      "symbol": "5324",
+      "name": "士開",
+      "market": "TPEx",
+      "securityType": "stock"
+    },
+    {
+      "symbol": "5328",
+      "name": "華容",
+      "market": "TPEx",
+      "securityType": "stock"
+    },
+    {
+      "symbol": "5340",
+      "name": "建榮",
+      "market": "TPEx",
+      "securityType": "stock"
+    },
+    {
+      "symbol": "5344",
+      "name": "立衛",
+      "market": "TPEx",
+      "securityType": "stock"
+    },
+    {
+      "symbol": "5345",
+      "name": "馥鴻",
+      "market": "TPEx",
+      "securityType": "stock"
+    },
+    {
+      "symbol": "5347",
+      "name": "世界",
+      "market": "TPEx",
+      "securityType": "stock"
+    },
+    {
+      "symbol": "5348",
+      "name": "正能量智能",
+      "market": "TPEx",
+      "securityType": "stock"
+    },
+    {
+      "symbol": "5351",
+      "name": "鈺創",
+      "market": "TPEx",
+      "securityType": "stock"
+    },
+    {
+      "symbol": "5353",
+      "name": "台林",
+      "market": "TPEx",
+      "securityType": "stock"
+    },
+    {
+      "symbol": "5355",
+      "name": "佳總",
+      "market": "TPEx",
+      "securityType": "stock"
+    },
+    {
+      "symbol": "5356",
+      "name": "協益",
+      "market": "TPEx",
+      "securityType": "stock"
+    },
+    {
+      "symbol": "5364",
+      "name": "力麗店",
+      "market": "TPEx",
+      "securityType": "stock"
+    },
+    {
+      "symbol": "5381",
+      "name": "光譜",
+      "market": "TPEx",
+      "securityType": "stock"
+    },
+    {
+      "symbol": "5386",
+      "name": "青雲",
+      "market": "TPEx",
       "securityType": "stock"
     },
     {
@@ -6189,9 +9455,117 @@
       "securityType": "stock"
     },
     {
+      "symbol": "5392",
+      "name": "能率",
+      "market": "TPEx",
+      "securityType": "stock"
+    },
+    {
+      "symbol": "5398",
+      "name": "慕康生醫",
+      "market": "TPEx",
+      "securityType": "stock"
+    },
+    {
+      "symbol": "5403",
+      "name": "中菲",
+      "market": "TPEx",
+      "securityType": "stock"
+    },
+    {
+      "symbol": "5410",
+      "name": "國眾",
+      "market": "TPEx",
+      "securityType": "stock"
+    },
+    {
+      "symbol": "5425",
+      "name": "台半",
+      "market": "TPEx",
+      "securityType": "stock"
+    },
+    {
+      "symbol": "5426",
+      "name": "振發",
+      "market": "TPEx",
+      "securityType": "stock"
+    },
+    {
+      "symbol": "5432",
+      "name": "新門",
+      "market": "TPEx",
+      "securityType": "stock"
+    },
+    {
       "symbol": "5434",
       "name": "崇越",
       "market": "TWSE",
+      "securityType": "stock"
+    },
+    {
+      "symbol": "5438",
+      "name": "東友",
+      "market": "TPEx",
+      "securityType": "stock"
+    },
+    {
+      "symbol": "5439",
+      "name": "高技",
+      "market": "TPEx",
+      "securityType": "stock"
+    },
+    {
+      "symbol": "5443",
+      "name": "均豪",
+      "market": "TPEx",
+      "securityType": "stock"
+    },
+    {
+      "symbol": "5450",
+      "name": "南良",
+      "market": "TPEx",
+      "securityType": "stock"
+    },
+    {
+      "symbol": "5452",
+      "name": "佶優",
+      "market": "TPEx",
+      "securityType": "stock"
+    },
+    {
+      "symbol": "5455",
+      "name": "昇益",
+      "market": "TPEx",
+      "securityType": "stock"
+    },
+    {
+      "symbol": "5457",
+      "name": "宣德",
+      "market": "TPEx",
+      "securityType": "stock"
+    },
+    {
+      "symbol": "5460",
+      "name": "同協",
+      "market": "TPEx",
+      "securityType": "stock"
+    },
+    {
+      "symbol": "5464",
+      "name": "霖宏",
+      "market": "TPEx",
+      "securityType": "stock"
+    },
+    {
+      "symbol": "5465",
+      "name": "富驊",
+      "market": "TPEx",
+      "securityType": "stock"
+    },
+    {
+      "symbol": "5468",
+      "name": "凱鈺",
+      "market": "TPEx",
       "securityType": "stock"
     },
     {
@@ -6207,9 +9581,99 @@
       "securityType": "stock"
     },
     {
+      "symbol": "5474",
+      "name": "聰泰",
+      "market": "TPEx",
+      "securityType": "stock"
+    },
+    {
+      "symbol": "5475",
+      "name": "德宏",
+      "market": "TPEx",
+      "securityType": "stock"
+    },
+    {
+      "symbol": "5478",
+      "name": "智冠",
+      "market": "TPEx",
+      "securityType": "stock"
+    },
+    {
+      "symbol": "5481",
+      "name": "新華",
+      "market": "TPEx",
+      "securityType": "stock"
+    },
+    {
+      "symbol": "5483",
+      "name": "中美晶",
+      "market": "TPEx",
+      "securityType": "stock"
+    },
+    {
       "symbol": "5484",
       "name": "慧友",
       "market": "TWSE",
+      "securityType": "stock"
+    },
+    {
+      "symbol": "5487",
+      "name": "通泰",
+      "market": "TPEx",
+      "securityType": "stock"
+    },
+    {
+      "symbol": "5488",
+      "name": "松普",
+      "market": "TPEx",
+      "securityType": "stock"
+    },
+    {
+      "symbol": "5489",
+      "name": "彩富",
+      "market": "TPEx",
+      "securityType": "stock"
+    },
+    {
+      "symbol": "5490",
+      "name": "同亨",
+      "market": "TPEx",
+      "securityType": "stock"
+    },
+    {
+      "symbol": "5493",
+      "name": "三聯",
+      "market": "TPEx",
+      "securityType": "stock"
+    },
+    {
+      "symbol": "5498",
+      "name": "凱崴",
+      "market": "TPEx",
+      "securityType": "stock"
+    },
+    {
+      "symbol": "5508",
+      "name": "永信建",
+      "market": "TPEx",
+      "securityType": "stock"
+    },
+    {
+      "symbol": "5511",
+      "name": "德昌",
+      "market": "TPEx",
+      "securityType": "stock"
+    },
+    {
+      "symbol": "5512",
+      "name": "力麒",
+      "market": "TPEx",
+      "securityType": "stock"
+    },
+    {
+      "symbol": "5514",
+      "name": "三豐",
+      "market": "TPEx",
       "securityType": "stock"
     },
     {
@@ -6219,9 +9683,21 @@
       "securityType": "stock"
     },
     {
+      "symbol": "5516",
+      "name": "雙喜",
+      "market": "TPEx",
+      "securityType": "stock"
+    },
+    {
       "symbol": "5519",
       "name": "隆大",
       "market": "TWSE",
+      "securityType": "stock"
+    },
+    {
+      "symbol": "5520",
+      "name": "力泰",
+      "market": "TPEx",
       "securityType": "stock"
     },
     {
@@ -6237,9 +9713,27 @@
       "securityType": "stock"
     },
     {
+      "symbol": "5523",
+      "name": "豐謙",
+      "market": "TPEx",
+      "securityType": "stock"
+    },
+    {
       "symbol": "5525",
       "name": "順天",
       "market": "TWSE",
+      "securityType": "stock"
+    },
+    {
+      "symbol": "5529",
+      "name": "鉅陞",
+      "market": "TPEx",
+      "securityType": "stock"
+    },
+    {
+      "symbol": "5530",
+      "name": "龍巖",
+      "market": "TPEx",
       "securityType": "stock"
     },
     {
@@ -6261,15 +9755,57 @@
       "securityType": "stock"
     },
     {
+      "symbol": "5536",
+      "name": "聖暉*",
+      "market": "TPEx",
+      "securityType": "stock"
+    },
+    {
       "symbol": "5538",
       "name": "東明-KY",
       "market": "TWSE",
       "securityType": "stock"
     },
     {
+      "symbol": "5543",
+      "name": "桓鼎-KY",
+      "market": "TPEx",
+      "securityType": "stock"
+    },
+    {
       "symbol": "5546",
       "name": "永固-KY",
       "market": "TWSE",
+      "securityType": "stock"
+    },
+    {
+      "symbol": "5547",
+      "name": "久舜",
+      "market": "TPEx",
+      "securityType": "stock"
+    },
+    {
+      "symbol": "5548",
+      "name": "安倉",
+      "market": "TPEx",
+      "securityType": "stock"
+    },
+    {
+      "symbol": "5601",
+      "name": "台聯櫃",
+      "market": "TPEx",
+      "securityType": "stock"
+    },
+    {
+      "symbol": "5603",
+      "name": "陸海",
+      "market": "TPEx",
+      "securityType": "stock"
+    },
+    {
+      "symbol": "5604",
+      "name": "中連",
+      "market": "TPEx",
       "securityType": "stock"
     },
     {
@@ -6285,9 +9821,39 @@
       "securityType": "stock"
     },
     {
+      "symbol": "5609",
+      "name": "中菲行",
+      "market": "TPEx",
+      "securityType": "stock"
+    },
+    {
+      "symbol": "5701",
+      "name": "劍湖山",
+      "market": "TPEx",
+      "securityType": "stock"
+    },
+    {
+      "symbol": "5703",
+      "name": "亞都",
+      "market": "TPEx",
+      "securityType": "stock"
+    },
+    {
+      "symbol": "5704",
+      "name": "老爺知",
+      "market": "TPEx",
+      "securityType": "stock"
+    },
+    {
       "symbol": "5706",
       "name": "鳳凰",
       "market": "TWSE",
+      "securityType": "stock"
+    },
+    {
+      "symbol": "5864",
+      "name": "致和證",
+      "market": "TPEx",
       "securityType": "stock"
     },
     {
@@ -6309,9 +9875,39 @@
       "securityType": "stock"
     },
     {
+      "symbol": "5878",
+      "name": "台名",
+      "market": "TPEx",
+      "securityType": "stock"
+    },
+    {
       "symbol": "5880",
       "name": "合庫金",
       "market": "TWSE",
+      "securityType": "stock"
+    },
+    {
+      "symbol": "5902",
+      "name": "德記",
+      "market": "TPEx",
+      "securityType": "stock"
+    },
+    {
+      "symbol": "5903",
+      "name": "全家",
+      "market": "TPEx",
+      "securityType": "stock"
+    },
+    {
+      "symbol": "5904",
+      "name": "寶雅*",
+      "market": "TPEx",
+      "securityType": "stock"
+    },
+    {
+      "symbol": "5905",
+      "name": "南仁湖",
+      "market": "TPEx",
       "securityType": "stock"
     },
     {
@@ -6333,9 +9929,69 @@
       "securityType": "stock"
     },
     {
+      "symbol": "6015",
+      "name": "宏遠證",
+      "market": "TPEx",
+      "securityType": "stock"
+    },
+    {
+      "symbol": "6016",
+      "name": "康和證",
+      "market": "TPEx",
+      "securityType": "stock"
+    },
+    {
+      "symbol": "6020",
+      "name": "大展證",
+      "market": "TPEx",
+      "securityType": "stock"
+    },
+    {
+      "symbol": "6021",
+      "name": "美好證",
+      "market": "TPEx",
+      "securityType": "stock"
+    },
+    {
+      "symbol": "6023",
+      "name": "元大期",
+      "market": "TPEx",
+      "securityType": "stock"
+    },
+    {
       "symbol": "6024",
       "name": "群益期",
       "market": "TWSE",
+      "securityType": "stock"
+    },
+    {
+      "symbol": "6026",
+      "name": "福邦證",
+      "market": "TPEx",
+      "securityType": "stock"
+    },
+    {
+      "symbol": "6028",
+      "name": "公勝保經",
+      "market": "TPEx",
+      "securityType": "stock"
+    },
+    {
+      "symbol": "6101",
+      "name": "寬魚國際",
+      "market": "TPEx",
+      "securityType": "stock"
+    },
+    {
+      "symbol": "6103",
+      "name": "合邦",
+      "market": "TPEx",
+      "securityType": "stock"
+    },
+    {
+      "symbol": "6104",
+      "name": "創惟",
+      "market": "TPEx",
       "securityType": "stock"
     },
     {
@@ -6345,9 +10001,33 @@
       "securityType": "stock"
     },
     {
+      "symbol": "6109",
+      "name": "亞元",
+      "market": "TPEx",
+      "securityType": "stock"
+    },
+    {
+      "symbol": "6111",
+      "name": "光聚晶電",
+      "market": "TPEx",
+      "securityType": "stock"
+    },
+    {
       "symbol": "6112",
       "name": "邁達特",
       "market": "TWSE",
+      "securityType": "stock"
+    },
+    {
+      "symbol": "6113",
+      "name": "亞矽",
+      "market": "TPEx",
+      "securityType": "stock"
+    },
+    {
+      "symbol": "6114",
+      "name": "久威",
+      "market": "TPEx",
       "securityType": "stock"
     },
     {
@@ -6369,9 +10049,57 @@
       "securityType": "stock"
     },
     {
+      "symbol": "6118",
+      "name": "建達",
+      "market": "TPEx",
+      "securityType": "stock"
+    },
+    {
       "symbol": "6120",
       "name": "達運",
       "market": "TWSE",
+      "securityType": "stock"
+    },
+    {
+      "symbol": "6121",
+      "name": "新普",
+      "market": "TPEx",
+      "securityType": "stock"
+    },
+    {
+      "symbol": "6122",
+      "name": "擎邦",
+      "market": "TPEx",
+      "securityType": "stock"
+    },
+    {
+      "symbol": "6123",
+      "name": "上奇",
+      "market": "TPEx",
+      "securityType": "stock"
+    },
+    {
+      "symbol": "6124",
+      "name": "業強",
+      "market": "TPEx",
+      "securityType": "stock"
+    },
+    {
+      "symbol": "6125",
+      "name": "廣運",
+      "market": "TPEx",
+      "securityType": "stock"
+    },
+    {
+      "symbol": "6126",
+      "name": "信音",
+      "market": "TPEx",
+      "securityType": "stock"
+    },
+    {
+      "symbol": "6127",
+      "name": "九豪",
+      "market": "TPEx",
       "securityType": "stock"
     },
     {
@@ -6381,9 +10109,27 @@
       "securityType": "stock"
     },
     {
+      "symbol": "6129",
+      "name": "普誠",
+      "market": "TPEx",
+      "securityType": "stock"
+    },
+    {
+      "symbol": "6130",
+      "name": "上亞科技",
+      "market": "TPEx",
+      "securityType": "stock"
+    },
+    {
       "symbol": "6133",
       "name": "金橋",
       "market": "TWSE",
+      "securityType": "stock"
+    },
+    {
+      "symbol": "6134",
+      "name": "萬旭",
+      "market": "TPEx",
       "securityType": "stock"
     },
     {
@@ -6393,9 +10139,21 @@
       "securityType": "stock"
     },
     {
+      "symbol": "6138",
+      "name": "茂達",
+      "market": "TPEx",
+      "securityType": "stock"
+    },
+    {
       "symbol": "6139",
       "name": "亞翔",
       "market": "TWSE",
+      "securityType": "stock"
+    },
+    {
+      "symbol": "6140",
+      "name": "訊達",
+      "market": "TPEx",
       "securityType": "stock"
     },
     {
@@ -6411,6 +10169,48 @@
       "securityType": "stock"
     },
     {
+      "symbol": "6143",
+      "name": "振曜",
+      "market": "TPEx",
+      "securityType": "stock"
+    },
+    {
+      "symbol": "6144",
+      "name": "得利影",
+      "market": "TPEx",
+      "securityType": "stock"
+    },
+    {
+      "symbol": "6146",
+      "name": "耕興",
+      "market": "TPEx",
+      "securityType": "stock"
+    },
+    {
+      "symbol": "6147",
+      "name": "頎邦",
+      "market": "TPEx",
+      "securityType": "stock"
+    },
+    {
+      "symbol": "6148",
+      "name": "驊宏資",
+      "market": "TPEx",
+      "securityType": "stock"
+    },
+    {
+      "symbol": "6150",
+      "name": "撼訊",
+      "market": "TPEx",
+      "securityType": "stock"
+    },
+    {
+      "symbol": "6151",
+      "name": "晉倫",
+      "market": "TPEx",
+      "securityType": "stock"
+    },
+    {
       "symbol": "6152",
       "name": "百一",
       "market": "TWSE",
@@ -6423,9 +10223,45 @@
       "securityType": "stock"
     },
     {
+      "symbol": "6154",
+      "name": "順發",
+      "market": "TPEx",
+      "securityType": "stock"
+    },
+    {
       "symbol": "6155",
       "name": "鈞寶",
       "market": "TWSE",
+      "securityType": "stock"
+    },
+    {
+      "symbol": "6156",
+      "name": "松上",
+      "market": "TPEx",
+      "securityType": "stock"
+    },
+    {
+      "symbol": "6158",
+      "name": "禾昌",
+      "market": "TPEx",
+      "securityType": "stock"
+    },
+    {
+      "symbol": "6160",
+      "name": "欣技",
+      "market": "TPEx",
+      "securityType": "stock"
+    },
+    {
+      "symbol": "6161",
+      "name": "捷波",
+      "market": "TPEx",
+      "securityType": "stock"
+    },
+    {
+      "symbol": "6163",
+      "name": "華電網",
+      "market": "TPEx",
       "securityType": "stock"
     },
     {
@@ -6447,9 +10283,51 @@
       "securityType": "stock"
     },
     {
+      "symbol": "6167",
+      "name": "久正",
+      "market": "TPEx",
+      "securityType": "stock"
+    },
+    {
       "symbol": "6168",
       "name": "宏齊",
       "market": "TWSE",
+      "securityType": "stock"
+    },
+    {
+      "symbol": "6169",
+      "name": "昱泉",
+      "market": "TPEx",
+      "securityType": "stock"
+    },
+    {
+      "symbol": "6170",
+      "name": "統振",
+      "market": "TPEx",
+      "securityType": "stock"
+    },
+    {
+      "symbol": "6171",
+      "name": "大城地產",
+      "market": "TPEx",
+      "securityType": "stock"
+    },
+    {
+      "symbol": "6173",
+      "name": "信昌電",
+      "market": "TPEx",
+      "securityType": "stock"
+    },
+    {
+      "symbol": "6174",
+      "name": "安碁",
+      "market": "TPEx",
+      "securityType": "stock"
+    },
+    {
+      "symbol": "6175",
+      "name": "立敦",
+      "market": "TPEx",
       "securityType": "stock"
     },
     {
@@ -6465,6 +10343,24 @@
       "securityType": "stock"
     },
     {
+      "symbol": "6179",
+      "name": "亞通",
+      "market": "TPEx",
+      "securityType": "stock"
+    },
+    {
+      "symbol": "6180",
+      "name": "橘子",
+      "market": "TPEx",
+      "securityType": "stock"
+    },
+    {
+      "symbol": "6182",
+      "name": "合晶",
+      "market": "TPEx",
+      "securityType": "stock"
+    },
+    {
       "symbol": "6183",
       "name": "關貿",
       "market": "TWSE",
@@ -6477,9 +10373,39 @@
       "securityType": "stock"
     },
     {
+      "symbol": "6185",
+      "name": "幃翔",
+      "market": "TPEx",
+      "securityType": "stock"
+    },
+    {
+      "symbol": "6186",
+      "name": "新潤",
+      "market": "TPEx",
+      "securityType": "stock"
+    },
+    {
+      "symbol": "6187",
+      "name": "萬潤",
+      "market": "TPEx",
+      "securityType": "stock"
+    },
+    {
+      "symbol": "6188",
+      "name": "廣明",
+      "market": "TPEx",
+      "securityType": "stock"
+    },
+    {
       "symbol": "6189",
       "name": "豐藝",
       "market": "TWSE",
+      "securityType": "stock"
+    },
+    {
+      "symbol": "6190",
+      "name": "萬泰科",
+      "market": "TPEx",
       "securityType": "stock"
     },
     {
@@ -6495,6 +10421,18 @@
       "securityType": "stock"
     },
     {
+      "symbol": "6194",
+      "name": "育富",
+      "market": "TPEx",
+      "securityType": "stock"
+    },
+    {
+      "symbol": "6195",
+      "name": "詩肯",
+      "market": "TPEx",
+      "securityType": "stock"
+    },
+    {
       "symbol": "6196",
       "name": "帆宣",
       "market": "TWSE",
@@ -6504,6 +10442,18 @@
       "symbol": "6197",
       "name": "佳必琪",
       "market": "TWSE",
+      "securityType": "stock"
+    },
+    {
+      "symbol": "6198",
+      "name": "瑞築",
+      "market": "TPEx",
+      "securityType": "stock"
+    },
+    {
+      "symbol": "6199",
+      "name": "天品",
+      "market": "TPEx",
       "securityType": "stock"
     },
     {
@@ -6519,6 +10469,18 @@
       "securityType": "stock"
     },
     {
+      "symbol": "6203",
+      "name": "海韻電",
+      "market": "TPEx",
+      "securityType": "stock"
+    },
+    {
+      "symbol": "6204",
+      "name": "艾華",
+      "market": "TPEx",
+      "securityType": "stock"
+    },
+    {
       "symbol": "6205",
       "name": "詮欣",
       "market": "TWSE",
@@ -6531,9 +10493,33 @@
       "securityType": "stock"
     },
     {
+      "symbol": "6207",
+      "name": "雷科",
+      "market": "TPEx",
+      "securityType": "stock"
+    },
+    {
+      "symbol": "6208",
+      "name": "日揚",
+      "market": "TPEx",
+      "securityType": "stock"
+    },
+    {
       "symbol": "6209",
       "name": "今國光",
       "market": "TWSE",
+      "securityType": "stock"
+    },
+    {
+      "symbol": "6210",
+      "name": "慶生",
+      "market": "TPEx",
+      "securityType": "stock"
+    },
+    {
+      "symbol": "6212",
+      "name": "理銘",
+      "market": "TPEx",
       "securityType": "stock"
     },
     {
@@ -6561,6 +10547,48 @@
       "securityType": "stock"
     },
     {
+      "symbol": "6217",
+      "name": "中探針",
+      "market": "TPEx",
+      "securityType": "stock"
+    },
+    {
+      "symbol": "6218",
+      "name": "豪勉",
+      "market": "TPEx",
+      "securityType": "stock"
+    },
+    {
+      "symbol": "6219",
+      "name": "富旺",
+      "market": "TPEx",
+      "securityType": "stock"
+    },
+    {
+      "symbol": "6220",
+      "name": "岳豐",
+      "market": "TPEx",
+      "securityType": "stock"
+    },
+    {
+      "symbol": "6221",
+      "name": "晉泰",
+      "market": "TPEx",
+      "securityType": "stock"
+    },
+    {
+      "symbol": "6222",
+      "name": "立軒",
+      "market": "TPEx",
+      "securityType": "stock"
+    },
+    {
+      "symbol": "6223",
+      "name": "旺矽",
+      "market": "TPEx",
+      "securityType": "stock"
+    },
+    {
       "symbol": "6224",
       "name": "聚鼎",
       "market": "TWSE",
@@ -6579,9 +10607,45 @@
       "securityType": "stock"
     },
     {
+      "symbol": "6227",
+      "name": "茂綸",
+      "market": "TPEx",
+      "securityType": "stock"
+    },
+    {
+      "symbol": "6228",
+      "name": "全譜",
+      "market": "TPEx",
+      "securityType": "stock"
+    },
+    {
+      "symbol": "6229",
+      "name": "研通",
+      "market": "TPEx",
+      "securityType": "stock"
+    },
+    {
       "symbol": "6230",
       "name": "尼得科超眾",
       "market": "TWSE",
+      "securityType": "stock"
+    },
+    {
+      "symbol": "6231",
+      "name": "系微",
+      "market": "TPEx",
+      "securityType": "stock"
+    },
+    {
+      "symbol": "6233",
+      "name": "旺玖",
+      "market": "TPEx",
+      "securityType": "stock"
+    },
+    {
+      "symbol": "6234",
+      "name": "高僑",
+      "market": "TPEx",
       "securityType": "stock"
     },
     {
@@ -6591,9 +10655,39 @@
       "securityType": "stock"
     },
     {
+      "symbol": "6236",
+      "name": "中湛",
+      "market": "TPEx",
+      "securityType": "stock"
+    },
+    {
+      "symbol": "6237",
+      "name": "驊訊",
+      "market": "TPEx",
+      "securityType": "stock"
+    },
+    {
       "symbol": "6239",
       "name": "力成",
       "market": "TWSE",
+      "securityType": "stock"
+    },
+    {
+      "symbol": "6240",
+      "name": "松崗",
+      "market": "TPEx",
+      "securityType": "stock"
+    },
+    {
+      "symbol": "6241",
+      "name": "鑫永洋",
+      "market": "TPEx",
+      "securityType": "stock"
+    },
+    {
+      "symbol": "6242",
+      "name": "立康",
+      "market": "TPEx",
       "securityType": "stock"
     },
     {
@@ -6603,15 +10697,81 @@
       "securityType": "stock"
     },
     {
+      "symbol": "6244",
+      "name": "茂迪",
+      "market": "TPEx",
+      "securityType": "stock"
+    },
+    {
+      "symbol": "6245",
+      "name": "立端",
+      "market": "TPEx",
+      "securityType": "stock"
+    },
+    {
+      "symbol": "6246",
+      "name": "臺龍",
+      "market": "TPEx",
+      "securityType": "stock"
+    },
+    {
+      "symbol": "6248",
+      "name": "沛波",
+      "market": "TPEx",
+      "securityType": "stock"
+    },
+    {
       "symbol": "6257",
       "name": "矽格",
       "market": "TWSE",
       "securityType": "stock"
     },
     {
+      "symbol": "6259",
+      "name": "百徽",
+      "market": "TPEx",
+      "securityType": "stock"
+    },
+    {
+      "symbol": "6261",
+      "name": "久元",
+      "market": "TPEx",
+      "securityType": "stock"
+    },
+    {
+      "symbol": "6263",
+      "name": "普萊德",
+      "market": "TPEx",
+      "securityType": "stock"
+    },
+    {
+      "symbol": "6264",
+      "name": "富裔",
+      "market": "TPEx",
+      "securityType": "stock"
+    },
+    {
+      "symbol": "6265",
+      "name": "方土昶",
+      "market": "TPEx",
+      "securityType": "stock"
+    },
+    {
+      "symbol": "6266",
+      "name": "泰詠",
+      "market": "TPEx",
+      "securityType": "stock"
+    },
+    {
       "symbol": "6269",
       "name": "台郡",
       "market": "TWSE",
+      "securityType": "stock"
+    },
+    {
+      "symbol": "6270",
+      "name": "倍微",
+      "market": "TPEx",
       "securityType": "stock"
     },
     {
@@ -6627,6 +10787,24 @@
       "securityType": "stock"
     },
     {
+      "symbol": "6274",
+      "name": "台燿",
+      "market": "TPEx",
+      "securityType": "stock"
+    },
+    {
+      "symbol": "6275",
+      "name": "元山",
+      "market": "TPEx",
+      "securityType": "stock"
+    },
+    {
+      "symbol": "6276",
+      "name": "安鈦克",
+      "market": "TPEx",
+      "securityType": "stock"
+    },
+    {
       "symbol": "6277",
       "name": "宏正",
       "market": "TWSE",
@@ -6636,6 +10814,12 @@
       "symbol": "6278",
       "name": "台表科",
       "market": "TWSE",
+      "securityType": "stock"
+    },
+    {
+      "symbol": "6279",
+      "name": "胡連",
+      "market": "TPEx",
       "securityType": "stock"
     },
     {
@@ -6657,9 +10841,39 @@
       "securityType": "stock"
     },
     {
+      "symbol": "6284",
+      "name": "佳邦",
+      "market": "TPEx",
+      "securityType": "stock"
+    },
+    {
       "symbol": "6285",
       "name": "啟碁",
       "market": "TWSE",
+      "securityType": "stock"
+    },
+    {
+      "symbol": "6290",
+      "name": "良維",
+      "market": "TPEx",
+      "securityType": "stock"
+    },
+    {
+      "symbol": "6291",
+      "name": "沛亨",
+      "market": "TPEx",
+      "securityType": "stock"
+    },
+    {
+      "symbol": "6292",
+      "name": "迅德",
+      "market": "TPEx",
+      "securityType": "stock"
+    },
+    {
+      "symbol": "6294",
+      "name": "智基",
+      "market": "TPEx",
       "securityType": "stock"
     },
     {
@@ -6672,6 +10886,12 @@
       "symbol": "6409",
       "name": "旭隼",
       "market": "TWSE",
+      "securityType": "stock"
+    },
+    {
+      "symbol": "6411",
+      "name": "晶焱",
+      "market": "TPEx",
       "securityType": "stock"
     },
     {
@@ -6699,6 +10919,36 @@
       "securityType": "stock"
     },
     {
+      "symbol": "6417",
+      "name": "韋僑",
+      "market": "TPEx",
+      "securityType": "stock"
+    },
+    {
+      "symbol": "6418",
+      "name": "詠昇",
+      "market": "TPEx",
+      "securityType": "stock"
+    },
+    {
+      "symbol": "6419",
+      "name": "京晨科",
+      "market": "TPEx",
+      "securityType": "stock"
+    },
+    {
+      "symbol": "6423",
+      "name": "億而得",
+      "market": "TPEx",
+      "securityType": "stock"
+    },
+    {
+      "symbol": "6425",
+      "name": "易發",
+      "market": "TPEx",
+      "securityType": "stock"
+    },
+    {
       "symbol": "6426",
       "name": "統新",
       "market": "TWSE",
@@ -6711,9 +10961,27 @@
       "securityType": "stock"
     },
     {
+      "symbol": "6432",
+      "name": "今展科",
+      "market": "TPEx",
+      "securityType": "stock"
+    },
+    {
+      "symbol": "6435",
+      "name": "大中",
+      "market": "TPEx",
+      "securityType": "stock"
+    },
+    {
       "symbol": "6438",
       "name": "迅得",
       "market": "TWSE",
+      "securityType": "stock"
+    },
+    {
+      "symbol": "6441",
+      "name": "廣錠",
+      "market": "TPEx",
       "securityType": "stock"
     },
     {
@@ -6753,9 +11021,39 @@
       "securityType": "stock"
     },
     {
+      "symbol": "6461",
+      "name": "益得",
+      "market": "TPEx",
+      "securityType": "stock"
+    },
+    {
+      "symbol": "6462",
+      "name": "神盾",
+      "market": "TPEx",
+      "securityType": "stock"
+    },
+    {
       "symbol": "6464",
       "name": "台數科",
       "market": "TWSE",
+      "securityType": "stock"
+    },
+    {
+      "symbol": "6465",
+      "name": "威潤",
+      "market": "TPEx",
+      "securityType": "stock"
+    },
+    {
+      "symbol": "6469",
+      "name": "大樹",
+      "market": "TPEx",
+      "securityType": "stock"
+    },
+    {
+      "symbol": "6470",
+      "name": "宇智",
+      "market": "TPEx",
       "securityType": "stock"
     },
     {
@@ -6765,15 +11063,75 @@
       "securityType": "stock"
     },
     {
+      "symbol": "6474",
+      "name": "華豫寧",
+      "market": "TPEx",
+      "securityType": "stock"
+    },
+    {
       "symbol": "6477",
       "name": "安集",
       "market": "TWSE",
       "securityType": "stock"
     },
     {
+      "symbol": "6482",
+      "name": "弘煜科",
+      "market": "TPEx",
+      "securityType": "stock"
+    },
+    {
+      "symbol": "6485",
+      "name": "點序",
+      "market": "TPEx",
+      "securityType": "stock"
+    },
+    {
+      "symbol": "6486",
+      "name": "互動",
+      "market": "TPEx",
+      "securityType": "stock"
+    },
+    {
+      "symbol": "6488",
+      "name": "環球晶",
+      "market": "TPEx",
+      "securityType": "stock"
+    },
+    {
       "symbol": "6491",
       "name": "晶碩",
       "market": "TWSE",
+      "securityType": "stock"
+    },
+    {
+      "symbol": "6492",
+      "name": "生華科",
+      "market": "TPEx",
+      "securityType": "stock"
+    },
+    {
+      "symbol": "6494",
+      "name": "九齊",
+      "market": "TPEx",
+      "securityType": "stock"
+    },
+    {
+      "symbol": "6496",
+      "name": "科懋",
+      "market": "TPEx",
+      "securityType": "stock"
+    },
+    {
+      "symbol": "6498",
+      "name": "久禾光",
+      "market": "TPEx",
+      "securityType": "stock"
+    },
+    {
+      "symbol": "6499",
+      "name": "益安",
+      "market": "TPEx",
       "securityType": "stock"
     },
     {
@@ -6789,9 +11147,57 @@
       "securityType": "stock"
     },
     {
+      "symbol": "6506",
+      "name": "雙邦",
+      "market": "TPEx",
+      "securityType": "stock"
+    },
+    {
+      "symbol": "6508",
+      "name": "惠光",
+      "market": "TPEx",
+      "securityType": "stock"
+    },
+    {
+      "symbol": "6509",
+      "name": "聚和",
+      "market": "TPEx",
+      "securityType": "stock"
+    },
+    {
+      "symbol": "6510",
+      "name": "精測",
+      "market": "TPEx",
+      "securityType": "stock"
+    },
+    {
+      "symbol": "6512",
+      "name": "啟發電",
+      "market": "TPEx",
+      "securityType": "stock"
+    },
+    {
       "symbol": "6515",
       "name": "穎崴",
       "market": "TWSE",
+      "securityType": "stock"
+    },
+    {
+      "symbol": "6516",
+      "name": "勤崴國際",
+      "market": "TPEx",
+      "securityType": "stock"
+    },
+    {
+      "symbol": "6517",
+      "name": "保勝光學",
+      "market": "TPEx",
+      "securityType": "stock"
+    },
+    {
+      "symbol": "6523",
+      "name": "達爾膚",
+      "market": "TPEx",
       "securityType": "stock"
     },
     {
@@ -6807,9 +11213,27 @@
       "securityType": "stock"
     },
     {
+      "symbol": "6527",
+      "name": "明達醫",
+      "market": "TPEx",
+      "securityType": "stock"
+    },
+    {
+      "symbol": "6530",
+      "name": "創威",
+      "market": "TPEx",
+      "securityType": "stock"
+    },
+    {
       "symbol": "6531",
       "name": "愛普*",
       "market": "TWSE",
+      "securityType": "stock"
+    },
+    {
+      "symbol": "6532",
+      "name": "瑞耘",
+      "market": "TPEx",
       "securityType": "stock"
     },
     {
@@ -6825,9 +11249,45 @@
       "securityType": "stock"
     },
     {
+      "symbol": "6535",
+      "name": "順藥",
+      "market": "TPEx",
+      "securityType": "stock"
+    },
+    {
+      "symbol": "6538",
+      "name": "倉和",
+      "market": "TPEx",
+      "securityType": "stock"
+    },
+    {
       "symbol": "6541",
       "name": "泰福-KY",
       "market": "TWSE",
+      "securityType": "stock"
+    },
+    {
+      "symbol": "6542",
+      "name": "隆中",
+      "market": "TPEx",
+      "securityType": "stock"
+    },
+    {
+      "symbol": "6546",
+      "name": "正基",
+      "market": "TPEx",
+      "securityType": "stock"
+    },
+    {
+      "symbol": "6547",
+      "name": "高端疫苗",
+      "market": "TPEx",
+      "securityType": "stock"
+    },
+    {
+      "symbol": "6548",
+      "name": "長科*",
+      "market": "TPEx",
       "securityType": "stock"
     },
     {
@@ -6843,15 +11303,75 @@
       "securityType": "stock"
     },
     {
+      "symbol": "6556",
+      "name": "勝品",
+      "market": "TPEx",
+      "securityType": "stock"
+    },
+    {
       "symbol": "6558",
       "name": "興能高",
       "market": "TWSE",
       "securityType": "stock"
     },
     {
+      "symbol": "6560",
+      "name": "欣普羅",
+      "market": "TPEx",
+      "securityType": "stock"
+    },
+    {
+      "symbol": "6561",
+      "name": "是方",
+      "market": "TPEx",
+      "securityType": "stock"
+    },
+    {
+      "symbol": "6568",
+      "name": "宏觀",
+      "market": "TPEx",
+      "securityType": "stock"
+    },
+    {
+      "symbol": "6569",
+      "name": "醫揚",
+      "market": "TPEx",
+      "securityType": "stock"
+    },
+    {
+      "symbol": "6570",
+      "name": "維田",
+      "market": "TPEx",
+      "securityType": "stock"
+    },
+    {
       "symbol": "6573",
       "name": "虹揚-KY",
       "market": "TWSE",
+      "securityType": "stock"
+    },
+    {
+      "symbol": "6574",
+      "name": "霈方",
+      "market": "TPEx",
+      "securityType": "stock"
+    },
+    {
+      "symbol": "6576",
+      "name": "逸達",
+      "market": "TPEx",
+      "securityType": "stock"
+    },
+    {
+      "symbol": "6577",
+      "name": "勁豐",
+      "market": "TPEx",
+      "securityType": "stock"
+    },
+    {
+      "symbol": "6578",
+      "name": "達邦蛋白",
+      "market": "TPEx",
       "securityType": "stock"
     },
     {
@@ -6873,15 +11393,33 @@
       "securityType": "stock"
     },
     {
+      "symbol": "6584",
+      "name": "南俊國際",
+      "market": "TPEx",
+      "securityType": "stock"
+    },
+    {
       "symbol": "6585",
       "name": "鼎基",
       "market": "TWSE",
       "securityType": "stock"
     },
     {
+      "symbol": "6588",
+      "name": "東典光電",
+      "market": "TPEx",
+      "securityType": "stock"
+    },
+    {
       "symbol": "6589",
       "name": "台康生技",
       "market": "TWSE",
+      "securityType": "stock"
+    },
+    {
+      "symbol": "6590",
+      "name": "普鴻",
+      "market": "TPEx",
       "securityType": "stock"
     },
     {
@@ -6909,9 +11447,33 @@
       "securityType": "stock"
     },
     {
+      "symbol": "6593",
+      "name": "台灣銘板",
+      "market": "TPEx",
+      "securityType": "stock"
+    },
+    {
+      "symbol": "6596",
+      "name": "寬宏藝術",
+      "market": "TPEx",
+      "securityType": "stock"
+    },
+    {
+      "symbol": "6597",
+      "name": "立誠",
+      "market": "TPEx",
+      "securityType": "stock"
+    },
+    {
       "symbol": "6598",
       "name": "ABC-KY",
       "market": "TWSE",
+      "securityType": "stock"
+    },
+    {
+      "symbol": "6603",
+      "name": "富強鑫",
+      "market": "TPEx",
       "securityType": "stock"
     },
     {
@@ -6927,9 +11489,57 @@
       "securityType": "stock"
     },
     {
+      "symbol": "6609",
+      "name": "瀧澤科",
+      "market": "TPEx",
+      "securityType": "stock"
+    },
+    {
+      "symbol": "6612",
+      "name": "奈米醫材",
+      "market": "TPEx",
+      "securityType": "stock"
+    },
+    {
+      "symbol": "6613",
+      "name": "朋億*",
+      "market": "TPEx",
+      "securityType": "stock"
+    },
+    {
       "symbol": "6614",
       "name": "資拓宏宇",
       "market": "TWSE",
+      "securityType": "stock"
+    },
+    {
+      "symbol": "6615",
+      "name": "慧智",
+      "market": "TPEx",
+      "securityType": "stock"
+    },
+    {
+      "symbol": "6616",
+      "name": "特昇-KY",
+      "market": "TPEx",
+      "securityType": "stock"
+    },
+    {
+      "symbol": "6617",
+      "name": "共信-KY",
+      "market": "TPEx",
+      "securityType": "stock"
+    },
+    {
+      "symbol": "6620",
+      "name": "漢達",
+      "market": "TPEx",
+      "securityType": "stock"
+    },
+    {
+      "symbol": "6624",
+      "name": "萬年清",
+      "market": "TPEx",
       "securityType": "stock"
     },
     {
@@ -6939,15 +11549,63 @@
       "securityType": "stock"
     },
     {
+      "symbol": "6629",
+      "name": "泰金-KY",
+      "market": "TPEx",
+      "securityType": "stock"
+    },
+    {
+      "symbol": "6637",
+      "name": "醫影",
+      "market": "TPEx",
+      "securityType": "stock"
+    },
+    {
+      "symbol": "6640",
+      "name": "均華",
+      "market": "TPEx",
+      "securityType": "stock"
+    },
+    {
       "symbol": "6641",
       "name": "基士德-KY",
       "market": "TWSE",
       "securityType": "stock"
     },
     {
+      "symbol": "6642",
+      "name": "富致",
+      "market": "TPEx",
+      "securityType": "stock"
+    },
+    {
+      "symbol": "6643",
+      "name": "M31",
+      "market": "TPEx",
+      "securityType": "stock"
+    },
+    {
       "symbol": "6645",
       "name": "金萬林-創",
       "market": "TWSE",
+      "securityType": "stock"
+    },
+    {
+      "symbol": "6649",
+      "name": "台生材",
+      "market": "TPEx",
+      "securityType": "stock"
+    },
+    {
+      "symbol": "6651",
+      "name": "全宇昕",
+      "market": "TPEx",
+      "securityType": "stock"
+    },
+    {
+      "symbol": "6654",
+      "name": "天正國際",
+      "market": "TPEx",
       "securityType": "stock"
     },
     {
@@ -6969,9 +11627,33 @@
       "securityType": "stock"
     },
     {
+      "symbol": "6661",
+      "name": "威健生技",
+      "market": "TPEx",
+      "securityType": "stock"
+    },
+    {
+      "symbol": "6662",
+      "name": "樂斯科",
+      "market": "TPEx",
+      "securityType": "stock"
+    },
+    {
+      "symbol": "6664",
+      "name": "群翊",
+      "market": "TPEx",
+      "securityType": "stock"
+    },
+    {
       "symbol": "6666",
       "name": "羅麗芬-KY",
       "market": "TWSE",
+      "securityType": "stock"
+    },
+    {
+      "symbol": "6667",
+      "name": "信紘科",
+      "market": "TPEx",
       "securityType": "stock"
     },
     {
@@ -7011,9 +11693,39 @@
       "securityType": "stock"
     },
     {
+      "symbol": "6679",
+      "name": "鈺太",
+      "market": "TPEx",
+      "securityType": "stock"
+    },
+    {
+      "symbol": "6680",
+      "name": "鑫創電子",
+      "market": "TPEx",
+      "securityType": "stock"
+    },
+    {
+      "symbol": "6683",
+      "name": "雍智科技",
+      "market": "TPEx",
+      "securityType": "stock"
+    },
+    {
+      "symbol": "6684",
+      "name": "安格",
+      "market": "TPEx",
+      "securityType": "stock"
+    },
+    {
       "symbol": "6689",
       "name": "伊雲谷",
       "market": "TWSE",
+      "securityType": "stock"
+    },
+    {
+      "symbol": "6690",
+      "name": "安碁資訊",
+      "market": "TPEx",
       "securityType": "stock"
     },
     {
@@ -7023,9 +11735,27 @@
       "securityType": "stock"
     },
     {
+      "symbol": "6692",
+      "name": "進能服",
+      "market": "TPEx",
+      "securityType": "stock"
+    },
+    {
+      "symbol": "6693",
+      "name": "廣閎科",
+      "market": "TPEx",
+      "securityType": "stock"
+    },
+    {
       "symbol": "6695",
       "name": "芯鼎",
       "market": "TWSE",
+      "securityType": "stock"
+    },
+    {
+      "symbol": "6697",
+      "name": "東捷資訊",
+      "market": "TPEx",
       "securityType": "stock"
     },
     {
@@ -7035,9 +11765,27 @@
       "securityType": "stock"
     },
     {
+      "symbol": "6703",
+      "name": "軒郁",
+      "market": "TPEx",
+      "securityType": "stock"
+    },
+    {
       "symbol": "6706",
       "name": "惠特",
       "market": "TWSE",
+      "securityType": "stock"
+    },
+    {
+      "symbol": "6708",
+      "name": "天擎",
+      "market": "TPEx",
+      "securityType": "stock"
+    },
+    {
+      "symbol": "6712",
+      "name": "長聖",
+      "market": "TPEx",
       "securityType": "stock"
     },
     {
@@ -7047,15 +11795,87 @@
       "securityType": "stock"
     },
     {
+      "symbol": "6716",
+      "name": "應廣",
+      "market": "TPEx",
+      "securityType": "stock"
+    },
+    {
       "symbol": "6719",
       "name": "力智",
       "market": "TWSE",
       "securityType": "stock"
     },
     {
+      "symbol": "6720",
+      "name": "久昌",
+      "market": "TPEx",
+      "securityType": "stock"
+    },
+    {
+      "symbol": "6721",
+      "name": "信實",
+      "market": "TPEx",
+      "securityType": "stock"
+    },
+    {
       "symbol": "6722",
       "name": "輝創",
       "market": "TWSE",
+      "securityType": "stock"
+    },
+    {
+      "symbol": "6725",
+      "name": "矽科宏晟",
+      "market": "TPEx",
+      "securityType": "stock"
+    },
+    {
+      "symbol": "6727",
+      "name": "亞泰金屬",
+      "market": "TPEx",
+      "securityType": "stock"
+    },
+    {
+      "symbol": "6728",
+      "name": "上洋",
+      "market": "TPEx",
+      "securityType": "stock"
+    },
+    {
+      "symbol": "6730",
+      "name": "常廣",
+      "market": "TPEx",
+      "securityType": "stock"
+    },
+    {
+      "symbol": "6732",
+      "name": "昇佳電子",
+      "market": "TPEx",
+      "securityType": "stock"
+    },
+    {
+      "symbol": "6733",
+      "name": "博晟生醫",
+      "market": "TPEx",
+      "securityType": "stock"
+    },
+    {
+      "symbol": "6735",
+      "name": "美達科技",
+      "market": "TPEx",
+      "securityType": "stock"
+    },
+    {
+      "symbol": "6739",
+      "name": "竹陞科技",
+      "market": "TPEx",
+      "securityType": "stock"
+    },
+    {
+      "symbol": "6741",
+      "name": "91APP*-KY",
+      "market": "TPEx",
       "securityType": "stock"
     },
     {
@@ -7068,6 +11888,18 @@
       "symbol": "6743",
       "name": "安普新",
       "market": "TWSE",
+      "securityType": "stock"
+    },
+    {
+      "symbol": "6751",
+      "name": "智聯服務",
+      "market": "TPEx",
+      "securityType": "stock"
+    },
+    {
+      "symbol": "6752",
+      "name": "叡揚",
+      "market": "TPEx",
       "securityType": "stock"
     },
     {
@@ -7092,6 +11924,30 @@
       "symbol": "6757",
       "name": "台灣虎航",
       "market": "TWSE",
+      "securityType": "stock"
+    },
+    {
+      "symbol": "6761",
+      "name": "穩得",
+      "market": "TPEx",
+      "securityType": "stock"
+    },
+    {
+      "symbol": "6762",
+      "name": "達亞",
+      "market": "TPEx",
+      "securityType": "stock"
+    },
+    {
+      "symbol": "6763",
+      "name": "綠界科技*",
+      "market": "TPEx",
+      "securityType": "stock"
+    },
+    {
+      "symbol": "6767",
+      "name": "台微醫",
+      "market": "TPEx",
       "securityType": "stock"
     },
     {
@@ -7131,6 +11987,18 @@
       "securityType": "stock"
     },
     {
+      "symbol": "6785",
+      "name": "昱展新藥",
+      "market": "TPEx",
+      "securityType": "stock"
+    },
+    {
+      "symbol": "6788",
+      "name": "華景電",
+      "market": "TPEx",
+      "securityType": "stock"
+    },
+    {
       "symbol": "6789",
       "name": "采鈺",
       "market": "TWSE",
@@ -7140,6 +12008,12 @@
       "symbol": "6790",
       "name": "永豐實",
       "market": "TWSE",
+      "securityType": "stock"
+    },
+    {
+      "symbol": "6791",
+      "name": "虎門科技",
+      "market": "TPEx",
       "securityType": "stock"
     },
     {
@@ -7167,6 +12041,18 @@
       "securityType": "stock"
     },
     {
+      "symbol": "6803",
+      "name": "崑鼎",
+      "market": "TPEx",
+      "securityType": "stock"
+    },
+    {
+      "symbol": "6804",
+      "name": "明係",
+      "market": "TPEx",
+      "securityType": "stock"
+    },
+    {
       "symbol": "6805",
       "name": "富世達",
       "market": "TWSE",
@@ -7176,6 +12062,30 @@
       "symbol": "6807",
       "name": "峰源-KY",
       "market": "TWSE",
+      "securityType": "stock"
+    },
+    {
+      "symbol": "6811",
+      "name": "宏碁資訊",
+      "market": "TPEx",
+      "securityType": "stock"
+    },
+    {
+      "symbol": "6821",
+      "name": "聯寶",
+      "market": "TPEx",
+      "securityType": "stock"
+    },
+    {
+      "symbol": "6823",
+      "name": "濾能",
+      "market": "TPEx",
+      "securityType": "stock"
+    },
+    {
+      "symbol": "6829",
+      "name": "千附精密",
+      "market": "TPEx",
       "securityType": "stock"
     },
     {
@@ -7209,9 +12119,57 @@
       "securityType": "stock"
     },
     {
+      "symbol": "6840",
+      "name": "東研信超",
+      "market": "TPEx",
+      "securityType": "stock"
+    },
+    {
+      "symbol": "6841",
+      "name": "長佳智能",
+      "market": "TPEx",
+      "securityType": "stock"
+    },
+    {
+      "symbol": "6843",
+      "name": "進典",
+      "market": "TPEx",
+      "securityType": "stock"
+    },
+    {
+      "symbol": "6844",
+      "name": "諾貝兒",
+      "market": "TPEx",
+      "securityType": "stock"
+    },
+    {
+      "symbol": "6846",
+      "name": "綠茵",
+      "market": "TPEx",
+      "securityType": "stock"
+    },
+    {
       "symbol": "6854",
       "name": "錼創科技-KY創",
       "market": "TWSE",
+      "securityType": "stock"
+    },
+    {
+      "symbol": "6855",
+      "name": "數泓科",
+      "market": "TPEx",
+      "securityType": "stock"
+    },
+    {
+      "symbol": "6856",
+      "name": "鑫傳",
+      "market": "TPEx",
+      "securityType": "stock"
+    },
+    {
+      "symbol": "6859",
+      "name": "伯特光",
+      "market": "TPEx",
       "securityType": "stock"
     },
     {
@@ -7233,15 +12191,63 @@
       "securityType": "stock"
     },
     {
+      "symbol": "6865",
+      "name": "偉康科技",
+      "market": "TPEx",
+      "securityType": "stock"
+    },
+    {
       "symbol": "6869",
       "name": "雲豹能源",
       "market": "TWSE",
       "securityType": "stock"
     },
     {
+      "symbol": "6870",
+      "name": "騰雲",
+      "market": "TPEx",
+      "securityType": "stock"
+    },
+    {
+      "symbol": "6872",
+      "name": "浩宇生醫",
+      "market": "TPEx",
+      "securityType": "stock"
+    },
+    {
       "symbol": "6873",
       "name": "泓德能源",
       "market": "TWSE",
+      "securityType": "stock"
+    },
+    {
+      "symbol": "6874",
+      "name": "倍力",
+      "market": "TPEx",
+      "securityType": "stock"
+    },
+    {
+      "symbol": "6875",
+      "name": "國邑*",
+      "market": "TPEx",
+      "securityType": "stock"
+    },
+    {
+      "symbol": "6877",
+      "name": "鏵友益",
+      "market": "TPEx",
+      "securityType": "stock"
+    },
+    {
+      "symbol": "6881",
+      "name": "潤德",
+      "market": "TPEx",
+      "securityType": "stock"
+    },
+    {
+      "symbol": "6884",
+      "name": "海柏特",
+      "market": "TPEx",
       "securityType": "stock"
     },
     {
@@ -7263,6 +12269,24 @@
       "securityType": "stock"
     },
     {
+      "symbol": "6894",
+      "name": "衛司特",
+      "market": "TPEx",
+      "securityType": "stock"
+    },
+    {
+      "symbol": "6895",
+      "name": "宏碩系統",
+      "market": "TPEx",
+      "securityType": "stock"
+    },
+    {
+      "symbol": "6899",
+      "name": "創為精密",
+      "market": "TPEx",
+      "securityType": "stock"
+    },
+    {
       "symbol": "6901",
       "name": "鑽石投資",
       "market": "TWSE",
@@ -7275,9 +12299,27 @@
       "securityType": "stock"
     },
     {
+      "symbol": "6903",
+      "name": "巨漢",
+      "market": "TPEx",
+      "securityType": "stock"
+    },
+    {
+      "symbol": "6904",
+      "name": "伯鑫",
+      "market": "TPEx",
+      "securityType": "stock"
+    },
+    {
       "symbol": "6906",
       "name": "現觀科",
       "market": "TWSE",
+      "securityType": "stock"
+    },
+    {
+      "symbol": "6907",
+      "name": "雅特力-KY",
+      "market": "TPEx",
       "securityType": "stock"
     },
     {
@@ -7290,6 +12332,18 @@
       "symbol": "6909",
       "name": "創控",
       "market": "TWSE",
+      "securityType": "stock"
+    },
+    {
+      "symbol": "6910",
+      "name": "德鴻",
+      "market": "TPEx",
+      "securityType": "stock"
+    },
+    {
+      "symbol": "6913",
+      "name": "鴻呈",
+      "market": "TPEx",
       "securityType": "stock"
     },
     {
@@ -7323,6 +12377,12 @@
       "securityType": "stock"
     },
     {
+      "symbol": "6922",
+      "name": "宸曜",
+      "market": "TPEx",
+      "securityType": "stock"
+    },
+    {
       "symbol": "6923",
       "name": "中台",
       "market": "TWSE",
@@ -7335,9 +12395,21 @@
       "securityType": "stock"
     },
     {
+      "symbol": "6925",
+      "name": "意藍",
+      "market": "TPEx",
+      "securityType": "stock"
+    },
+    {
       "symbol": "6928",
       "name": "攸泰科技",
       "market": "TWSE",
+      "securityType": "stock"
+    },
+    {
+      "symbol": "6929",
+      "name": "佑全",
+      "market": "TPEx",
       "securityType": "stock"
     },
     {
@@ -7377,6 +12449,12 @@
       "securityType": "stock"
     },
     {
+      "symbol": "6945",
+      "name": "圓祥生技",
+      "market": "TPEx",
+      "securityType": "stock"
+    },
+    {
       "symbol": "6947",
       "name": "台鎔科技",
       "market": "TWSE",
@@ -7398,6 +12476,12 @@
       "symbol": "6952",
       "name": "大武山",
       "market": "TWSE",
+      "securityType": "stock"
+    },
+    {
+      "symbol": "6953",
+      "name": "家碩",
+      "market": "TPEx",
       "securityType": "stock"
     },
     {
@@ -7425,6 +12509,12 @@
       "securityType": "stock"
     },
     {
+      "symbol": "6961",
+      "name": "旅天下",
+      "market": "TPEx",
+      "securityType": "stock"
+    },
+    {
       "symbol": "6962",
       "name": "奕力-KY",
       "market": "TWSE",
@@ -7437,9 +12527,45 @@
       "securityType": "stock"
     },
     {
+      "symbol": "6967",
+      "name": "汎瑋材料",
+      "market": "TPEx",
+      "securityType": "stock"
+    },
+    {
+      "symbol": "6968",
+      "name": "萬達寵物",
+      "market": "TPEx",
+      "securityType": "stock"
+    },
+    {
       "symbol": "6969",
       "name": "成信實業*-創",
       "market": "TWSE",
+      "securityType": "stock"
+    },
+    {
+      "symbol": "6971",
+      "name": "惠民實業",
+      "market": "TPEx",
+      "securityType": "stock"
+    },
+    {
+      "symbol": "6982",
+      "name": "大井泵浦",
+      "market": "TPEx",
+      "securityType": "stock"
+    },
+    {
+      "symbol": "6983",
+      "name": "華洋精機",
+      "market": "TPEx",
+      "securityType": "stock"
+    },
+    {
+      "symbol": "6986",
+      "name": "和迅",
+      "market": "TPEx",
       "securityType": "stock"
     },
     {
@@ -7455,6 +12581,42 @@
       "securityType": "stock"
     },
     {
+      "symbol": "6996",
+      "name": "力領科技",
+      "market": "TPEx",
+      "securityType": "stock"
+    },
+    {
+      "symbol": "6997",
+      "name": "博弘",
+      "market": "TPEx",
+      "securityType": "stock"
+    },
+    {
+      "symbol": "7402",
+      "name": "邑錡",
+      "market": "TPEx",
+      "securityType": "stock"
+    },
+    {
+      "symbol": "7547",
+      "name": "碩網",
+      "market": "TPEx",
+      "securityType": "stock"
+    },
+    {
+      "symbol": "7556",
+      "name": "意德士",
+      "market": "TPEx",
+      "securityType": "stock"
+    },
+    {
+      "symbol": "7584",
+      "name": "樂意",
+      "market": "TPEx",
+      "securityType": "stock"
+    },
+    {
       "symbol": "7610",
       "name": "聯友金屬-創",
       "market": "TWSE",
@@ -7467,9 +12629,27 @@
       "securityType": "stock"
     },
     {
+      "symbol": "7642",
+      "name": "昶瑞機電",
+      "market": "TPEx",
+      "securityType": "stock"
+    },
+    {
       "symbol": "7689",
       "name": "大鵬科CLMX",
       "market": "TWSE",
+      "securityType": "stock"
+    },
+    {
+      "symbol": "7703",
+      "name": "銳澤",
+      "market": "TPEx",
+      "securityType": "stock"
+    },
+    {
+      "symbol": "7704",
+      "name": "明遠精密",
+      "market": "TPEx",
       "securityType": "stock"
     },
     {
@@ -7479,9 +12659,63 @@
       "securityType": "stock"
     },
     {
+      "symbol": "7708",
+      "name": "全家餐飲",
+      "market": "TPEx",
+      "securityType": "stock"
+    },
+    {
+      "symbol": "7709",
+      "name": "榮田",
+      "market": "TPEx",
+      "securityType": "stock"
+    },
+    {
       "symbol": "7711",
       "name": "永擎",
       "market": "TWSE",
+      "securityType": "stock"
+    },
+    {
+      "symbol": "7712",
+      "name": "博盛半導體",
+      "market": "TPEx",
+      "securityType": "stock"
+    },
+    {
+      "symbol": "7713",
+      "name": "威力德生醫",
+      "market": "TPEx",
+      "securityType": "stock"
+    },
+    {
+      "symbol": "7714",
+      "name": "創泓科技",
+      "market": "TPEx",
+      "securityType": "stock"
+    },
+    {
+      "symbol": "7715",
+      "name": "裕山",
+      "market": "TPEx",
+      "securityType": "stock"
+    },
+    {
+      "symbol": "7716",
+      "name": "昱臺國際",
+      "market": "TPEx",
+      "securityType": "stock"
+    },
+    {
+      "symbol": "7717",
+      "name": "萊德光電-KY",
+      "market": "TPEx",
+      "securityType": "stock"
+    },
+    {
+      "symbol": "7718",
+      "name": "友鋮",
+      "market": "TPEx",
       "securityType": "stock"
     },
     {
@@ -7497,6 +12731,18 @@
       "securityType": "stock"
     },
     {
+      "symbol": "7723",
+      "name": "築間",
+      "market": "TPEx",
+      "securityType": "stock"
+    },
+    {
+      "symbol": "7728",
+      "name": "光焱科技",
+      "market": "TPEx",
+      "securityType": "stock"
+    },
+    {
       "symbol": "7730",
       "name": "暉盛-創",
       "market": "TWSE",
@@ -7509,15 +12755,45 @@
       "securityType": "stock"
     },
     {
+      "symbol": "7734",
+      "name": "印能科技",
+      "market": "TPEx",
+      "securityType": "stock"
+    },
+    {
       "symbol": "7736",
       "name": "虎山",
       "market": "TWSE",
       "securityType": "stock"
     },
     {
+      "symbol": "7738",
+      "name": "東聯互動",
+      "market": "TPEx",
+      "securityType": "stock"
+    },
+    {
       "symbol": "7740",
       "name": "熙特爾-創",
       "market": "TWSE",
+      "securityType": "stock"
+    },
+    {
+      "symbol": "7743",
+      "name": "金利食安",
+      "market": "TPEx",
+      "securityType": "stock"
+    },
+    {
+      "symbol": "7744",
+      "name": "崴寶",
+      "market": "TPEx",
+      "securityType": "stock"
+    },
+    {
+      "symbol": "7747",
+      "name": "昕奇雲端",
+      "market": "TPEx",
       "securityType": "stock"
     },
     {
@@ -7533,6 +12809,24 @@
       "securityType": "stock"
     },
     {
+      "symbol": "7751",
+      "name": "竑騰",
+      "market": "TPEx",
+      "securityType": "stock"
+    },
+    {
+      "symbol": "7753",
+      "name": "星亞",
+      "market": "TPEx",
+      "securityType": "stock"
+    },
+    {
+      "symbol": "7757",
+      "name": "金色三麥",
+      "market": "TPEx",
+      "securityType": "stock"
+    },
+    {
       "symbol": "7760",
       "name": "享溫馨",
       "market": "TWSE",
@@ -7542,6 +12836,12 @@
       "symbol": "7765",
       "name": "中華資安",
       "market": "TWSE",
+      "securityType": "stock"
+    },
+    {
+      "symbol": "7767",
+      "name": "仁大資訊",
+      "market": "TPEx",
       "securityType": "stock"
     },
     {
@@ -7557,9 +12857,33 @@
       "securityType": "stock"
     },
     {
+      "symbol": "7770",
+      "name": "君曜",
+      "market": "TPEx",
+      "securityType": "stock"
+    },
+    {
+      "symbol": "7772",
+      "name": "耀穎",
+      "market": "TPEx",
+      "securityType": "stock"
+    },
+    {
+      "symbol": "7777",
+      "name": "能率亞洲",
+      "market": "TPEx",
+      "securityType": "stock"
+    },
+    {
       "symbol": "7780",
       "name": "大研生醫*",
       "market": "TWSE",
+      "securityType": "stock"
+    },
+    {
+      "symbol": "7782",
+      "name": "光速火箭",
+      "market": "TPEx",
       "securityType": "stock"
     },
     {
@@ -7581,6 +12905,18 @@
       "securityType": "stock"
     },
     {
+      "symbol": "7792",
+      "name": "安葆",
+      "market": "TPEx",
+      "securityType": "stock"
+    },
+    {
+      "symbol": "7794",
+      "name": "宏碁智新",
+      "market": "TPEx",
+      "securityType": "stock"
+    },
+    {
       "symbol": "7795",
       "name": "長廣",
       "market": "TWSE",
@@ -7599,9 +12935,45 @@
       "securityType": "stock"
     },
     {
+      "symbol": "7805",
+      "name": "威聯通",
+      "market": "TPEx",
+      "securityType": "stock"
+    },
+    {
+      "symbol": "7810",
+      "name": "捷創科技",
+      "market": "TPEx",
+      "securityType": "stock"
+    },
+    {
+      "symbol": "7811",
+      "name": "民盛",
+      "market": "TPEx",
+      "securityType": "stock"
+    },
+    {
+      "symbol": "7814",
+      "name": "海昌生技",
+      "market": "TPEx",
+      "securityType": "stock"
+    },
+    {
       "symbol": "7818",
       "name": "溢泰實業",
       "market": "TWSE",
+      "securityType": "stock"
+    },
+    {
+      "symbol": "7819",
+      "name": "精誠金融",
+      "market": "TPEx",
+      "securityType": "stock"
+    },
+    {
+      "symbol": "7820",
+      "name": "立盈",
+      "market": "TPEx",
       "securityType": "stock"
     },
     {
@@ -7623,15 +12995,39 @@
       "securityType": "stock"
     },
     {
+      "symbol": "7825",
+      "name": "和亞智慧",
+      "market": "TPEx",
+      "securityType": "stock"
+    },
+    {
       "symbol": "7827",
       "name": "漢康-KY創",
       "market": "TWSE",
       "securityType": "stock"
     },
     {
+      "symbol": "7828",
+      "name": "創新服務",
+      "market": "TPEx",
+      "securityType": "stock"
+    },
+    {
       "symbol": "7835",
       "name": "永悅健康-創",
       "market": "TWSE",
+      "securityType": "stock"
+    },
+    {
+      "symbol": "7839",
+      "name": "達人網",
+      "market": "TPEx",
+      "securityType": "stock"
+    },
+    {
+      "symbol": "7842",
+      "name": "天能綠電",
+      "market": "TPEx",
       "securityType": "stock"
     },
     {
@@ -7659,9 +13055,27 @@
       "securityType": "stock"
     },
     {
+      "symbol": "8024",
+      "name": "佑華",
+      "market": "TPEx",
+      "securityType": "stock"
+    },
+    {
+      "symbol": "8027",
+      "name": "鈦昇",
+      "market": "TPEx",
+      "securityType": "stock"
+    },
+    {
       "symbol": "8028",
       "name": "昇陽半導體",
       "market": "TWSE",
+      "securityType": "stock"
+    },
+    {
+      "symbol": "8032",
+      "name": "光菱",
+      "market": "TPEx",
       "securityType": "stock"
     },
     {
@@ -7671,9 +13085,45 @@
       "securityType": "stock"
     },
     {
+      "symbol": "8034",
+      "name": "榮群",
+      "market": "TPEx",
+      "securityType": "stock"
+    },
+    {
+      "symbol": "8038",
+      "name": "長園科",
+      "market": "TPEx",
+      "securityType": "stock"
+    },
+    {
       "symbol": "8039",
       "name": "台虹",
       "market": "TWSE",
+      "securityType": "stock"
+    },
+    {
+      "symbol": "8040",
+      "name": "九暘",
+      "market": "TPEx",
+      "securityType": "stock"
+    },
+    {
+      "symbol": "8042",
+      "name": "金山電",
+      "market": "TPEx",
+      "securityType": "stock"
+    },
+    {
+      "symbol": "8043",
+      "name": "蜜望實",
+      "market": "TPEx",
+      "securityType": "stock"
+    },
+    {
+      "symbol": "8044",
+      "name": "網家",
+      "market": "TPEx",
       "securityType": "stock"
     },
     {
@@ -7689,9 +13139,81 @@
       "securityType": "stock"
     },
     {
+      "symbol": "8047",
+      "name": "星雲",
+      "market": "TPEx",
+      "securityType": "stock"
+    },
+    {
+      "symbol": "8048",
+      "name": "德勝",
+      "market": "TPEx",
+      "securityType": "stock"
+    },
+    {
+      "symbol": "8049",
+      "name": "晶采",
+      "market": "TPEx",
+      "securityType": "stock"
+    },
+    {
+      "symbol": "8050",
+      "name": "廣積",
+      "market": "TPEx",
+      "securityType": "stock"
+    },
+    {
+      "symbol": "8054",
+      "name": "安國",
+      "market": "TPEx",
+      "securityType": "stock"
+    },
+    {
+      "symbol": "8059",
+      "name": "凱碩",
+      "market": "TPEx",
+      "securityType": "stock"
+    },
+    {
+      "symbol": "8064",
+      "name": "東捷",
+      "market": "TPEx",
+      "securityType": "stock"
+    },
+    {
+      "symbol": "8066",
+      "name": "來思達",
+      "market": "TPEx",
+      "securityType": "stock"
+    },
+    {
+      "symbol": "8067",
+      "name": "志旭",
+      "market": "TPEx",
+      "securityType": "stock"
+    },
+    {
+      "symbol": "8068",
+      "name": "全達",
+      "market": "TPEx",
+      "securityType": "stock"
+    },
+    {
+      "symbol": "8069",
+      "name": "元太",
+      "market": "TPEx",
+      "securityType": "stock"
+    },
+    {
       "symbol": "8070",
       "name": "長華*",
       "market": "TWSE",
+      "securityType": "stock"
+    },
+    {
+      "symbol": "8071",
+      "name": "能率網通",
+      "market": "TPEx",
       "securityType": "stock"
     },
     {
@@ -7701,15 +13223,123 @@
       "securityType": "stock"
     },
     {
+      "symbol": "8074",
+      "name": "鉅橡",
+      "market": "TPEx",
+      "securityType": "stock"
+    },
+    {
+      "symbol": "8076",
+      "name": "伍豐",
+      "market": "TPEx",
+      "securityType": "stock"
+    },
+    {
+      "symbol": "8077",
+      "name": "洛碁",
+      "market": "TPEx",
+      "securityType": "stock"
+    },
+    {
+      "symbol": "8080",
+      "name": "泰霖",
+      "market": "TPEx",
+      "securityType": "stock"
+    },
+    {
       "symbol": "8081",
       "name": "致新",
       "market": "TWSE",
       "securityType": "stock"
     },
     {
+      "symbol": "8083",
+      "name": "瑞穎",
+      "market": "TPEx",
+      "securityType": "stock"
+    },
+    {
+      "symbol": "8084",
+      "name": "巨虹",
+      "market": "TPEx",
+      "securityType": "stock"
+    },
+    {
+      "symbol": "8085",
+      "name": "福華",
+      "market": "TPEx",
+      "securityType": "stock"
+    },
+    {
+      "symbol": "8086",
+      "name": "宏捷科",
+      "market": "TPEx",
+      "securityType": "stock"
+    },
+    {
+      "symbol": "8087",
+      "name": "麗升能源",
+      "market": "TPEx",
+      "securityType": "stock"
+    },
+    {
+      "symbol": "8088",
+      "name": "品安",
+      "market": "TPEx",
+      "securityType": "stock"
+    },
+    {
+      "symbol": "8089",
+      "name": "康全電訊",
+      "market": "TPEx",
+      "securityType": "stock"
+    },
+    {
+      "symbol": "8091",
+      "name": "翔名",
+      "market": "TPEx",
+      "securityType": "stock"
+    },
+    {
+      "symbol": "8092",
+      "name": "建暐",
+      "market": "TPEx",
+      "securityType": "stock"
+    },
+    {
+      "symbol": "8093",
+      "name": "保銳",
+      "market": "TPEx",
+      "securityType": "stock"
+    },
+    {
+      "symbol": "8096",
+      "name": "擎亞",
+      "market": "TPEx",
+      "securityType": "stock"
+    },
+    {
+      "symbol": "8097",
+      "name": "常珵",
+      "market": "TPEx",
+      "securityType": "stock"
+    },
+    {
+      "symbol": "8099",
+      "name": "大世科",
+      "market": "TPEx",
+      "securityType": "stock"
+    },
+    {
       "symbol": "8101",
       "name": "華冠",
       "market": "TWSE",
+      "securityType": "stock"
+    },
+    {
+      "symbol": "8102",
+      "name": "傑霖科技",
+      "market": "TPEx",
       "securityType": "stock"
     },
     {
@@ -7731,9 +13361,27 @@
       "securityType": "stock"
     },
     {
+      "symbol": "8107",
+      "name": "大億金茂",
+      "market": "TPEx",
+      "securityType": "stock"
+    },
+    {
+      "symbol": "8109",
+      "name": "博大",
+      "market": "TPEx",
+      "securityType": "stock"
+    },
+    {
       "symbol": "8110",
       "name": "華東",
       "market": "TWSE",
+      "securityType": "stock"
+    },
+    {
+      "symbol": "8111",
+      "name": "立碁",
+      "market": "TPEx",
       "securityType": "stock"
     },
     {
@@ -7755,15 +13403,33 @@
       "securityType": "stock"
     },
     {
+      "symbol": "8121",
+      "name": "越峰",
+      "market": "TPEx",
+      "securityType": "stock"
+    },
+    {
       "symbol": "8131",
       "name": "福懋科",
       "market": "TWSE",
       "securityType": "stock"
     },
     {
+      "symbol": "8147",
+      "name": "正淩",
+      "market": "TPEx",
+      "securityType": "stock"
+    },
+    {
       "symbol": "8150",
       "name": "南茂",
       "market": "TWSE",
+      "securityType": "stock"
+    },
+    {
+      "symbol": "8155",
+      "name": "博智",
+      "market": "TPEx",
       "securityType": "stock"
     },
     {
@@ -7776,6 +13442,30 @@
       "symbol": "8163",
       "name": "達方",
       "market": "TWSE",
+      "securityType": "stock"
+    },
+    {
+      "symbol": "8171",
+      "name": "天宇",
+      "market": "TPEx",
+      "securityType": "stock"
+    },
+    {
+      "symbol": "8176",
+      "name": "智捷",
+      "market": "TPEx",
+      "securityType": "stock"
+    },
+    {
+      "symbol": "8182",
+      "name": "加高",
+      "market": "TPEx",
+      "securityType": "stock"
+    },
+    {
+      "symbol": "8183",
+      "name": "精星",
+      "market": "TPEx",
       "securityType": "stock"
     },
     {
@@ -7809,9 +13499,33 @@
       "securityType": "stock"
     },
     {
+      "symbol": "8227",
+      "name": "巨有科技",
+      "market": "TPEx",
+      "securityType": "stock"
+    },
+    {
+      "symbol": "8234",
+      "name": "新漢",
+      "market": "TPEx",
+      "securityType": "stock"
+    },
+    {
+      "symbol": "8240",
+      "name": "華宏",
+      "market": "TPEx",
+      "securityType": "stock"
+    },
+    {
       "symbol": "8249",
       "name": "菱光",
       "market": "TWSE",
+      "securityType": "stock"
+    },
+    {
+      "symbol": "8255",
+      "name": "朋程",
+      "market": "TPEx",
       "securityType": "stock"
     },
     {
@@ -7827,9 +13541,75 @@
       "securityType": "stock"
     },
     {
+      "symbol": "8272",
+      "name": "全景軟體",
+      "market": "TPEx",
+      "securityType": "stock"
+    },
+    {
+      "symbol": "8277",
+      "name": "商丞",
+      "market": "TPEx",
+      "securityType": "stock"
+    },
+    {
+      "symbol": "8279",
+      "name": "生展",
+      "market": "TPEx",
+      "securityType": "stock"
+    },
+    {
+      "symbol": "8284",
+      "name": "三竹",
+      "market": "TPEx",
+      "securityType": "stock"
+    },
+    {
+      "symbol": "8289",
+      "name": "泰藝",
+      "market": "TPEx",
+      "securityType": "stock"
+    },
+    {
+      "symbol": "8291",
+      "name": "尚茂",
+      "market": "TPEx",
+      "securityType": "stock"
+    },
+    {
+      "symbol": "8299",
+      "name": "群聯",
+      "market": "TPEx",
+      "securityType": "stock"
+    },
+    {
       "symbol": "8341",
       "name": "日友",
       "market": "TWSE",
+      "securityType": "stock"
+    },
+    {
+      "symbol": "8342",
+      "name": "益張",
+      "market": "TPEx",
+      "securityType": "stock"
+    },
+    {
+      "symbol": "8349",
+      "name": "恒耀",
+      "market": "TPEx",
+      "securityType": "stock"
+    },
+    {
+      "symbol": "8354",
+      "name": "冠好",
+      "market": "TPEx",
+      "securityType": "stock"
+    },
+    {
+      "symbol": "8358",
+      "name": "金居",
+      "market": "TPEx",
       "securityType": "stock"
     },
     {
@@ -7845,9 +13625,45 @@
       "securityType": "stock"
     },
     {
+      "symbol": "8383",
+      "name": "千附",
+      "market": "TPEx",
+      "securityType": "stock"
+    },
+    {
+      "symbol": "8390",
+      "name": "金益鼎",
+      "market": "TPEx",
+      "securityType": "stock"
+    },
+    {
+      "symbol": "8401",
+      "name": "白紗科",
+      "market": "TPEx",
+      "securityType": "stock"
+    },
+    {
+      "symbol": "8403",
+      "name": "盛弘",
+      "market": "TPEx",
+      "securityType": "stock"
+    },
+    {
       "symbol": "8404",
       "name": "百和興業-KY",
       "market": "TWSE",
+      "securityType": "stock"
+    },
+    {
+      "symbol": "8409",
+      "name": "商之器",
+      "market": "TPEx",
+      "securityType": "stock"
+    },
+    {
+      "symbol": "8410",
+      "name": "森田",
+      "market": "TPEx",
       "securityType": "stock"
     },
     {
@@ -7857,9 +13673,45 @@
       "securityType": "stock"
     },
     {
+      "symbol": "8415",
+      "name": "大國鋼",
+      "market": "TPEx",
+      "securityType": "stock"
+    },
+    {
+      "symbol": "8416",
+      "name": "實威",
+      "market": "TPEx",
+      "securityType": "stock"
+    },
+    {
+      "symbol": "8421",
+      "name": "旭源",
+      "market": "TPEx",
+      "securityType": "stock"
+    },
+    {
       "symbol": "8422",
       "name": "可寧衛*",
       "market": "TWSE",
+      "securityType": "stock"
+    },
+    {
+      "symbol": "8423",
+      "name": "保綠-KY",
+      "market": "TPEx",
+      "securityType": "stock"
+    },
+    {
+      "symbol": "8424",
+      "name": "惠普",
+      "market": "TPEx",
+      "securityType": "stock"
+    },
+    {
+      "symbol": "8426",
+      "name": "紅木-KY",
+      "market": "TPEx",
       "securityType": "stock"
     },
     {
@@ -7869,9 +13721,51 @@
       "securityType": "stock"
     },
     {
+      "symbol": "8431",
+      "name": "匯鑽科",
+      "market": "TPEx",
+      "securityType": "stock"
+    },
+    {
+      "symbol": "8432",
+      "name": "東生華",
+      "market": "TPEx",
+      "securityType": "stock"
+    },
+    {
+      "symbol": "8433",
+      "name": "弘帆",
+      "market": "TPEx",
+      "securityType": "stock"
+    },
+    {
+      "symbol": "8435",
+      "name": "鉅邁",
+      "market": "TPEx",
+      "securityType": "stock"
+    },
+    {
+      "symbol": "8436",
+      "name": "大江",
+      "market": "TPEx",
+      "securityType": "stock"
+    },
+    {
+      "symbol": "8437",
+      "name": "大地-KY",
+      "market": "TPEx",
+      "securityType": "stock"
+    },
+    {
       "symbol": "8438",
       "name": "昶昕",
       "market": "TWSE",
+      "securityType": "stock"
+    },
+    {
+      "symbol": "8440",
+      "name": "綠電",
+      "market": "TPEx",
       "securityType": "stock"
     },
     {
@@ -7887,9 +13781,33 @@
       "securityType": "stock"
     },
     {
+      "symbol": "8444",
+      "name": "綠河-KY",
+      "market": "TPEx",
+      "securityType": "stock"
+    },
+    {
+      "symbol": "8446",
+      "name": "華研",
+      "market": "TPEx",
+      "securityType": "stock"
+    },
+    {
+      "symbol": "8450",
+      "name": "霹靂",
+      "market": "TPEx",
+      "securityType": "stock"
+    },
+    {
       "symbol": "8454",
       "name": "富邦媒",
       "market": "TWSE",
+      "securityType": "stock"
+    },
+    {
+      "symbol": "8455",
+      "name": "大拓-KY",
+      "market": "TPEx",
       "securityType": "stock"
     },
     {
@@ -7923,6 +13841,12 @@
       "securityType": "stock"
     },
     {
+      "symbol": "8472",
+      "name": "納維康",
+      "market": "TPEx",
+      "securityType": "stock"
+    },
+    {
       "symbol": "8473",
       "name": "山林水",
       "market": "TWSE",
@@ -7932,6 +13856,12 @@
       "symbol": "8476",
       "name": "台境*",
       "market": "TWSE",
+      "securityType": "stock"
+    },
+    {
+      "symbol": "8477",
+      "name": "創業家",
+      "market": "TPEx",
       "securityType": "stock"
     },
     {
@@ -7965,9 +13895,63 @@
       "securityType": "stock"
     },
     {
+      "symbol": "8489",
+      "name": "三貝德",
+      "market": "TPEx",
+      "securityType": "stock"
+    },
+    {
       "symbol": "8499",
       "name": "鼎炫-KY",
       "market": "TWSE",
+      "securityType": "stock"
+    },
+    {
+      "symbol": "8905",
+      "name": "裕國",
+      "market": "TPEx",
+      "securityType": "stock"
+    },
+    {
+      "symbol": "8906",
+      "name": "花王",
+      "market": "TPEx",
+      "securityType": "stock"
+    },
+    {
+      "symbol": "8908",
+      "name": "欣雄",
+      "market": "TPEx",
+      "securityType": "stock"
+    },
+    {
+      "symbol": "8916",
+      "name": "光隆",
+      "market": "TPEx",
+      "securityType": "stock"
+    },
+    {
+      "symbol": "8917",
+      "name": "欣泰",
+      "market": "TPEx",
+      "securityType": "stock"
+    },
+    {
+      "symbol": "8921",
+      "name": "沈氏",
+      "market": "TPEx",
+      "securityType": "stock"
+    },
+    {
+      "symbol": "8923",
+      "name": "時報",
+      "market": "TPEx",
+      "securityType": "stock"
+    },
+    {
+      "symbol": "8924",
+      "name": "大田",
+      "market": "TPEx",
       "securityType": "stock"
     },
     {
@@ -7977,9 +13961,87 @@
       "securityType": "stock"
     },
     {
+      "symbol": "8927",
+      "name": "北基",
+      "market": "TPEx",
+      "securityType": "stock"
+    },
+    {
+      "symbol": "8928",
+      "name": "鉅明",
+      "market": "TPEx",
+      "securityType": "stock"
+    },
+    {
+      "symbol": "8929",
+      "name": "富堡",
+      "market": "TPEx",
+      "securityType": "stock"
+    },
+    {
+      "symbol": "8930",
+      "name": "青鋼",
+      "market": "TPEx",
+      "securityType": "stock"
+    },
+    {
+      "symbol": "8931",
+      "name": "大汽電",
+      "market": "TPEx",
+      "securityType": "stock"
+    },
+    {
+      "symbol": "8932",
+      "name": "智通*",
+      "market": "TPEx",
+      "securityType": "stock"
+    },
+    {
+      "symbol": "8933",
+      "name": "愛地雅",
+      "market": "TPEx",
+      "securityType": "stock"
+    },
+    {
+      "symbol": "8935",
+      "name": "邦泰",
+      "market": "TPEx",
+      "securityType": "stock"
+    },
+    {
+      "symbol": "8936",
+      "name": "國統",
+      "market": "TPEx",
+      "securityType": "stock"
+    },
+    {
+      "symbol": "8937",
+      "name": "合騏*",
+      "market": "TPEx",
+      "securityType": "stock"
+    },
+    {
+      "symbol": "8938",
+      "name": "明安",
+      "market": "TPEx",
+      "securityType": "stock"
+    },
+    {
       "symbol": "8940",
       "name": "新天地",
       "market": "TWSE",
+      "securityType": "stock"
+    },
+    {
+      "symbol": "8941",
+      "name": "關中",
+      "market": "TPEx",
+      "securityType": "stock"
+    },
+    {
+      "symbol": "8942",
+      "name": "森鉅",
+      "market": "TPEx",
       "securityType": "stock"
     },
     {
@@ -8271,6 +14333,24 @@
       "securityType": "stock"
     },
     {
+      "symbol": "9949",
+      "name": "琉園",
+      "market": "TPEx",
+      "securityType": "stock"
+    },
+    {
+      "symbol": "9950",
+      "name": "萬國通",
+      "market": "TPEx",
+      "securityType": "stock"
+    },
+    {
+      "symbol": "9951",
+      "name": "皇田",
+      "market": "TPEx",
+      "securityType": "stock"
+    },
+    {
       "symbol": "9955",
       "name": "佳龍",
       "market": "TWSE",
@@ -8280,6 +14360,18 @@
       "symbol": "9958",
       "name": "世紀鋼",
       "market": "TWSE",
+      "securityType": "stock"
+    },
+    {
+      "symbol": "9960",
+      "name": "邁達康",
+      "market": "TPEx",
+      "securityType": "stock"
+    },
+    {
+      "symbol": "9962",
+      "name": "有益",
+      "market": "TPEx",
       "securityType": "stock"
     }
   ]
