@@ -1,7 +1,7 @@
 'use strict';
 
 const $ = id => document.getElementById(id);
-const APP_VERSION = '1.5.0';
+const APP_VERSION = '1.5.1';
 const DATA_VERSION = 13;
 const VAULT_KEY = 'little_days_bookkeeping_vault_v2';
 const AUTH_KEY = 'little_days_bookkeeping_auth_v2';
@@ -1300,7 +1300,7 @@ async function unlockWithFace(){
 async function completeUnlock(){ unlocked=true; try{await loadVault(); unlockAppUi();}catch(e){console.error(e);unlocked=false;$('unlockMessage').textContent='資料解鎖失敗，請重新整理再試';} }
 function unlockAppUi(){ document.body.classList.remove('locked'); hide($('lockScreen')); $('app').setAttribute('aria-hidden','false'); $('pinUnlockInput').value=''; updatePinUnlockState(); $('unlockMessage').textContent=''; renderCategoryPicker(); renderSubcategories(); renderAll(); refreshSecurityUi(); showPostUpdateNotice(); }
 function lockApp(reason='background'){
-  if(!unlocked)return; collapseVoiceFab(); stopVoiceSession(); const inInvestmentSub=['investmentHoldingsScreen','investmentIncomeAnalysisScreen','investmentActivityScreen'].some(id=>$(id)&&!$(id).classList.contains('hidden')); if(inInvestmentSub){['investmentHoldingsScreen','investmentIncomeAnalysisScreen','investmentActivityScreen'].forEach(id=>hide($(id)));show($('investmentScreen'));} ['editorScreen','calculatorScreen','voiceSheet','voiceDraftScreen','voiceDraftEditScreen','txnMenuScreen','budgetEditorScreen','investmentTxnEditorScreen','investmentPendingScreen','investmentQuoteEditorScreen','dividendEventEditorScreen','annualSummaryEditorScreen','investmentSecurityDetailScreen','investmentHoldingsScreen','investmentIncomeAnalysisScreen','investmentActivityScreen','settingsScreen','securityScreen','quickTemplateManagerScreen','quickTemplateEditorScreen','insightDetailScreen','categoryManagerScreen','categoryEditorScreen','recurringManagerScreen','recurringEditorScreen','recurringDeleteScreen'].forEach(id=>hide($(id))); unlocked=false;vaultLoaded=false;txns=[];budgets={};categories=clone(DEFAULT_CATEGORIES);quickTemplates=clone(DEFAULT_QUICK_TEMPLATES);settings={};recurring=[];investmentLedger=[];investmentQuotes=[];dividendEvents=[];annualIncomeSummaries=[];dividendEventEditingId=null;annualSummaryEditingYear=null;investmentDetailSymbol=null;investmentValuesVisible=false; document.body.classList.add('locked'); show($('lockScreen')); show($('unlockPanel')); hide($('setupPanel')); $('app').setAttribute('aria-hidden','true'); updatePinUnlockState(); refreshLockFaceUi();
+  if(!unlocked)return; collapseVoiceFab(); stopVoiceSession(); const inInvestmentSub=['investmentHoldingsScreen','investmentIncomeAnalysisScreen','investmentActivityScreen'].some(id=>$(id)&&!$(id).classList.contains('hidden')); if(inInvestmentSub){['investmentHoldingsScreen','investmentIncomeAnalysisScreen','investmentActivityScreen'].forEach(id=>hide($(id)));show($('investmentScreen'));} ['editorScreen','calculatorScreen','voiceSheet','voiceDraftScreen','voiceDraftEditScreen','txnMenuScreen','budgetEditorScreen','investmentTxnEditorScreen','investmentPendingScreen','investmentQuoteEditorScreen','investmentMarketOverviewScreen','dividendEventEditorScreen','annualSummaryEditorScreen','investmentSecurityDetailScreen','investmentHoldingsScreen','investmentIncomeAnalysisScreen','investmentActivityScreen','settingsScreen','securityScreen','quickTemplateManagerScreen','quickTemplateEditorScreen','insightDetailScreen','categoryManagerScreen','categoryEditorScreen','recurringManagerScreen','recurringEditorScreen','recurringDeleteScreen'].forEach(id=>hide($(id))); unlocked=false;vaultLoaded=false;txns=[];budgets={};categories=clone(DEFAULT_CATEGORIES);quickTemplates=clone(DEFAULT_QUICK_TEMPLATES);settings={};recurring=[];investmentLedger=[];investmentQuotes=[];dividendEvents=[];annualIncomeSummaries=[];dividendEventEditingId=null;annualSummaryEditingYear=null;investmentDetailSymbol=null;investmentValuesVisible=false; document.body.classList.add('locked'); show($('lockScreen')); show($('unlockPanel')); hide($('setupPanel')); $('app').setAttribute('aria-hidden','true'); updatePinUnlockState(); refreshLockFaceUi();
 }
 async function refreshLockFaceUi(){ const yes=!!authConfig.faceEnabled&&!!authConfig.faceCredentialId&&await isFaceAvailable(); $('faceUnlockBtn').classList.toggle('hidden',!yes); $('faceDivider').classList.toggle('hidden',!yes); }
 async function refreshSecurityUi(){ if(!$('faceStatusText'))return; const avail=await isFaceAvailable(); if(authConfig.faceEnabled&&authConfig.faceCredentialId){$('faceStatusText').textContent='已啟用。離開 App 後，回來可用 Face ID 重新解鎖。';$('toggleFaceBtn').textContent='重新設定 Face ID';}else{$('faceStatusText').textContent=avail?'尚未啟用。':'此裝置／瀏覽器目前無法使用平台生物辨識。';$('toggleFaceBtn').textContent='啟用 Face ID';$('toggleFaceBtn').disabled=!avail;} }
@@ -1537,7 +1537,14 @@ async function resolveSecurityMeta(symbol,{force=false}={}){
     cache[key]=normalized;queueSecurityCachePersist();return normalized;
   }
   try{
-    const directory=await loadSecurityDirectory({force}),found=directory.get(key);
+    let directory=await loadSecurityDirectory({force}),found=directory.get(key);
+    // 若剛好在 GitHub Actions 更新後仍握有舊的 10 分鐘記憶體主檔，
+    // 第一次查不到時立刻強制重讀一次，避免只有 bootstrap 代號可辨識。
+    if(!found&&!force){
+      securityDirectoryPromise=null;securityDirectoryLoadedAt=0;
+      directory=await loadSecurityDirectory({force:true});
+      found=directory.get(key);
+    }
     if(found&&found.name&&found.name!==key){
       const normalized=normalizeSecurityMeta({...found,updatedAt:new Date().toISOString()},key);
       cache[key]=normalized;queueSecurityCachePersist();return normalized;
@@ -1553,7 +1560,7 @@ async function loadStaticMarketSnapshot({force=false}={}){
   marketSnapshotPromise=(async()=>{
     const data=await fetchStaticJson(STATIC_LATEST_QUOTES_URL,8000);
     const items=Array.isArray(data)?data:(Array.isArray(data?.items)?data.items:[]);
-    return {generatedAt:data?.generatedAt||'',items};
+    return {generatedAt:data?.generatedAt||'',latestTradeDate:data?.latestTradeDate||'',items,indices:Array.isArray(data?.indices)?data.indices:[]};
   })();
   return marketSnapshotPromise;
 }
@@ -1724,6 +1731,9 @@ function staticSnapshotQuoteMap(snapshot,items){
     out.set(symbol,{
       symbol,name,price,date,priceType:'close',
       market:r.market||'',
+      previousClose:Number(r.previousClose||0)||0,
+      change:Number(r.change||0)||0,
+      changePct:Number(r.changePct||0)||0,
       source:'GitHub Pages 每日收盤檔',
       generatedAt:snapshot?.generatedAt||''
     });
@@ -1790,6 +1800,40 @@ function investmentCloseQuoteOn(symbol,date){
 function investmentManualQuoteChecks(){
   if(!settings.investmentManualQuoteChecks||typeof settings.investmentManualQuoteChecks!=='object')settings.investmentManualQuoteChecks={};
   return settings.investmentManualQuoteChecks;
+}
+
+function marketSignedClass(value){const n=Number(value||0);return n>0?'market-up':n<0?'market-down':'market-flat';}
+function marketSigned(value,digits=2){const n=Number(value||0);if(!Number.isFinite(n))return '--';return `${n>0?'+':''}${n.toLocaleString('zh-TW',{minimumFractionDigits:digits,maximumFractionDigits:digits})}`;}
+function marketPriceText(value){const n=Number(value||0);if(!(n>0))return '--';return n.toLocaleString('zh-TW',{minimumFractionDigits:Number.isInteger(n)?0:2,maximumFractionDigits:2});}
+function marketIndexCardHtml(index){
+  if(!index)return `<div class="market-index-card missing"><span>大盤</span><strong>尚無資料</strong><small>等待下一次每日行情更新</small></div>`;
+  const change=Number(index.change||0),pct=Number(index.changePct||0),cls=marketSignedClass(change);
+  return `<div class="market-index-card"><span>${escapeHtml(index.name||index.code||'大盤')}</span><strong>${marketPriceText(index.value)}</strong><small class="${cls}">${marketSigned(change,2)} · ${marketSigned(pct,2)}%</small><em>${escapeHtml(index.date||'')}</em></div>`;
+}
+async function renderInvestmentMarketOverview({force=false}={}){
+  const status=$('investmentMarketOverviewStatus'),indices=$('investmentMarketIndexGrid'),list=$('investmentMarketHoldingsList');
+  if(!status||!indices||!list)return;
+  status.textContent='正在讀取每日行情檔…';indices.innerHTML='';list.innerHTML='';
+  try{
+    const snapshot=await loadStaticMarketSnapshot({force});
+    const indexMap=new Map((snapshot.indices||[]).map(x=>[String(x.code||x.market||'').toUpperCase(),x]));
+    indices.innerHTML=marketIndexCardHtml(indexMap.get('TAIEX')||indexMap.get('TWSE'))+marketIndexCardHtml(indexMap.get('OTC')||indexMap.get('TPEX'));
+    const pf=investmentPortfolio(dateKey(new Date())),staticMap=new Map((snapshot.items||[]).map(x=>[investmentAssetKey(x.symbol),x]));
+    const rows=[];
+    for(const p of pf.active){
+      const symbol=investmentAssetKey(p.symbol),r=staticMap.get(symbol),local=investmentLatestQuote(symbol,dateKey(new Date())),meta=cachedSecurityMeta(symbol)||{};
+      const price=Number(r?.close||r?.price||local?.price||0),date=String(r?.date||local?.date||''),change=Number(r?.change||local?.change||0),pct=Number(r?.changePct||local?.changePct||0),cls=marketSignedClass(change);
+      rows.push(`<div class="market-holding-row"><div><strong>${escapeHtml(symbol)} ${escapeHtml(r?.name||p.name||meta.name||'')}</strong><span>${escapeHtml(date||'尚無日期')} · ${escapeHtml(r?.market||meta.market||'')}</span></div><div class="market-holding-price"><strong>${marketPriceText(price)}</strong><span class="${cls}">${marketSigned(change,2)}${Number.isFinite(pct)?` · ${marketSigned(pct,2)}%`:''}</span></div></div>`);
+    }
+    list.innerHTML=rows.join('')||'<div class="empty-mini">目前沒有持股。</div>';
+    const when=snapshot.latestTradeDate||[...(snapshot.items||[])].map(x=>x.date).filter(Boolean).sort().at(-1)||'';
+    status.textContent=`最新交易日 ${when||'--'}${snapshot.generatedAt?` · 行情檔已同步`:''}`;
+  }catch(e){console.warn('market overview',e);status.textContent='暫時無法讀取每日行情檔，以下顯示本機最近資料。';indices.innerHTML=marketIndexCardHtml(null)+marketIndexCardHtml(null);list.innerHTML='<div class="empty-mini">行情檔讀取失敗。</div>';}
+}
+async function openInvestmentMarketOverview(){
+  show($('investmentMarketOverviewScreen'));
+  await fetchIntradayQuotes();
+  await renderInvestmentMarketOverview({force:true});
 }
 async function fetchIntradayQuotes(){
   const pf=investmentPortfolio(dateKey(new Date())),symbols=[...new Set(pf.active.map(p=>p.symbol))];
@@ -2506,7 +2550,7 @@ function bindEvents(){
   for(let m=0;m<12;m++){const o=document.createElement('option');o.value=String(m);o.textContent=`${m+1} 月`;$('analysisMonthSelect').appendChild(o);}
   $('analysisPrevYearBtn').onclick=()=>{analysisYear--;renderAnalysis();}; $('analysisNextYearBtn').onclick=()=>{analysisYear++;renderAnalysis();}; $('analysisYearModeBtn').onclick=()=>{analysisMode='year';renderAnalysis();}; $('analysisMonthModeBtn').onclick=()=>{analysisMode='month';renderAnalysis();}; $('analysisMonthSelect').onchange=e=>{analysisMonth=Number(e.target.value);renderAnalysis();};
   $('manageRecurringBtn').onclick=openRecurringManager; $('closeRecurringManagerBtn').onclick=()=>hide($('recurringManagerScreen')); $('addRecurringBtn').onclick=()=>openRecurringEditor(); $('cancelRecurringEditBtn').onclick=()=>{recurringSplitSourceId=null;recurringSplitEffectiveDate='';$('recurringStartDateInput').disabled=false;hide($('recurringEditorScreen'));}; $('saveRecurringBtn').onclick=saveRecurring; $('recurringExpenseTypeBtn').onclick=()=>setRecurringType('expense'); $('recurringIncomeTypeBtn').onclick=()=>setRecurringType('income'); $('recurringInvestmentTypeBtn').onclick=()=>setRecurringType('investment'); $('recurringFrequencyInput').onchange=updateRecurringFrequencyFields; $('recurringAddMonthlyDayBtn').onclick=addRecurringMonthlyDay; $('recurringMonthlyDayInput').addEventListener('keydown',e=>{if(e.key==='Enter'){e.preventDefault();addRecurringMonthlyDay();}}); $('recurringCategoryInput').onchange=()=>renderRecurringSubcategories(); document.querySelectorAll('[data-recurring-payment]').forEach(b=>b.onclick=()=>setRecurringPayment(b.dataset.recurringPayment));
-    $('addInvestmentTxnBtn').onclick=()=>openInvestmentTxnEditor(); $('investmentAddHoldingBtn').onclick=()=>openInvestmentTxnEditor(); $('cancelInvestmentTxnBtn').onclick=()=>hide($('investmentTxnEditorScreen')); $('saveInvestmentTxnBtn').onclick=saveInvestmentTxn; $('deleteInvestmentTxnBtn').onclick=deleteInvestmentTxn; $('investmentTxnKindInput').onchange=syncInvestmentTxnFields; $('investmentSymbolInput').addEventListener('input',scheduleInvestmentSymbolLookup); $('investmentSymbolInput').addEventListener('blur',()=>refreshInvestmentSymbolMeta(false)); $('bookkeepingInvestmentSymbolInput').addEventListener('input',()=>scheduleSimpleSecurityMeta('bookkeepingInvestmentSymbolInput','bookkeepingInvestmentMetaStatus')); $('bookkeepingInvestmentSymbolInput').addEventListener('blur',()=>refreshSimpleSecurityMeta('bookkeepingInvestmentSymbolInput','bookkeepingInvestmentMetaStatus')); $('recurringInvestmentSymbolInput').addEventListener('input',()=>scheduleSimpleSecurityMeta('recurringInvestmentSymbolInput','recurringInvestmentMetaStatus')); $('recurringInvestmentSymbolInput').addEventListener('blur',()=>refreshSimpleSecurityMeta('recurringInvestmentSymbolInput','recurringInvestmentMetaStatus')); ['investmentQuantityInput','investmentTxnPriceInput','investmentTxnDateInput'].forEach(id=>$(id).addEventListener('input',syncInvestmentAutoCosts)); $('investmentCostManualInput').onchange=syncInvestmentCostManualState; $('updateInvestmentPriceBtn').onclick=()=>openInvestmentQuoteEditor(); $('refreshTodayInvestmentPriceBtn').onclick=fetchIntradayQuotes; if($('toggleInvestmentVisibilityBtn'))$('toggleInvestmentVisibilityBtn').onclick=toggleInvestmentValuesVisible; $('investmentQuoteSymbolInput').addEventListener('blur',refreshInvestmentQuoteSymbolMeta); $('cancelInvestmentQuoteBtn').onclick=()=>hide($('investmentQuoteEditorScreen')); $('saveInvestmentQuoteBtn').onclick=saveInvestmentQuote;
+    $('addInvestmentTxnBtn').onclick=()=>openInvestmentTxnEditor(); $('investmentAddHoldingBtn').onclick=()=>openInvestmentTxnEditor(); $('cancelInvestmentTxnBtn').onclick=()=>hide($('investmentTxnEditorScreen')); $('saveInvestmentTxnBtn').onclick=saveInvestmentTxn; $('deleteInvestmentTxnBtn').onclick=deleteInvestmentTxn; $('investmentTxnKindInput').onchange=syncInvestmentTxnFields; $('investmentSymbolInput').addEventListener('input',scheduleInvestmentSymbolLookup); $('investmentSymbolInput').addEventListener('blur',()=>refreshInvestmentSymbolMeta(false)); $('bookkeepingInvestmentSymbolInput').addEventListener('input',()=>scheduleSimpleSecurityMeta('bookkeepingInvestmentSymbolInput','bookkeepingInvestmentMetaStatus')); $('bookkeepingInvestmentSymbolInput').addEventListener('blur',()=>refreshSimpleSecurityMeta('bookkeepingInvestmentSymbolInput','bookkeepingInvestmentMetaStatus')); $('recurringInvestmentSymbolInput').addEventListener('input',()=>scheduleSimpleSecurityMeta('recurringInvestmentSymbolInput','recurringInvestmentMetaStatus')); $('recurringInvestmentSymbolInput').addEventListener('blur',()=>refreshSimpleSecurityMeta('recurringInvestmentSymbolInput','recurringInvestmentMetaStatus')); ['investmentQuantityInput','investmentTxnPriceInput','investmentTxnDateInput'].forEach(id=>$(id).addEventListener('input',syncInvestmentAutoCosts)); $('investmentCostManualInput').onchange=syncInvestmentCostManualState; $('updateInvestmentPriceBtn').onclick=()=>openInvestmentQuoteEditor(); $('refreshTodayInvestmentPriceBtn').onclick=openInvestmentMarketOverview; if($('toggleInvestmentVisibilityBtn'))$('toggleInvestmentVisibilityBtn').onclick=toggleInvestmentValuesVisible; $('investmentQuoteSymbolInput').addEventListener('blur',refreshInvestmentQuoteSymbolMeta); $('cancelInvestmentQuoteBtn').onclick=()=>hide($('investmentQuoteEditorScreen')); $('saveInvestmentQuoteBtn').onclick=saveInvestmentQuote; if($('closeInvestmentMarketOverviewBtn'))$('closeInvestmentMarketOverviewBtn').onclick=()=>hide($('investmentMarketOverviewScreen')); if($('refreshInvestmentMarketOverviewBtn'))$('refreshInvestmentMarketOverviewBtn').onclick=async()=>{await fetchIntradayQuotes();await renderInvestmentMarketOverview({force:true});};
     $('investmentAllocationCard').onclick=openInvestmentHoldingsOverview; $('investmentAllocationCard').onkeydown=e=>{if(e.key==='Enter'||e.key===' '){e.preventDefault();openInvestmentHoldingsOverview();}}; $('closeInvestmentHoldingsBtn').onclick=closeInvestmentHoldingsOverview; if($('investmentSyncNotice')){$('investmentSyncNotice').onclick=openInvestmentPendingList;$('investmentSyncNotice').onkeydown=e=>{if(e.key==='Enter'||e.key===' '){e.preventDefault();openInvestmentPendingList();}};} if($('closeInvestmentPendingBtn'))$('closeInvestmentPendingBtn').onclick=()=>hide($('investmentPendingScreen')); $('openInvestmentIncomeAnalysisBtn').onclick=openInvestmentIncomeAnalysis; $('investmentIncomeAnalysisShortcutBtn').onclick=openInvestmentIncomeAnalysis; $('closeInvestmentIncomeAnalysisBtn').onclick=closeInvestmentIncomeAnalysis; $('applyInvestmentIncomeRangeBtn').onclick=renderInvestmentIncomeRange; $('investmentIncomeStartMonth').onchange=renderInvestmentIncomeRange; $('investmentIncomeEndMonth').onchange=renderInvestmentIncomeRange; $('openInvestmentActivityBtn').onclick=openInvestmentActivity; $('closeInvestmentActivityBtn').onclick=closeInvestmentActivity; $('investmentActivityYearInput').onchange=renderInvestmentActivity; if($('openInvestmentReturnDetailBtn'))$('openInvestmentReturnDetailBtn').onclick=()=>openInvestmentReturnDetail(new Date().getFullYear()); if($('closeInvestmentReturnDetailBtn'))$('closeInvestmentReturnDetailBtn').onclick=closeInvestmentReturnDetail; if($('refreshInvestmentBoundaryPricesBtn'))$('refreshInvestmentBoundaryPricesBtn').onclick=refreshInvestmentBoundaryPrices;
     $('addDividendEventBtn').onclick=()=>openDividendEventEditor(); $('cancelDividendEventBtn').onclick=()=>hide($('dividendEventEditorScreen')); $('saveDividendEventBtn').onclick=saveDividendEvent; $('deleteDividendEventBtn').onclick=deleteDividendEvent; $('dividendSymbolInput').addEventListener('blur',refreshDividendSymbolMeta); ['dividendSymbolInput','dividendExDateInput','dividendPerShareInput'].forEach(id=>$(id).addEventListener('input',renderDividendEditorPreview));
     $('addAnnualSummaryBtn').onclick=()=>openAnnualSummaryEditor(); $('cancelAnnualSummaryBtn').onclick=()=>hide($('annualSummaryEditorScreen')); $('saveAnnualSummaryBtn').onclick=saveAnnualSummary; $('deleteAnnualSummaryBtn').onclick=deleteAnnualSummary;
