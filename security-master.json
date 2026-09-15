@@ -1,0 +1,77 @@
+{
+  "schemaVersion": 1,
+  "generatedAt": "bootstrap-v1.5.0",
+  "bootstrap": true,
+  "items": [
+    {
+      "symbol": "00406A",
+      "name": "主動中信台灣收益",
+      "shortName": "中信台灣收益",
+      "securityType": "etf",
+      "market": "TWSE"
+    },
+    {
+      "symbol": "0050",
+      "name": "元大台灣50",
+      "shortName": "台灣50",
+      "securityType": "etf",
+      "market": "TWSE"
+    },
+    {
+      "symbol": "0056",
+      "name": "元大高股息",
+      "shortName": "高股息",
+      "securityType": "etf",
+      "market": "TWSE"
+    },
+    {
+      "symbol": "00878",
+      "name": "國泰永續高股息",
+      "shortName": "永續高股息",
+      "securityType": "etf",
+      "market": "TWSE"
+    },
+    {
+      "symbol": "00919",
+      "name": "群益台灣精選高息",
+      "shortName": "精選高息",
+      "securityType": "etf",
+      "market": "TWSE"
+    },
+    {
+      "symbol": "00929",
+      "name": "復華台灣科技優息",
+      "shortName": "科技優息",
+      "securityType": "etf",
+      "market": "TWSE"
+    },
+    {
+      "symbol": "00937B",
+      "name": "群益ESG投等債20+",
+      "shortName": "ESG投等債20+",
+      "securityType": "bond-etf",
+      "market": "TPEx"
+    },
+    {
+      "symbol": "00981A",
+      "name": "主動統一台股增長",
+      "shortName": "台股增長",
+      "securityType": "etf",
+      "market": "TWSE"
+    },
+    {
+      "symbol": "2330",
+      "name": "台積電",
+      "shortName": "台積電",
+      "securityType": "stock",
+      "market": "TWSE"
+    },
+    {
+      "symbol": "6446",
+      "name": "藥華藥",
+      "shortName": "藥華藥",
+      "securityType": "stock",
+      "market": "TWSE"
+    }
+  ]
+}
