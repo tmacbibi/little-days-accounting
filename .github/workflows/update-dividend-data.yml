@@ -1,0 +1,46 @@
+name: Update Taiwan dividend calendar
+
+on:
+  workflow_dispatch:
+  schedule:
+    # 17:10 Asia/Taipei every day; resync because announced schedules can change.
+    - cron: '10 9 * * *'
+  push:
+    paths:
+      - 'scripts/update-dividend-data.mjs'
+      - 'scripts/test-dividend-data.mjs'
+      - 'scripts/test-dividend-app.mjs'
+      - 'app.js'
+      - '.github/workflows/update-dividend-data.yml'
+
+permissions:
+  contents: write
+
+jobs:
+  update:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Test dividend parser and app integration
+        run: |
+          node scripts/test-dividend-data.mjs
+          node scripts/test-dividend-app.mjs
+      - name: Fetch official dividend data
+        run: node scripts/update-dividend-data.mjs
+      - name: Commit updated dividend calendar
+        run: |
+          if git diff --quiet -- data/dividend-calendar.json; then
+            echo "No dividend-calendar changes."
+            exit 0
+          fi
+          git config user.name "little-days-dividend-bot"
+          git config user.email "actions@users.noreply.github.com"
+          git add data/dividend-calendar.json
+          git commit -m "chore: update Taiwan dividend calendar"
+          git push
