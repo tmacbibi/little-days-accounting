@@ -4,13 +4,13 @@
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover" />
   <meta name="theme-color" content="#5f7fbc" />
-  <meta name="app-version" content="1.5.4" />
+  <meta name="app-version" content="1.5.5" />
   <meta name="apple-mobile-web-app-capable" content="yes" />
   <meta name="apple-mobile-web-app-status-bar-style" content="default" />
   <meta name="apple-mobile-web-app-title" content="小日子記帳" />
-  <link rel="apple-touch-icon" href="apple-touch-icon.png?v=1.5.4" />
-  <link rel="manifest" href="manifest.json?v=1.5.4" />
-  <link rel="stylesheet" href="styles.css?v=1.5.4" />
+  <link rel="apple-touch-icon" href="apple-touch-icon.png?v=1.5.5" />
+  <link rel="manifest" href="manifest.json?v=1.5.5" />
+  <link rel="stylesheet" href="styles.css?v=1.5.5" />
   <title>小日子記帳</title>
 </head>
 <body class="locked">
@@ -60,7 +60,7 @@
           <div>
             <div class="eyebrow">小日子</div>
             <h1>每日記帳</h1>
-            <p class="version-line">V1.5.4 · 損益明細與個股總覽版</p>
+            <p class="version-line">V1.5.5 · 自動股息行事曆版</p>
           </div>
           <button id="openSettingsBtn" class="icon-btn" aria-label="設定">⚙️</button>
         </header>
@@ -209,6 +209,12 @@
         <div class="investment-quick-actions investment-quick-actions-v147"><button id="updateInvestmentPriceBtn" type="button">◎ 手動價格</button><button id="investmentIncomeAnalysisShortcutBtn" type="button">▥ 收益分析</button></div>
         <div id="investmentHealthNotice" class="investment-health-notice hidden"><span>⚠️</span><div><strong>有 <b id="investmentHealthIssueCount">0</b> 筆歷史交易需要確認</strong><p id="investmentHealthIssueText"></p></div></div>
         <div id="investmentSyncNotice" class="investment-sync-notice investment-sync-notice-clickable hidden" role="button" tabindex="0" aria-label="查看待補投資資料"><span>🔗</span><div><strong>有 <b id="investmentSyncPendingCount">0</b> 筆記帳投入待補成交資訊</strong><p>點一下直接補股數與成交價；完成後會自動更新持股與 XIRR。</p></div><em id="investmentSyncPendingAmount">$0</em><i class="investment-sync-chevron">›</i></div>
+
+        <section class="section-card investment-dividend-calendar-card">
+          <div class="section-head"><div><h2>股息行事曆</h2><p id="investmentDividendSyncStatus">自動同步官方除息與發放日；實際入帳仍由你確認</p></div><button id="refreshDividendCalendarBtn" class="text-btn strong" type="button">更新</button></div>
+          <div id="investmentDividendEvents" class="investment-dividend-list"></div>
+          <div id="investmentDividendEmpty" class="empty-mini">目前沒有符合持股的近期股息事件。</div>
+        </section>
 
         <section class="section-card investment-return-overview-card">
           <div class="section-head"><div><h2>年度投報率</h2><p>XIRR 考慮每筆資金進出日期；點年度可查看完整計算</p></div></div>
@@ -572,7 +578,7 @@
           <div class="setting-card"><h3>⚡ 快速輸入</h3><p>建立常用模板，例如午餐、停車、家庭餐飲或定期投資。</p><button id="manageQuickTemplatesBtn" class="secondary full">管理快速模板</button></div>
           <div class="setting-card"><h3>🔁 週期紀錄</h3><p>支援固定收入、固定支出與定期投資；現在也可從某一筆開始修改後續週期，過去紀錄不受影響。</p><div id="recurringCountText" class="status-pill">0 個啟用中</div><button id="manageRecurringBtn" class="secondary full">管理週期紀錄</button></div>
           <div class="setting-card"><h3>投資交易成本</h3><p>定期定額手續費：1 元／筆<br>一般買賣手續費：牌告 0.1425% × 2.8 折，最低 20 元<br>證交稅：賣出時依股票／ETF／債券 ETF 類型自動判斷</p></div>
-          <div class="setting-card"><h3>版本</h3><p>目前版本 V1.5.4 · 資料結構 V13</p><div id="updateStatus" class="update-status">尚未檢查</div><button id="checkUpdateBtn" class="secondary full">檢查新版本</button><button id="updateNowBtn" class="primary full hidden">立即更新</button><button id="updateHomeBtn" class="secondary full update-home-btn">← 回到首頁</button></div>
+          <div class="setting-card"><h3>版本</h3><p>目前版本 V1.5.5 · 資料結構 V13</p><div id="updateStatus" class="update-status">尚未檢查</div><button id="checkUpdateBtn" class="secondary full">檢查新版本</button><button id="updateNowBtn" class="primary full hidden">立即更新</button><button id="updateHomeBtn" class="secondary full update-home-btn">← 回到首頁</button></div>
           <div class="setting-card backup-card"><h3>🛟 備份與還原</h3><p>備份包含記帳、預算、自訂類別、快速模板、週期設定，以及股票買賣／股息／市價資料。更新前建議先備份。</p><div id="backupStatusText" class="backup-status">尚未建立備份</div><div class="action-list"><button id="exportBtn" class="secondary full">立即匯出 JSON 備份</button><button id="importBtn" class="secondary full">匯入備份還原</button><input id="importFileInput" type="file" accept="application/json" class="hidden" /></div></div>
           <div class="setting-card danger-card"><h3>清除資料</h3><p>清除記帳、預算、自訂類別、快速模板與投資帳本；安全設定保留。</p><button id="wipeBtn" class="danger full">清除所有記帳資料</button></div>
           <button id="settingsHomeBtn" class="settings-home-fixed">⌂ 回到首頁</button>
@@ -686,6 +692,6 @@
   </div>
 
   <div id="toast" class="toast hidden"></div>
-  <script src="app.js?v=1.5.4"></script>
+  <script src="app.js?v=1.5.5"></script>
 </body>
 </html>

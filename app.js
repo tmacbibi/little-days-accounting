@@ -1,7 +1,7 @@
 'use strict';
 
 const $ = id => document.getElementById(id);
-const APP_VERSION = '1.5.4';
+const APP_VERSION = '1.5.5';
 const DATA_VERSION = 13;
 const VAULT_KEY = 'little_days_bookkeeping_vault_v2';
 const AUTH_KEY = 'little_days_bookkeeping_auth_v2';
@@ -100,6 +100,7 @@ let investmentEditingId = null;
 let investmentQuoteEditingId = null;
 let dividendEvents = [];
 let dividendEventEditingId = null;
+let dividendCalendarSyncInFlight = null;
 let annualIncomeSummaries = [];
 let annualSummaryEditingYear = null;
 let investmentDetailSymbol = null;
@@ -304,7 +305,7 @@ function normalizeData(){
   investmentQuotes=investmentQuotes.map(q=>({...q,id:q.id||uid(),symbol:String(q.symbol||'').trim().toUpperCase(),name:String(q.name||'').trim(),price:Number(q.price||0),date:q.date||dateKey(new Date()),priceType:q.priceType||'close',source:q.source||'manual',createdAt:q.createdAt||new Date().toISOString()})).filter(q=>q.symbol&&q.price>0);
   {const unique=new Map();for(const q of investmentQuotes){const k=`${q.symbol}|${q.date}|${q.priceType||'close'}`,prev=unique.get(k),stamp=String(q.updatedAt||q.createdAt||''),prevStamp=String(prev?.updatedAt||prev?.createdAt||'');if(!prev||stamp>=prevStamp)unique.set(k,q);}investmentQuotes=[...unique.values()];}
   if(!Array.isArray(dividendEvents))dividendEvents=[];
-  dividendEvents=dividendEvents.map(e=>({...e,id:e.id||uid(),symbol:String(e.symbol||'').trim().toUpperCase(),name:String(e.name||'').trim(),shortName:String(e.shortName||'').trim(),securityType:String(e.securityType||''),exDate:String(e.exDate||''),expectedPayDate:String(e.expectedPayDate||''),actualPayDate:String(e.actualPayDate||''),perShare:Number(e.perShare||0),actualAmount:e.actualAmount==null||e.actualAmount===''?null:ntd(e.actualAmount),statusOverride:String(e.statusOverride||''),note:String(e.note||''),createdAt:e.createdAt||new Date().toISOString(),bookkeepingTxnId:e.bookkeepingTxnId||null,ledgerTxnId:e.ledgerTxnId||null})).filter(e=>e.symbol&&(e.exDate||e.expectedPayDate||e.actualPayDate));
+  dividendEvents=dividendEvents.map(e=>({...e,id:e.id||uid(),symbol:String(e.symbol||'').trim().toUpperCase(),name:String(e.name||'').trim(),shortName:String(e.shortName||'').trim(),securityType:String(e.securityType||''),exDate:String(e.exDate||''),recordDate:String(e.recordDate||''),expectedPayDate:String(e.expectedPayDate||''),actualPayDate:String(e.actualPayDate||''),perShare:Number(e.perShare||0),actualAmount:e.actualAmount==null||e.actualAmount===''?null:ntd(e.actualAmount),entitledShares:e.entitledShares==null||e.entitledShares===''?null:Number(e.entitledShares),entitlementFrozenAt:String(e.entitlementFrozenAt||''),source:String(e.source||''),sourceProvider:String(e.sourceProvider||''),sourceUrl:String(e.sourceUrl||''),sourceUpdatedAt:String(e.sourceUpdatedAt||''),statusOverride:String(e.statusOverride||''),note:String(e.note||''),createdAt:e.createdAt||new Date().toISOString(),bookkeepingTxnId:e.bookkeepingTxnId||null,ledgerTxnId:e.ledgerTxnId||null})).filter(e=>e.symbol&&(e.exDate||e.expectedPayDate||e.actualPayDate));
   if(!Array.isArray(annualIncomeSummaries))annualIncomeSummaries=[];
   annualIncomeSummaries=annualIncomeSummaries.map(a=>({year:Number(a.year),dividendIncome:ntd(a.dividendIncome||0),spouseBonus:ntd(a.spouseBonus||0),note:String(a.note||''),updatedAt:a.updatedAt||new Date().toISOString()})).filter(a=>Number.isInteger(a.year)&&a.year>=1900&&a.year<=2200);
   {const byYear=new Map();for(const a of annualIncomeSummaries){const prev=byYear.get(a.year);if(!prev||String(a.updatedAt||'')>=String(prev.updatedAt||''))byYear.set(a.year,a);}annualIncomeSummaries=[...byYear.values()];}
@@ -1302,7 +1303,7 @@ async function unlockWithFace(){
   }catch(e){console.warn(e);$('unlockMessage').textContent='Face ID 未完成，可改用密碼';}
 }
 async function completeUnlock(){ unlocked=true; try{await loadVault(); unlockAppUi();}catch(e){console.error(e);unlocked=false;$('unlockMessage').textContent='資料解鎖失敗，請重新整理再試';} }
-function unlockAppUi(){ document.body.classList.remove('locked'); hide($('lockScreen')); $('app').setAttribute('aria-hidden','false'); $('pinUnlockInput').value=''; updatePinUnlockState(); $('unlockMessage').textContent=''; renderCategoryPicker(); renderSubcategories(); renderAll(); refreshSecurityUi(); showPostUpdateNotice(); }
+function unlockAppUi(){ document.body.classList.remove('locked'); hide($('lockScreen')); $('app').setAttribute('aria-hidden','false'); $('pinUnlockInput').value=''; updatePinUnlockState(); $('unlockMessage').textContent=''; renderCategoryPicker(); renderSubcategories(); renderAll(); refreshSecurityUi(); showPostUpdateNotice(); setTimeout(()=>syncOfficialDividendCalendar({silent:true}),0); }
 function lockApp(reason='background'){
   if(!unlocked)return; collapseVoiceFab(); stopVoiceSession(); const inInvestmentSub=['investmentHoldingsScreen','investmentIncomeAnalysisScreen','investmentActivityScreen'].some(id=>$(id)&&!$(id).classList.contains('hidden')); if(inInvestmentSub){['investmentHoldingsScreen','investmentIncomeAnalysisScreen','investmentActivityScreen'].forEach(id=>hide($(id)));show($('investmentScreen'));} ['editorScreen','calculatorScreen','voiceSheet','voiceDraftScreen','voiceDraftEditScreen','txnMenuScreen','budgetEditorScreen','investmentTxnEditorScreen','investmentPendingScreen','investmentQuoteEditorScreen','investmentMarketOverviewScreen','dividendEventEditorScreen','annualSummaryEditorScreen','investmentSecurityDetailScreen','investmentRealizedScreen','investmentHoldingsScreen','investmentIncomeAnalysisScreen','investmentActivityScreen','settingsScreen','securityScreen','quickTemplateManagerScreen','quickTemplateEditorScreen','insightDetailScreen','categoryManagerScreen','categoryEditorScreen','recurringManagerScreen','recurringEditorScreen','recurringDeleteScreen'].forEach(id=>hide($(id))); unlocked=false;vaultLoaded=false;txns=[];budgets={};categories=clone(DEFAULT_CATEGORIES);quickTemplates=clone(DEFAULT_QUICK_TEMPLATES);settings={};recurring=[];investmentLedger=[];investmentQuotes=[];dividendEvents=[];annualIncomeSummaries=[];dividendEventEditingId=null;annualSummaryEditingYear=null;investmentDetailSymbol=null;investmentValuesVisible=false; document.body.classList.add('locked'); show($('lockScreen')); show($('unlockPanel')); hide($('setupPanel')); $('app').setAttribute('aria-hidden','true'); updatePinUnlockState(); refreshLockFaceUi();
 }
@@ -1507,6 +1508,7 @@ function parseSecurityRows(rows,{market='',sourceType='',source='official'}={}){
 async function fetchJsonWithTimeout(url,ms=4500){const ctrl=new AbortController(),timer=setTimeout(()=>ctrl.abort(),ms);try{const r=await fetch(url,{cache:'no-store',signal:ctrl.signal});if(!r.ok)throw new Error(`HTTP ${r.status}`);return await r.json();}finally{clearTimeout(timer);}}
 const STATIC_SECURITY_MASTER_URL='./data/security-master.json';
 const STATIC_LATEST_QUOTES_URL='./data/latest-quotes.json';
+const STATIC_DIVIDEND_CALENDAR_URL='./data/dividend-calendar.json';
 let marketSnapshotPromise=null,marketSnapshotLoadedAt=0;
 
 async function fetchStaticJson(relativeUrl,ms=8000){
@@ -1580,6 +1582,54 @@ async function loadStaticMarketSnapshot({force=false}={}){
   })();
   return marketSnapshotPromise;
 }
+async function loadStaticDividendCalendar(){
+  const data=await fetchStaticJson(STATIC_DIVIDEND_CALENDAR_URL,8000);
+  return {generatedAt:data?.generatedAt||'',items:Array.isArray(data?.items)?data.items:[],sources:Array.isArray(data?.sources)?data.sources:[],warnings:Array.isArray(data?.warnings)?data.warnings:[]};
+}
+function officialDividendEventKey(x){return `${investmentAssetKey(x?.symbol)}|${String(x?.exDate||'')}`;}
+async function syncOfficialDividendCalendar({force=false,silent=true}={}){
+  if(dividendCalendarSyncInFlight)return dividendCalendarSyncInFlight;
+  const task=(async()=>{
+    const today=dateKey(new Date());
+    try{
+      const calendar=await loadStaticDividendCalendar();
+      if(!settings.dividendAutoStartDate)settings.dividendAutoStartDate=today;
+      const autoStart=String(settings.dividendAutoStartDate||today);
+      const existingByKey=new Map(dividendEvents.filter(e=>e.exDate).map((e,i)=>[officialDividendEventKey(e),i]));
+      let changed=0,created=0,updated=0,frozen=0;
+      for(const row of calendar.items){
+        const symbol=investmentAssetKey(row?.symbol),exDate=String(row?.exDate||''),recordDate=String(row?.recordDate||''),officialPay=String(row?.expectedPayDate||'');
+        if(!symbol||!/^[0-9]{4}-[0-9]{2}-[0-9]{2}$/.test(exDate))continue;
+        const key=`${symbol}|${exDate}`,idx=existingByKey.get(key),prior=idx==null?null:dividendEvents[idx];
+        if(!prior&&exDate<autoStart)continue;
+        let entitledShares=prior?.entitledShares==null||prior?.entitledShares===''?null:Number(prior.entitledShares),entitlementFrozenAt=String(prior?.entitlementFrozenAt||'');
+        if(entitledShares==null&&today>=exDate){entitledShares=investmentSharesAsOf(symbol,investmentPreviousDayKey(exDate));entitlementFrozenAt=today;if(entitledShares>0)frozen++;}
+        const currentShares=investmentSharesAsOf(symbol,today);
+        if(!prior&&((today>=exDate&&!(entitledShares>0))||(today<exDate&&!(currentShares>0))))continue;
+        const rowPerShare=row?.perShare==null||row?.perShare===''?null:Number(row.perShare),priorPerShare=Number(prior?.perShare||0);
+        const meta=cachedSecurityMeta(symbol),next={
+          ...(prior||{}),id:prior?.id||`auto-dividend-${symbol}-${exDate}`,symbol,name:String(row?.name||prior?.name||meta?.name||symbol),shortName:prior?.shortName||meta?.shortName||shortenSecurityName(row?.name||symbol,symbol),securityType:String(row?.securityType||prior?.securityType||meta?.securityType||guessSecurityType(symbol,row?.name||'')),
+          exDate,recordDate:recordDate||prior?.recordDate||'',expectedPayDate:officialPay||prior?.expectedPayDate||'',actualPayDate:prior?.actualPayDate||'',perShare:Number.isFinite(rowPerShare)?Math.max(0,rowPerShare):priorPerShare,actualAmount:prior?.actualAmount??null,entitledShares,entitlementFrozenAt,
+          source:prior?.source&&prior.source!=='official-auto'?prior.source:'official-auto',sourceProvider:String(row?.source||prior?.sourceProvider||''),sourceUrl:String(row?.sourceUrl||prior?.sourceUrl||''),sourceUpdatedAt:calendar.generatedAt||new Date().toISOString(),statusOverride:prior?.statusOverride||'',note:prior?.note||'官方股息行事曆自動同步；實際入帳需人工確認',createdAt:prior?.createdAt||new Date().toISOString(),bookkeepingTxnId:prior?.bookkeepingTxnId||null,ledgerTxnId:prior?.ledgerTxnId||null
+        };
+        const before=prior?JSON.stringify(prior):'';
+        if(prior){if(JSON.stringify(next)!==before){dividendEvents[idx]=next;changed++;updated++;}}
+        else{existingByKey.set(key,dividendEvents.length);dividendEvents.push(next);changed++;created++;}
+      }
+      settings.dividendCalendarGeneratedAt=calendar.generatedAt||settings.dividendCalendarGeneratedAt||'';
+      settings.dividendLastSyncAt=new Date().toISOString();
+      settings.dividendLastSyncError='';
+      settings.dividendLastSyncStats={created,updated,frozen};
+      if(changed||force)await persistState(); else await persistState();
+      if(unlocked&&vaultLoaded)renderAll();
+      if(!silent)toast(changed?`股息行事曆已更新：新增 ${created}、更新 ${updated}`:'股息行事曆已是最新');
+      return {changed,created,updated,frozen,generatedAt:calendar.generatedAt};
+    }catch(e){
+      console.warn('dividend calendar sync',e);settings.dividendLastSyncAt=new Date().toISOString();settings.dividendLastSyncError=String(e?.message||e);if(unlocked&&vaultLoaded){await persistState().catch(()=>{});renderDividendCalendar();}if(!silent)toast('股息行事曆暫時無法更新，會保留既有資料',2600);return {error:e};
+    }finally{dividendCalendarSyncInFlight=null;}
+  })();
+  dividendCalendarSyncInFlight=task;return task;
+}
 function securityTaxRate(meta,date=dateKey(new Date())){
   const type=meta?.securityType||guessSecurityType(meta?.symbol||'',meta?.name||'');
   if(type==='bond-etf')return date<='2026-12-31'?0:0.001;
@@ -1627,7 +1677,8 @@ function investmentSharesAsOf(symbol,asOf){
 }
 function dividendDerived(e,today=dateKey(new Date())){
   const entitlementDate=e.exDate?investmentPreviousDayKey(e.exDate):(e.actualPayDate||e.expectedPayDate||today);
-  const entitledShares=e.exDate?investmentSharesAsOf(e.symbol,entitlementDate):0;
+  const frozen=Number.isFinite(Number(e.entitledShares))&&e.entitledShares!==null&&e.entitledShares!==''?Math.max(0,Number(e.entitledShares)):null;
+  const entitledShares=frozen==null?(e.exDate?investmentSharesAsOf(e.symbol,entitlementDate):0):frozen;
   const estimatedAmount=e.perShare>0&&e.exDate?ntd(entitledShares*Number(e.perShare||0)):null;
   let status='planned';
   if(e.statusOverride==='cancelled')status='cancelled';
@@ -2258,6 +2309,7 @@ function renderInvestment(){
   renderInvestmentIncomeAnalysis();
   renderInvestmentActivity();
   setTimeout(()=>ensureLatestClosePrices(),0);
+  renderDividendCalendar();
 }
 function renderInvestmentHoldingsOverview(pf=investmentPortfolio(dateKey(new Date()))){
   const box=$('investmentHoldingsCards'),empty=$('investmentHoldingsCardsEmpty');if(!box)return;box.innerHTML='';const total=pf.active.reduce((sum,p)=>sum+Math.max(0,p.marketValue),0);
@@ -2459,8 +2511,9 @@ async function confirmDividendEvent(id){
   e.actualPayDate=dateKey(new Date());e.actualAmount=ntd(suggested);syncDividendEventLedger(e);await persistState();renderAll();toast('股息已確認並自動加入收入');
 }
 function renderDividendCalendar(){
-  const box=$('investmentDividendEvents'),empty=$('investmentDividendEmpty');if(!box)return;box.innerHTML='';const today=dateKey(new Date()),rows=dividendEvents.map(e=>dividendDerived(e,today)).sort((a,b)=>String(b.actualPayDate||b.expectedPayDate||b.exDate).localeCompare(String(a.actualPayDate||a.expectedPayDate||a.exDate))).slice(0,12);empty.classList.toggle('hidden',rows.length>0);
-  rows.forEach(e=>{const row=document.createElement('button');row.type='button';row.className='investment-dividend-row';const amount=e.status==='paid'?e.actualAmount:e.estimatedAmount;row.innerHTML=`<span class="investment-dividend-icon">${dividendStatusIcon(e.status)}</span><span class="investment-dividend-main"><strong>${escapeHtml(investmentDisplayLabel(e.symbol,e.name,e.shortName))}</strong><small>除息 ${escapeHtml(e.exDate||'--')} · ${e.actualPayDate?`入帳 ${escapeHtml(e.actualPayDate)}`:`預計 ${escapeHtml(e.expectedPayDate||'--')}`}</small><em>${escapeHtml(dividendStatusLabel(e.status))}${e.entitledShares?` · ${e.entitledShares.toLocaleString('zh-TW',{maximumFractionDigits:4})} 股`:''}</em></span><b>${amount==null?'--':investmentPrivateMoney(amount)}</b>`;row.onclick=()=>openDividendEventEditor(e.id);box.appendChild(row);});
+  const box=$('investmentDividendEvents'),empty=$('investmentDividendEmpty'),status=$('investmentDividendSyncStatus');if(!box)return;box.innerHTML='';const today=dateKey(new Date()),rows=dividendEvents.map(e=>dividendDerived(e,today)).sort((a,b)=>String(b.actualPayDate||b.expectedPayDate||b.exDate).localeCompare(String(a.actualPayDate||a.expectedPayDate||a.exDate))).slice(0,12);empty.classList.toggle('hidden',rows.length>0);
+  if(status){const generated=String(settings.dividendCalendarGeneratedAt||''),err=settings.dividendLastSyncError,last=String(settings.dividendLastSyncAt||'');status.textContent=err?'官方資料暫時無法更新，已保留既有行事曆':generated?`官方資料 ${generated.slice(0,10)} · App 最近同步 ${last?last.slice(0,10):'--'}`:'尚未同步官方股息行事曆';}
+  rows.forEach(e=>{const row=document.createElement('button');row.type='button';row.className='investment-dividend-row';const amount=e.status==='paid'?e.actualAmount:e.estimatedAmount,payText=e.actualPayDate?`入帳 ${escapeHtml(e.actualPayDate)}`:e.expectedPayDate?`預計 ${escapeHtml(e.expectedPayDate)}`:'入帳日待補';const sourceTag=e.source==='official-auto'?' · 自動':'';row.innerHTML=`<span class="investment-dividend-icon">${dividendStatusIcon(e.status)}</span><span class="investment-dividend-main"><strong>${escapeHtml(investmentDisplayLabel(e.symbol,e.name,e.shortName))}</strong><small>除息 ${escapeHtml(e.exDate||'--')} · ${payText}</small><em>${escapeHtml(dividendStatusLabel(e.status))}${e.entitledShares?` · ${e.entitledShares.toLocaleString('zh-TW',{maximumFractionDigits:4})} 股`:''}${sourceTag}</em></span><b>${amount==null?'--':investmentPrivateMoney(amount)}</b>`;row.onclick=()=>openDividendEventEditor(e.id);box.appendChild(row);});
 }
 function renderAnnualSummaries(){
   const box=$('investmentAnnualSummaryList'),empty=$('investmentAnnualSummaryEmpty');if(!box)return;box.innerHTML='';const rows=annualIncomeSummaries.slice().sort((a,b)=>b.year-a.year);empty.classList.toggle('hidden',rows.length>0);rows.forEach(a=>{const row=document.createElement('button');row.type='button';row.className='annual-summary-row';row.innerHTML=`<div><strong>${a.year} 年</strong><span>股息收入 ${investmentPrivateMoney(a.dividendIncome)} · 老婆分紅 ${investmentPrivateMoney(a.spouseBonus)}</span></div><b>${investmentPrivateMoney(a.dividendIncome+a.spouseBonus)}</b><em>›</em>`;row.onclick=()=>openAnnualSummaryEditor(a.year);box.appendChild(row);});
@@ -2649,7 +2702,7 @@ function bindEvents(){
   $('manageRecurringBtn').onclick=openRecurringManager; $('closeRecurringManagerBtn').onclick=()=>hide($('recurringManagerScreen')); $('addRecurringBtn').onclick=()=>openRecurringEditor(); $('cancelRecurringEditBtn').onclick=()=>{recurringSplitSourceId=null;recurringSplitEffectiveDate='';$('recurringStartDateInput').disabled=false;hide($('recurringEditorScreen'));}; $('saveRecurringBtn').onclick=saveRecurring; $('recurringExpenseTypeBtn').onclick=()=>setRecurringType('expense'); $('recurringIncomeTypeBtn').onclick=()=>setRecurringType('income'); $('recurringInvestmentTypeBtn').onclick=()=>setRecurringType('investment'); $('recurringFrequencyInput').onchange=updateRecurringFrequencyFields; $('recurringAddMonthlyDayBtn').onclick=addRecurringMonthlyDay; $('recurringMonthlyDayInput').addEventListener('keydown',e=>{if(e.key==='Enter'){e.preventDefault();addRecurringMonthlyDay();}}); $('recurringCategoryInput').onchange=()=>renderRecurringSubcategories(); document.querySelectorAll('[data-recurring-payment]').forEach(b=>b.onclick=()=>setRecurringPayment(b.dataset.recurringPayment));
     $('addInvestmentTxnBtn').onclick=()=>openInvestmentTxnEditor(); $('investmentAddHoldingBtn').onclick=()=>openInvestmentTxnEditor(); $('cancelInvestmentTxnBtn').onclick=()=>hide($('investmentTxnEditorScreen')); $('saveInvestmentTxnBtn').onclick=saveInvestmentTxn; $('deleteInvestmentTxnBtn').onclick=deleteInvestmentTxn; $('investmentTxnKindInput').onchange=syncInvestmentTxnFields; $('investmentSymbolInput').addEventListener('input',scheduleInvestmentSymbolLookup); $('investmentSymbolInput').addEventListener('blur',()=>refreshInvestmentSymbolMeta(false)); $('bookkeepingInvestmentSymbolInput').addEventListener('input',()=>scheduleSimpleSecurityMeta('bookkeepingInvestmentSymbolInput','bookkeepingInvestmentMetaStatus')); $('bookkeepingInvestmentSymbolInput').addEventListener('blur',()=>refreshSimpleSecurityMeta('bookkeepingInvestmentSymbolInput','bookkeepingInvestmentMetaStatus')); $('recurringInvestmentSymbolInput').addEventListener('input',()=>scheduleSimpleSecurityMeta('recurringInvestmentSymbolInput','recurringInvestmentMetaStatus')); $('recurringInvestmentSymbolInput').addEventListener('blur',()=>refreshSimpleSecurityMeta('recurringInvestmentSymbolInput','recurringInvestmentMetaStatus')); ['investmentQuantityInput','investmentTxnPriceInput','investmentTxnDateInput'].forEach(id=>$(id).addEventListener('input',syncInvestmentAutoCosts)); $('investmentCostManualInput').onchange=syncInvestmentCostManualState; $('updateInvestmentPriceBtn').onclick=()=>openInvestmentQuoteEditor(); $('refreshTodayInvestmentPriceBtn').onclick=openInvestmentMarketOverview; if($('toggleInvestmentVisibilityBtn'))$('toggleInvestmentVisibilityBtn').onclick=toggleInvestmentValuesVisible; $('investmentQuoteSymbolInput').addEventListener('blur',refreshInvestmentQuoteSymbolMeta); $('cancelInvestmentQuoteBtn').onclick=()=>hide($('investmentQuoteEditorScreen')); $('saveInvestmentQuoteBtn').onclick=saveInvestmentQuote; if($('closeInvestmentMarketOverviewBtn'))$('closeInvestmentMarketOverviewBtn').onclick=()=>hide($('investmentMarketOverviewScreen')); if($('refreshInvestmentMarketOverviewBtn'))$('refreshInvestmentMarketOverviewBtn').onclick=async()=>{await fetchIntradayQuotes();await renderInvestmentMarketOverview({force:true});};
     $('investmentAllocationCard').onclick=openInvestmentHoldingsOverview; $('investmentAllocationCard').onkeydown=e=>{if(e.key==='Enter'||e.key===' '){e.preventDefault();openInvestmentHoldingsOverview();}}; $('closeInvestmentHoldingsBtn').onclick=closeInvestmentHoldingsOverview; if($('investmentSyncNotice')){$('investmentSyncNotice').onclick=openInvestmentPendingList;$('investmentSyncNotice').onkeydown=e=>{if(e.key==='Enter'||e.key===' '){e.preventDefault();openInvestmentPendingList();}};} if($('closeInvestmentPendingBtn'))$('closeInvestmentPendingBtn').onclick=()=>hide($('investmentPendingScreen')); $('openInvestmentIncomeAnalysisBtn').onclick=openInvestmentIncomeAnalysis; $('investmentIncomeAnalysisShortcutBtn').onclick=openInvestmentIncomeAnalysis; $('closeInvestmentIncomeAnalysisBtn').onclick=closeInvestmentIncomeAnalysis; $('applyInvestmentIncomeRangeBtn').onclick=renderInvestmentIncomeRange; $('investmentIncomeStartMonth').onchange=renderInvestmentIncomeRange; $('investmentIncomeEndMonth').onchange=renderInvestmentIncomeRange; $('openInvestmentActivityBtn').onclick=openInvestmentActivity; $('closeInvestmentActivityBtn').onclick=closeInvestmentActivity; $('investmentActivityYearInput').onchange=renderInvestmentActivity; if($('openInvestmentReturnDetailBtn'))$('openInvestmentReturnDetailBtn').onclick=()=>openInvestmentReturnDetail(new Date().getFullYear()); if($('closeInvestmentReturnDetailBtn'))$('closeInvestmentReturnDetailBtn').onclick=closeInvestmentReturnDetail; if($('refreshInvestmentBoundaryPricesBtn'))$('refreshInvestmentBoundaryPricesBtn').onclick=refreshInvestmentBoundaryPrices; if($('openInvestmentRealizedBtn'))$('openInvestmentRealizedBtn').onclick=()=>openInvestmentRealizedDetail(new Date().getFullYear()); if($('closeInvestmentRealizedBtn'))$('closeInvestmentRealizedBtn').onclick=()=>hide($('investmentRealizedScreen')); if($('investmentRealizedYearInput'))$('investmentRealizedYearInput').onchange=e=>{investmentRealizedYear=Number(e.target.value);investmentRealizedSymbol='';renderInvestmentRealizedDetail();}; if($('investmentRealizedSymbolInput'))$('investmentRealizedSymbolInput').onchange=e=>{investmentRealizedSymbol=e.target.value;renderInvestmentRealizedDetail();}; if($('investmentRealizedOutcomeInput'))$('investmentRealizedOutcomeInput').onchange=e=>{investmentRealizedOutcome=e.target.value;renderInvestmentRealizedDetail();};
-    $('addDividendEventBtn').onclick=()=>openDividendEventEditor(); $('cancelDividendEventBtn').onclick=()=>hide($('dividendEventEditorScreen')); $('saveDividendEventBtn').onclick=saveDividendEvent; $('deleteDividendEventBtn').onclick=deleteDividendEvent; $('dividendSymbolInput').addEventListener('blur',refreshDividendSymbolMeta); ['dividendSymbolInput','dividendExDateInput','dividendPerShareInput'].forEach(id=>$(id).addEventListener('input',renderDividendEditorPreview));
+    $('addDividendEventBtn').onclick=()=>openDividendEventEditor(); if($('refreshDividendCalendarBtn'))$('refreshDividendCalendarBtn').onclick=()=>syncOfficialDividendCalendar({force:true,silent:false}); $('cancelDividendEventBtn').onclick=()=>hide($('dividendEventEditorScreen')); $('saveDividendEventBtn').onclick=saveDividendEvent; $('deleteDividendEventBtn').onclick=deleteDividendEvent; $('dividendSymbolInput').addEventListener('blur',refreshDividendSymbolMeta); ['dividendSymbolInput','dividendExDateInput','dividendPerShareInput'].forEach(id=>$(id).addEventListener('input',renderDividendEditorPreview));
     $('addAnnualSummaryBtn').onclick=()=>openAnnualSummaryEditor(); $('cancelAnnualSummaryBtn').onclick=()=>hide($('annualSummaryEditorScreen')); $('saveAnnualSummaryBtn').onclick=saveAnnualSummary; $('deleteAnnualSummaryBtn').onclick=deleteAnnualSummary;
     $('closeInvestmentDetailBtn').onclick=()=>hide($('investmentSecurityDetailScreen')); $('investmentDetailAddDividendBtn').onclick=()=>openDividendEventEditor(null,investmentDetailSymbol); $('investmentDetailManualQuoteBtn').onclick=()=>openInvestmentQuoteEditor(investmentDetailSymbol,cachedSecurityMeta(investmentDetailSymbol)?.name||''); document.querySelectorAll('[data-investment-detail-tab]').forEach(b=>b.onclick=()=>setInvestmentDetailTab(b.dataset.investmentDetailTab)); if($('investmentDetailRealizedCard'))$('investmentDetailRealizedCard').onclick=()=>setInvestmentDetailTab('realized');
   $('manageSecurityBtn').onclick=()=>{show($('securityScreen'));refreshSecurityUi();}; $('closeSecurityBtn').onclick=()=>hide($('securityScreen')); $('changePinBtn').onclick=changePin; $('toggleFaceBtn').onclick=async()=>{try{await registerFaceId();refreshSecurityUi();toast('Face ID 已啟用');}catch(e){console.warn(e);toast(e.message||'Face ID 設定未完成',2600);}};
