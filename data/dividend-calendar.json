@@ -1,0 +1,20 @@
+{
+  "schemaVersion": 2,
+  "generatedAt": "2026-09-16T08:45:00.000Z",
+  "sourcePolicy": "official-only",
+  "coverage": {
+    "etf": "ex-date + record-date + expected payment date + per-unit distribution",
+    "listedStock": "ex-date + cash dividend; payment date remains blank when official dataset does not provide it"
+  },
+  "sources": [
+    {"id":"TWSE_ETFORTUNE","url":"https://www.twse.com.tw/zh/ETFortune/dividendList","status":"seeded-from-official-page"},
+    {"id":"TWSE_OPENAPI_TWT48U_ALL","url":"https://openapi.twse.com.tw/v1/exchangeReport/TWT48U_ALL","status":"seeded-empty"}
+  ],
+  "warnings": [],
+  "items": [
+    {"symbol":"00919","name":"群益台灣精選高息","market":"TWSE","securityType":"etf","exDate":"2026-09-16","recordDate":"2026-09-22","expectedPayDate":"2026-10-15","perShare":1.1,"source":"TWSE_ETFORTUNE","sourceUrl":"https://www.twse.com.tw/zh/ETFortune/dividendList"},
+    {"symbol":"00929","name":"復華台灣科技優息","market":"TWSE","securityType":"etf","exDate":"2026-09-17","recordDate":"2026-09-23","expectedPayDate":"2026-10-16","perShare":null,"source":"TWSE_ETFORTUNE","sourceUrl":"https://www.twse.com.tw/zh/ETFortune/dividendList"},
+    {"symbol":"00713","name":"元大台灣高息低波","market":"TWSE","securityType":"etf","exDate":"2026-09-21","recordDate":"2026-09-27","expectedPayDate":"2026-10-13","perShare":null,"source":"TWSE_ETFORTUNE","sourceUrl":"https://www.twse.com.tw/zh/ETFortune/dividendList"},
+    {"symbol":"00406A","name":"主動中信台灣收益","market":"TWSE","securityType":"etf","exDate":"2026-10-05","recordDate":"2026-10-11","expectedPayDate":"2026-11-02","perShare":null,"source":"TWSE_ETFORTUNE","sourceUrl":"https://www.twse.com.tw/zh/ETFortune/dividendList"}
+  ]
+}
