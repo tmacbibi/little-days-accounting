@@ -408,3 +408,23 @@ button.investment-click-section{border:1px solid var(--line);background:#fff}
 .investment-dividend-calendar-card .section-head p{max-width:240px;line-height:1.5}
 .investment-dividend-calendar-card .text-btn{flex:0 0 auto;padding:7px 10px;border-radius:12px;background:#f4f6fb}
 .investment-dividend-row .investment-dividend-main em{line-height:1.4}
+
+
+/* V1.5.6 — 介面與資訊優化 */
+:root{--shadow:0 7px 24px rgba(25,35,53,.045)}
+.summary-card strong,.finance-hero strong,.metric-grid strong,.hero-stat strong,.analysis-amount,.donut-legend-values b,.donut-legend-values strong{font-variant-numeric:tabular-nums}
+.summary-card span{font-size:13px}.summary-card strong{font-size:29px}.summary-card small{font-size:10px;line-height:1.45}
+.txn-main strong{font-size:15px}.txn-main span{font-size:11px}.txn-amount{font-size:15px}
+.form label{font-size:14px}.form input,.form select,.form textarea{font-size:15px}
+.section-card{box-shadow:0 6px 20px rgba(25,35,53,.04)}
+.analysis-period-card{touch-action:pan-y}.analysis-period-card:after{content:'左右滑動也能切換期間';display:block;text-align:center;color:#a0a6b0;font-size:10px;margin-top:9px}
+.donut-legend-item{appearance:none;width:100%;background:transparent;color:var(--text);text-align:left;padding:5px 4px;border-radius:10px;grid-template-columns:8px minmax(0,1fr) auto}.donut-legend-item.is-clickable:active{background:#f4f6f8}.donut-legend-values{text-align:right;display:flex;align-items:baseline;gap:7px}.donut-legend-values b{font-size:11px}.donut-legend-values strong{font-size:10px;color:var(--muted)}
+.analysis-donut{cursor:pointer}.analysis-donut:active{transform:scale(.99)}
+.subcategory-picker-btn{width:100%;min-height:52px;border:1px solid var(--line);border-radius:14px;background:#fff;color:var(--text);display:flex;align-items:center;justify-content:space-between;padding:13px 15px;font-size:16px;font-weight:800;text-align:left}.subcategory-picker-btn:active{background:#f7f8fa}.subcategory-picker-btn b{font-size:20px;color:#626b78}.hidden-accessible{position:absolute!important;width:1px!important;height:1px!important;padding:0!important;margin:-1px!important;overflow:hidden!important;clip:rect(0,0,0,0)!important;white-space:nowrap!important;border:0!important}
+.compact-choice-sheet{max-height:72dvh}.subcategory-choice-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px;padding:6px 0 18px}.subcategory-choice{min-height:62px;border:1px solid var(--line);border-radius:17px;background:#fff;color:var(--text);padding:12px;display:flex;flex-direction:column;align-items:flex-start;justify-content:center;gap:4px;text-align:left}.subcategory-choice span{font-size:16px;font-weight:900}.subcategory-choice small{font-size:9px;color:#8a93a1}.subcategory-choice.active{border-color:#c4d36a;background:var(--accentSoft);color:#52610c}.subcategory-choice.active small{color:#788d13}
+#monthInvestmentMeta,#analysisInvestmentMeta{white-space:normal}
+@media(max-width:390px){.summary-card strong{font-size:26px}.donut-legend-values{display:grid;gap:1px}.subcategory-choice-grid{grid-template-columns:1fr 1fr}.subcategory-choice span{font-size:15px}}
+/* V1.5.6 readability finishing touches */
+:root{--muted:#7f8794}
+.section-card{margin-top:14px}
+.backup-status{font-size:12px;line-height:1.45}

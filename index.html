@@ -4,13 +4,13 @@
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover" />
   <meta name="theme-color" content="#5f7fbc" />
-  <meta name="app-version" content="1.5.5" />
+  <meta name="app-version" content="1.5.6" />
   <meta name="apple-mobile-web-app-capable" content="yes" />
   <meta name="apple-mobile-web-app-status-bar-style" content="default" />
   <meta name="apple-mobile-web-app-title" content="小日子記帳" />
-  <link rel="apple-touch-icon" href="apple-touch-icon.png?v=1.5.5" />
-  <link rel="manifest" href="manifest.json?v=1.5.5" />
-  <link rel="stylesheet" href="styles.css?v=1.5.5" />
+  <link rel="apple-touch-icon" href="apple-touch-icon.png?v=1.5.6" />
+  <link rel="manifest" href="manifest.json?v=1.5.6" />
+  <link rel="stylesheet" href="styles.css?v=1.5.6" />
   <title>小日子記帳</title>
 </head>
 <body class="locked">
@@ -60,7 +60,7 @@
           <div>
             <div class="eyebrow">小日子</div>
             <h1>每日記帳</h1>
-            <p class="version-line">V1.5.5 · 自動股息行事曆版</p>
+            <p class="version-line">V1.5.6 · 介面與資訊優化版</p>
           </div>
           <button id="openSettingsBtn" class="icon-btn" aria-label="設定">⚙️</button>
         </header>
@@ -108,7 +108,7 @@
           <button id="monthExpenseCard" class="summary-card summary-action expense-card active" data-insight="expense"><span>本月支出</span><strong id="monthExpense">$0</strong><small>點一下看花費比重</small></button>
           <button id="monthIncomeCard" class="summary-card summary-action income-card" data-insight="income"><span>本月收入</span><strong id="monthIncome">$0</strong><small>點一下看收入來源</small></button>
           <button id="monthBalanceCard" class="summary-card summary-action balance-card" data-insight="balance"><span>生活收支</span><strong id="monthBalance">$0</strong><small>點一下看本月淨流入</small></button>
-          <button id="monthInvestmentCard" class="summary-card summary-action investment-card" data-insight="investment"><span>本月投資</span><strong id="monthInvestment">$0</strong><small>點一下看投入標的</small></button>
+          <button id="monthInvestmentCard" class="summary-card summary-action investment-card" data-insight="investment"><span>本月投資淨投入</span><strong id="monthInvestment">$0</strong><small id="monthInvestmentMeta">買進 $0 · 賣出 $0</small></button>
         </section>
 
         <section id="homeReminderPanel" class="reminder-panel hidden">
@@ -158,7 +158,7 @@
     <section id="analysisScreen" class="screen hidden">
       <header class="subbar"><button class="back-btn" data-back-home>‹</button><div><h1>收支分析</h1><p>全年總覽，也能切換單月</p></div><span class="subbar-spacer"></span></header>
       <main class="content sub-content">
-        <section class="analysis-period-card section-card">
+        <section id="analysisPeriodCard" class="analysis-period-card section-card">
           <div class="analysis-year-switch"><button id="analysisPrevYearBtn" class="round-btn">‹</button><strong id="analysisYearLabel">2026 年</strong><button id="analysisNextYearBtn" class="round-btn">›</button></div>
           <div class="analysis-mode-toggle"><button id="analysisYearModeBtn" class="active">全年</button><button id="analysisMonthModeBtn">單月</button></div>
           <select id="analysisMonthSelect" class="analysis-month-select hidden"></select>
@@ -167,7 +167,7 @@
           <div class="summary-card income-card"><span id="analysisIncomeLabel">全年收入</span><strong id="analysisTotalIncome">$0</strong></div>
           <div class="summary-card expense-card"><span id="analysisExpenseLabel">全年支出</span><strong id="analysisTotalExpense">$0</strong></div>
           <div class="summary-card balance-card"><span>收支差額</span><strong id="analysisNetBalance">$0</strong></div>
-          <div class="summary-card investment-card"><span>投資投入</span><strong id="analysisTotalInvestment">$0</strong><small>不列入支出</small></div>
+          <div class="summary-card investment-card"><span id="analysisInvestmentLabel">投資淨投入</span><strong id="analysisTotalInvestment">$0</strong><small id="analysisInvestmentMeta">買進 $0 · 賣出 $0</small></div>
         </section>
         <section class="section-card analysis-visual-card">
           <div class="section-head"><div><h2>支出結構</h2><p>用圓環一眼看出主要花費</p></div></div>
@@ -178,7 +178,7 @@
         </section>
         <section class="section-card"><div class="section-head"><div><h2>收入種類排名</h2><p id="incomeRankingSub">看看錢從哪裡進來</p></div></div><div id="incomeRanking" class="analysis-bars"></div><div id="incomeRankingEmpty" class="empty-mini hidden">這個期間還沒有收入。</div></section>
         <section class="section-card"><div class="section-head"><div><h2>支出種類排名</h2><p>最重要：錢花去哪裡</p></div></div><div id="expenseRanking" class="analysis-bars"></div><div id="expenseRankingEmpty" class="empty-mini hidden">這個期間還沒有支出。</div></section>
-        <section class="section-card"><div class="section-head"><div><h2>投資投入排行</h2><p>投資不算支出，但保留投入節奏</p></div></div><div id="investmentRanking" class="analysis-bars"></div><div id="investmentRankingEmpty" class="empty-mini hidden">這個期間還沒有投資。</div></section>
+        <section class="section-card"><div class="section-head"><div><h2>投資買進排行</h2><p>顯示買進金額；上方淨投入已扣除賣出實收</p></div></div><div id="investmentRanking" class="analysis-bars"></div><div id="investmentRankingEmpty" class="empty-mini hidden">這個期間還沒有投資。</div></section>
         <section class="section-card"><div class="section-head"><div><h2 id="analysisTrendTitle">全年月度趨勢</h2><p id="analysisTrendSub">收入與支出逐月比較</p></div></div><div id="analysisTrend" class="dual-trend"></div></section>
         <section class="section-card"><div class="section-head"><div><h2>期間比較</h2><p>快速看出這段時間有沒有異常</p></div></div><div id="analysisComparison" class="comparison-list"></div></section>
         <section class="section-card"><div class="section-head"><div><h2>付款方式</h2><p>只做次要參考：現金 / 信用卡</p></div></div><div class="metric-grid two"><div><span>現金</span><strong id="cashAmount">$0</strong></div><div><span>信用卡</span><strong id="cardAmount">$0</strong></div></div></section>
@@ -320,7 +320,7 @@
           <div id="expenseFields">
             <div class="label-row"><label>用途分類</label><button id="manageCategoriesInlineBtn" type="button" class="tiny-link">管理類別</button></div>
             <div id="categoryPicker" class="category-picker"></div>
-            <label>細分類</label><select id="subcategoryInput"></select>
+            <label>細分類</label><button id="subcategoryPickerBtn" type="button" class="subcategory-picker-btn"><span id="subcategoryPickerValue">請選擇</span><b>⌄</b></button><select id="subcategoryInput" class="hidden-accessible" aria-hidden="true" tabindex="-1"></select>
             <label>付款方式</label><div class="payment-toggle"><button type="button" data-payment="card" class="active">💳 信用卡</button><button type="button" data-payment="cash">💵 現金</button></div>
           </div>
           <div id="incomeFields" class="hidden"><label>收入分類</label><select id="incomeCategoryInput"><option>薪資</option><option>獎金</option><option>技師執業</option><option>股息</option><option>退款</option><option>其他收入</option></select></div>
@@ -568,6 +568,13 @@
       </div>
     </section>
 
+
+  <section id="subcategorySheet" class="sheet hidden" aria-modal="true" role="dialog">
+    <div class="sheet-card compact-choice-sheet">
+      <div class="sheet-head"><button id="closeSubcategorySheetBtn" class="text-btn">取消</button><h2 id="subcategorySheetTitle">選擇細分類</h2><span></span></div>
+      <div id="subcategoryChoices" class="subcategory-choice-grid"></div>
+    </div>
+  </section>
     <section id="settingsScreen" class="sheet hidden" aria-modal="true">
       <div class="sheet-card settings-card-sheet">
         <div class="sheet-head"><button id="closeSettingsBtn" class="text-btn">完成</button><h2>設定</h2><span></span></div>
@@ -578,7 +585,7 @@
           <div class="setting-card"><h3>⚡ 快速輸入</h3><p>建立常用模板，例如午餐、停車、家庭餐飲或定期投資。</p><button id="manageQuickTemplatesBtn" class="secondary full">管理快速模板</button></div>
           <div class="setting-card"><h3>🔁 週期紀錄</h3><p>支援固定收入、固定支出與定期投資；現在也可從某一筆開始修改後續週期，過去紀錄不受影響。</p><div id="recurringCountText" class="status-pill">0 個啟用中</div><button id="manageRecurringBtn" class="secondary full">管理週期紀錄</button></div>
           <div class="setting-card"><h3>投資交易成本</h3><p>定期定額手續費：1 元／筆<br>一般買賣手續費：牌告 0.1425% × 2.8 折，最低 20 元<br>證交稅：賣出時依股票／ETF／債券 ETF 類型自動判斷</p></div>
-          <div class="setting-card"><h3>版本</h3><p>目前版本 V1.5.5 · 資料結構 V13</p><div id="updateStatus" class="update-status">尚未檢查</div><button id="checkUpdateBtn" class="secondary full">檢查新版本</button><button id="updateNowBtn" class="primary full hidden">立即更新</button><button id="updateHomeBtn" class="secondary full update-home-btn">← 回到首頁</button></div>
+          <div class="setting-card"><h3>版本</h3><p>目前版本 V1.5.6 · 資料結構 V13</p><div id="updateStatus" class="update-status">尚未檢查</div><button id="checkUpdateBtn" class="secondary full">檢查新版本</button><button id="updateNowBtn" class="primary full hidden">立即更新</button><button id="updateHomeBtn" class="secondary full update-home-btn">← 回到首頁</button></div>
           <div class="setting-card backup-card"><h3>🛟 備份與還原</h3><p>備份包含記帳、預算、自訂類別、快速模板、週期設定，以及股票買賣／股息／市價資料。更新前建議先備份。</p><div id="backupStatusText" class="backup-status">尚未建立備份</div><div class="action-list"><button id="exportBtn" class="secondary full">立即匯出 JSON 備份</button><button id="importBtn" class="secondary full">匯入備份還原</button><input id="importFileInput" type="file" accept="application/json" class="hidden" /></div></div>
           <div class="setting-card danger-card"><h3>清除資料</h3><p>清除記帳、預算、自訂類別、快速模板與投資帳本；安全設定保留。</p><button id="wipeBtn" class="danger full">清除所有記帳資料</button></div>
           <button id="settingsHomeBtn" class="settings-home-fixed">⌂ 回到首頁</button>
@@ -692,6 +699,6 @@
   </div>
 
   <div id="toast" class="toast hidden"></div>
-  <script src="app.js?v=1.5.5"></script>
+  <script src="app.js?v=1.5.6"></script>
 </body>
 </html>
