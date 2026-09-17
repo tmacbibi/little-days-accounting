@@ -8,9 +8,19 @@ const MASTER_FILE = path.join(DATA_DIR, 'security-master.json');
 const QUOTES_FILE = path.join(DATA_DIR, 'latest-quotes.json');
 
 const SOURCES = {
-  TPEx: 'https://www.tpex.org.tw/openapi/v1/tpex_mainboard_daily_close_quotes',
-  TPEx_INDEX: 'https://www.tpex.org.tw/openapi/v1/tpex_daily_trading_index',
   TWSE_REPORT: ({date}) => `https://www.twse.com.tw/rwd/zh/afterTrading/MI_INDEX?date=${date}&type=ALLBUT0999&response=json`,
+  TPEx_QUOTES: 'https://www.tpex.org.tw/openapi/v1/tpex_mainboard_quotes',
+  TPEx_DAILY_CLOSE: 'https://www.tpex.org.tw/openapi/v1/tpex_mainboard_daily_close_quotes',
+  TPEx_INDEX: 'https://www.tpex.org.tw/openapi/v1/tpex_daily_trading_index',
+  HOLIDAY_SCHEDULE: 'https://www.twse.com.tw/rwd/zh/holidaySchedule/holidaySchedule?response=json',
+};
+
+const DEFAULT_HEADERS = {
+  accept: 'application/json,text/plain,*/*',
+  'accept-language': 'zh-TW,zh;q=0.9,en;q=0.7',
+  'cache-control': 'no-cache',
+  pragma: 'no-cache',
+  'user-agent': 'Mozilla/5.0 (compatible; LittleDaysMarketUpdater/1.5.6-v4; +https://github.com/)',
 };
 
 function pick(obj, keys) {
@@ -52,7 +62,7 @@ function numeric(value) {
 function signedNumber(sign, value) {
   const n = numeric(value);
   const s = String(sign ?? '').trim();
-  if (s.includes('-') || s === '－') return -Math.abs(n);
+  if (s.includes('-') || s.includes('－')) return -Math.abs(n);
   return n;
 }
 
@@ -68,23 +78,8 @@ function validSymbol(symbol) {
   return /^[0-9A-Z]{4,8}$/.test(symbol);
 }
 
-// Kept for backwards compatibility with the existing parser test fixtures.
-export function parseTWSE(rows) {
-  const out = [];
-  for (const r of Array.isArray(rows) ? rows : []) {
-    const symbol = pick(r, ['Code','證券代號']).toUpperCase();
-    const name = pick(r, ['Name','證券名稱']);
-    if (!validSymbol(symbol) || !name) continue;
-    const date = normalizeDate(pick(r, ['Date','日期']));
-    const close = numeric(pick(r, ['ClosingPrice','收盤價']));
-    const change = numeric(pick(r, ['Change','ChangePrice','漲跌價差','漲跌']));
-    const changePct = numeric(pick(r, ['ChangePercent','ChangePct','漲跌幅','漲跌百分比']));
-    out.push({
-      symbol, name, market:'TWSE', securityType:securityType(symbol,name),
-      date, close: close > 0 ? close : 0, change, changePct
-    });
-  }
-  return out;
+function marketKey(value) {
+  return String(value || '').toUpperCase() === 'TPEX' ? 'TPEx' : 'TWSE';
 }
 
 export function parseTPEx(rows) {
@@ -93,67 +88,29 @@ export function parseTPEx(rows) {
     const symbol = pick(r, ['SecuritiesCompanyCode','Code','證券代號']).toUpperCase();
     const name = pick(r, ['CompanyName','SecuritiesCompanyName','SecuritiesName','Name','證券名稱']);
     if (!validSymbol(symbol) || !name) continue;
-    const date = normalizeDate(pick(r, ['Date','日期']));
+    const date = normalizeDate(pick(r, ['Date','日期','TradeDate']));
     const close = numeric(pick(r, ['Close','收盤','收盤價']));
+    if (!date || !(close > 0)) continue; // Never publish a quote without its own official date.
     const change = numeric(pick(r, ['Change','ChangePrice','漲跌價差','漲跌']));
     const changePct = numeric(pick(r, ['ChangePercent','ChangePct','漲跌幅','漲跌百分比']));
-    out.push({
-      symbol, name, market:'TPEx', securityType:securityType(symbol,name),
-      date, close: close > 0 ? close : 0, change, changePct
-    });
+    out.push({symbol,name,market:'TPEx',securityType:securityType(symbol,name),date,close,change,changePct});
   }
   return out;
 }
 
-export function parseTWSEIndex(rows) {
-  const out=[];
-  for(const r of Array.isArray(rows)?rows:[]){
-    const date=normalizeDate(pick(r,['Date','日期']));
-    const value=numeric(pick(r,['TAIEX','Index','IndexValue','發行量加權股價指數','加權指數']));
-    const change=numeric(pick(r,['Change','ChangePoint','漲跌點數','漲跌']));
-    if(!date||!(value>0))continue;
-    const previous=value-change;
-    const changePct=previous>0?change/previous*100:0;
-    out.push({code:'TAIEX',name:'加權指數',market:'TWSE',date,value,change,changePct});
-  }
-  return out.sort((a,b)=>a.date.localeCompare(b.date));
-}
-
-export function parseTPExIndex(rows) {
-  const out=[];
-  for(const r of Array.isArray(rows)?rows:[]){
-    const date=normalizeDate(pick(r,['Date','日期','TradeDate']));
-    const value=numeric(pick(r,['Index','Close','ClosingIndex','IndexValue','TPExIndex','櫃買指數','指數']));
-    const change=numeric(pick(r,['Change','ChangePoint','漲跌點數','漲跌']));
-    if(!date||!(value>0))continue;
-    const explicitPct=numeric(pick(r,['ChangePercent','ChangePct','漲跌幅','漲跌百分比']));
-    const previous=value-change;
-    const changePct=explicitPct|| (previous>0?change/previous*100:0);
-    out.push({code:'OTC',name:'櫃買指數',market:'TPEx',date,value,change,changePct});
-  }
-  return out.sort((a,b)=>a.date.localeCompare(b.date));
-}
-
 function findReportTable(report, requiredFields) {
   if (!report || typeof report !== 'object') return null;
-
-  // Current TWSE RWD endpoint returns a `tables` array, where each table
-  // contains its own `fields` and `data`. Prefer this schema first.
   for (const table of Array.isArray(report.tables) ? report.tables : []) {
-    const fields = Array.isArray(table?.fields) ? table.fields : [];
-    const normalized = fields.map(x => String(x ?? '').trim());
-    if (!requiredFields.every(field => normalized.includes(field))) continue;
-    if (Array.isArray(table?.data)) return {fields: normalized, rows: table.data};
+    const fields = Array.isArray(table?.fields) ? table.fields.map(x => String(x ?? '').trim()) : [];
+    if (!requiredFields.every(field => fields.includes(field))) continue;
+    if (Array.isArray(table?.data)) return {fields, rows:table.data};
   }
-
-  // Backward compatibility with the older fields9/data9 style response.
-  for (const [key, fields] of Object.entries(report)) {
-    if (!/^fields\d+$/.test(key) || !Array.isArray(fields)) continue;
-    const normalized = fields.map(x => String(x ?? '').trim());
-    if (!requiredFields.every(field => normalized.includes(field))) continue;
-    const suffix = key.slice('fields'.length);
-    const rows = report[`data${suffix}`];
-    if (Array.isArray(rows)) return {fields: normalized, rows};
+  for (const [key, fieldsRaw] of Object.entries(report)) {
+    if (!/^fields\d+$/.test(key) || !Array.isArray(fieldsRaw)) continue;
+    const fields = fieldsRaw.map(x => String(x ?? '').trim());
+    if (!requiredFields.every(field => fields.includes(field))) continue;
+    const rows = report[`data${key.slice('fields'.length)}`];
+    if (Array.isArray(rows)) return {fields, rows};
   }
   return null;
 }
@@ -170,27 +127,16 @@ export function parseTWSEReport(report) {
   const date = normalizeDate(report?.date);
   const table = findReportTable(report, ['證券代號','證券名稱','收盤價']);
   if (!date || !table) return [];
-
-  const out=[];
+  const out = [];
   for (const row of table.rows) {
     if (!Array.isArray(row)) continue;
     const symbol = String(valueAt(row, table.fields, ['證券代號']) ?? '').trim().toUpperCase();
     const name = String(valueAt(row, table.fields, ['證券名稱']) ?? '').trim();
-    if (!validSymbol(symbol) || !name) continue;
     const close = numeric(valueAt(row, table.fields, ['收盤價']));
+    if (!validSymbol(symbol) || !name || !(close > 0)) continue;
     const sign = valueAt(row, table.fields, ['漲跌(+/-)','漲跌']);
     const change = signedNumber(sign, valueAt(row, table.fields, ['漲跌價差']));
-    if (!(close > 0)) continue;
-    out.push({
-      symbol,
-      name,
-      market:'TWSE',
-      securityType:securityType(symbol,name),
-      date,
-      close,
-      change,
-      changePct:0,
-    });
+    out.push({symbol,name,market:'TWSE',securityType:securityType(symbol,name),date,close,change,changePct:0});
   }
   return out;
 }
@@ -198,10 +144,8 @@ export function parseTWSEReport(report) {
 export function parseTWSEReportIndex(report) {
   const date = normalizeDate(report?.date);
   if (!date) return [];
-
   const table = findReportTable(report, ['指數']);
   if (!table) return [];
-
   for (const row of table.rows) {
     if (!Array.isArray(row)) continue;
     const name = String(valueAt(row, table.fields, ['指數']) ?? '').trim();
@@ -211,10 +155,23 @@ export function parseTWSEReportIndex(report) {
     const change = signedNumber(sign, valueAt(row, table.fields, ['漲跌點數','漲跌價差']));
     if (!(value > 0)) continue;
     const previous = value - change;
-    const changePct = previous > 0 ? change / previous * 100 : 0;
-    return [{code:'TAIEX', name:'加權指數', market:'TWSE', date, value, change, changePct}];
+    return [{code:'TAIEX',name:'加權指數',market:'TWSE',date,value,change,changePct:previous>0?change/previous*100:0}];
   }
   return [];
+}
+
+export function parseTPExIndex(rows) {
+  const out = [];
+  for (const r of Array.isArray(rows) ? rows : []) {
+    const date = normalizeDate(pick(r,['Date','日期','TradeDate']));
+    const value = numeric(pick(r,['TPExIndex','Index','Close','ClosingIndex','IndexValue','櫃買指數','指數']));
+    const change = numeric(pick(r,['Change','ChangePoint','漲跌點數','漲跌']));
+    if (!date || !(value > 0)) continue;
+    const explicitPct = numeric(pick(r,['ChangePercent','ChangePct','漲跌幅','漲跌百分比']));
+    const previous = value - change;
+    out.push({code:'OTC',name:'櫃買指數',market:'TPEx',date,value,change,changePct:explicitPct || (previous>0?change/previous*100:0)});
+  }
+  return out.sort((a,b)=>a.date.localeCompare(b.date));
 }
 
 async function readJson(file, fallback) {
@@ -222,202 +179,249 @@ async function readJson(file, fallback) {
   catch { return fallback; }
 }
 
-async function fetchJson(url, timeoutMs=20000) {
-  const controller = new AbortController();
-  const timer = setTimeout(() => controller.abort(), timeoutMs);
-  try {
-    const r = await fetch(url, {
-      signal: controller.signal,
-      headers: {
-        'accept': 'application/json,text/plain,*/*',
-        'user-agent': 'Mozilla/5.0 little-days-accounting-market-updater/1.5.6-hotfix'
-      }
-    });
-    if (!r.ok) throw new Error(`HTTP ${r.status}`);
-    const text = await r.text();
-    const trimmed = text.trim();
-    if (!trimmed.startsWith('{') && !trimmed.startsWith('[')) {
-      throw new Error(`Expected JSON but received ${trimmed.slice(0,80).replace(/\s+/g,' ')}`);
+function sleep(ms){ return new Promise(resolve=>setTimeout(resolve,ms)); }
+
+export async function fetchJsonWithRetry(url, {timeoutMs=20000, attempts=3, headers={}}={}) {
+  let lastError = null;
+  for (let attempt=1; attempt<=attempts; attempt++) {
+    const controller = new AbortController();
+    const timer = setTimeout(() => controller.abort(), timeoutMs);
+    try {
+      const response = await fetch(url, {signal:controller.signal, headers:{...DEFAULT_HEADERS,...headers}});
+      if (!response.ok) throw new Error(`HTTP ${response.status} ${response.statusText}`);
+      const text = await response.text();
+      const trimmed = text.trim();
+      const contentType = response.headers.get('content-type') || '';
+      if (trimmed.startsWith('<') || /text\/html/i.test(contentType)) throw new Error('received HTML instead of JSON');
+      if (!trimmed.startsWith('{') && !trimmed.startsWith('[')) throw new Error(`unexpected response prefix: ${trimmed.slice(0,80).replace(/\s+/g,' ')}`);
+      return JSON.parse(trimmed);
+    } catch (error) {
+      lastError = error;
+      if (attempt < attempts) await sleep(1000 * (2 ** (attempt - 1)) + Math.floor(Math.random()*500));
+    } finally {
+      clearTimeout(timer);
     }
-    return JSON.parse(trimmed);
-  } finally {
-    clearTimeout(timer);
   }
+  throw new Error(`failed after ${attempts} attempts: ${lastError?.message || 'unknown error'}`);
 }
 
 function taipeiDateString(now=new Date()) {
-  const parts = new Intl.DateTimeFormat('en-US', {
-    timeZone:'Asia/Taipei', year:'numeric', month:'2-digit', day:'2-digit'
-  }).formatToParts(now);
+  const parts = new Intl.DateTimeFormat('en-US', {timeZone:'Asia/Taipei',year:'numeric',month:'2-digit',day:'2-digit'}).formatToParts(now);
   const map = Object.fromEntries(parts.map(p => [p.type,p.value]));
   return `${map.year}-${map.month}-${map.day}`;
 }
+function compactDate(iso){ return String(iso).replace(/-/g,''); }
+function minusDays(iso, days){ const d=new Date(`${iso}T12:00:00Z`); d.setUTCDate(d.getUTCDate()-days); return d.toISOString().slice(0,10); }
+function latestDate(items){ return (items||[]).map(x=>x?.date).filter(Boolean).sort().at(-1)||''; }
+function sortBySymbol(a,b){ return String(a.symbol).localeCompare(String(b.symbol),'en'); }
 
-function compactDate(iso) { return String(iso).replace(/-/g,''); }
-
-function minusDays(iso, days) {
-  const d = new Date(`${iso}T12:00:00Z`);
-  d.setUTCDate(d.getUTCDate() - days);
-  return d.toISOString().slice(0,10);
-}
-
-async function fetchLatestTWSEReport(now=new Date()) {
-  const today = taipeiDateString(now);
-  let lastError = null;
-  for (let offset=0; offset<8; offset++) {
-    const date = minusDays(today, offset);
-    try {
-      const report = await fetchJson(SOURCES.TWSE_REPORT({date:compactDate(date)}));
-      const rows = parseTWSEReport(report);
-      if (rows.length) return {report, rows, date:rows[0].date};
-      lastError = new Error(`TWSE report ${date} returned no closing rows`);
-    } catch (e) {
-      lastError = e;
-    }
+export function parseHolidaySchedule(payload) {
+  const closed = new Set();
+  for (const row of Array.isArray(payload?.data) ? payload.data : []) {
+    if (!Array.isArray(row)) continue;
+    const date = normalizeDate(row[0]);
+    const name = String(row[1] ?? '').trim();
+    if (!date) continue;
+    if (!name.includes('交易日')) closed.add(date);
   }
-  throw lastError || new Error('TWSE report unavailable');
+  return closed;
 }
 
-function latestDate(items) {
-  return items.map(x=>x?.date).filter(Boolean).sort().at(-1) || '';
+function weekdayOf(iso) {
+  return new Date(`${iso}T12:00:00Z`).getUTCDay();
 }
 
-function sortBySymbol(a,b){ return a.symbol.localeCompare(b.symbol, 'en'); }
+export function expectedTradeDateFromClosures(today, closedDates=new Set()) {
+  let cursor = today;
+  for (let i=0; i<20; i++) {
+    const dow = weekdayOf(cursor);
+    if (dow !== 0 && dow !== 6 && !closedDates.has(cursor)) return cursor;
+    cursor = minusDays(cursor, 1);
+  }
+  return '';
+}
 
-export async function buildMarketData({twseRows=null,tpexRows=null, now=new Date()}={}) {
-  await fs.mkdir(DATA_DIR, {recursive:true});
-  const previousMaster = await readJson(MASTER_FILE, {items:[]});
-  const previousQuotes = await readJson(QUOTES_FILE, {items:[]});
+async function fetchExpectedTradeDate(now=new Date()) {
+  const today = taipeiDateString(now);
+  try {
+    const schedule = await fetchJsonWithRetry(SOURCES.HOLIDAY_SCHEDULE, {
+      attempts:2, timeoutMs:12000, headers:{referer:'https://www.twse.com.tw/'}
+    });
+    const closed = parseHolidaySchedule(schedule);
+    return {date:expectedTradeDateFromClosures(today, closed), verified:true, source:'TWSE holiday schedule'};
+  } catch (error) {
+    return {date:expectedTradeDateFromClosures(today, new Set()), verified:false, source:`weekday fallback: ${error.message}`};
+  }
+}
+
+async function fetchLatestTWSE(now=new Date()) {
+  const today = taipeiDateString(now);
+  const errors = [];
+  for (let offset=0; offset<8; offset++) {
+    const requestedDate = minusDays(today, offset);
+    try {
+      const report = await fetchJsonWithRetry(SOURCES.TWSE_REPORT({date:compactDate(requestedDate)}), {
+        attempts:2,
+        headers:{referer:'https://www.twse.com.tw/'}
+      });
+      const rows = parseTWSEReport(report);
+      if (rows.length) {
+        const reportDate = rows[0].date;
+        if (reportDate !== requestedDate) {
+          errors.push(`${requestedDate}: response date mismatch ${reportDate}`);
+          continue;
+        }
+        return {ok:true,market:'TWSE',rows,tradeDate:reportDate,index:parseTWSEReportIndex(report).at(-1)||null,source:'twse.com.tw MI_INDEX'};
+      }
+      errors.push(`${requestedDate}: ${String(report?.stat || 'no closing rows')}`);
+    } catch (e) { errors.push(`${requestedDate}: ${e.message}`); }
+  }
+  return {ok:false,market:'TWSE',rows:[],tradeDate:'',index:null,source:'twse.com.tw MI_INDEX',error:errors.slice(-3).join(' | ')};
+}
+
+async function fetchLatestTPEx() {
+  const errors = [];
+  for (const [label,url] of [['mainboard_quotes',SOURCES.TPEx_QUOTES],['daily_close',SOURCES.TPEx_DAILY_CLOSE]]) {
+    try {
+      const raw = await fetchJsonWithRetry(url,{attempts:3,headers:{referer:'https://www.tpex.org.tw/'}});
+      const parsed = parseTPEx(raw);
+      const tradeDate = latestDate(parsed);
+      if (!parsed.length || !tradeDate) { errors.push(`${label}: no valid dated closing quotes`); continue; }
+      const rows = parsed.filter(x=>x.date===tradeDate);
+      let index = null;
+      try {
+        const idxRaw = await fetchJsonWithRetry(SOURCES.TPEx_INDEX,{attempts:2,headers:{referer:'https://www.tpex.org.tw/'}});
+        const indices = parseTPExIndex(idxRaw).filter(x=>x.date<=tradeDate);
+        index = indices.at(-1)||null;
+      } catch (e) { errors.push(`index: ${e.message}`); }
+      return {ok:true,market:'TPEx',rows,tradeDate,index,source:`tpex.org.tw ${label}`,warning:errors.join(' | ')};
+    } catch (e) { errors.push(`${label}: ${e.message}`); }
+  }
+  return {ok:false,market:'TPEx',rows:[],tradeDate:'',index:null,source:'tpex.org.tw OpenAPI',error:errors.join(' | ')};
+}
+
+function clone(value){ return JSON.parse(JSON.stringify(value)); }
+
+export function mergeMarketSnapshots(previousMaster, previousQuotes, results, now=new Date(), expectedTradeDate='') {
+  const oldMaster = previousMaster && typeof previousMaster==='object' ? clone(previousMaster) : {items:[]};
+  const oldQuotes = previousQuotes && typeof previousQuotes==='object' ? clone(previousQuotes) : {items:[],indices:[]};
+  const masterMap = new Map((Array.isArray(oldMaster.items)?oldMaster.items:[]).filter(x=>x?.symbol).map(x=>[String(x.symbol).toUpperCase(),x]));
+  const quoteMap = new Map((Array.isArray(oldQuotes.items)?oldQuotes.items:[]).filter(x=>x?.symbol).map(x=>[String(x.symbol).toUpperCase(),x]));
+  const indexMap = new Map((Array.isArray(oldQuotes.indices)?oldQuotes.indices:[]).filter(x=>x?.market).map(x=>[marketKey(x.market),x]));
 
   const sourceStatus = {};
-  let twse = [];
-  let tpex = tpexRows;
-  let twseReport = null;
+  const marketTradeDates = {};
+  const marketFreshness = {};
+  const resultByMarket = new Map((results||[]).map(r=>[marketKey(r.market),r]));
 
-  if (twseRows !== null) {
-    twse = parseTWSE(twseRows);
-    sourceStatus.TWSE = 'fixture';
-  } else {
-    try {
-      const result = await fetchLatestTWSEReport(now);
-      twseReport = result.report;
-      twse = result.rows;
-      sourceStatus.TWSE = 'ok: twse.com.tw MI_INDEX';
-    } catch (e) {
-      sourceStatus.TWSE = `error: ${e.message}`;
-      throw new Error(`TWSE closing data unavailable: ${e.message}`);
+  for (const market of ['TWSE','TPEx']) {
+    const result = resultByMarket.get(market);
+    const existingForMarket = [...quoteMap.values()].filter(x=>marketKey(x.market)===market);
+    const previousMarketDate = latestDate(existingForMarket);
+
+    if (!result?.ok) {
+      sourceStatus[market] = `stale: ${result?.error || 'source unavailable'}`;
+      marketTradeDates[market] = previousMarketDate;
+      marketFreshness[market] = 'stale';
+      for (const old of existingForMarket) quoteMap.set(String(old.symbol).toUpperCase(), {...old,isStale:true});
+      const oldIndex=indexMap.get(market); if(oldIndex) indexMap.set(market,{...oldIndex,isStale:true});
+      continue;
     }
-  }
 
-  if (tpex === null) {
-    try { tpex = await fetchJson(SOURCES.TPEx); sourceStatus.TPEx = 'ok'; }
-    catch (e) {
-      sourceStatus.TPEx = `error: ${e.message}`;
-      throw new Error(`TPEx closing data unavailable: ${e.message}`);
+    const sourceDate = String(result.tradeDate||'');
+    if (!/^\d{4}-\d{2}-\d{2}$/.test(sourceDate)) {
+      sourceStatus[market] = 'stale: source returned no valid trade date';
+      marketTradeDates[market] = previousMarketDate;
+      marketFreshness[market] = 'stale';
+      for (const old of existingForMarket) quoteMap.set(String(old.symbol).toUpperCase(), {...old,isStale:true});
+      continue;
     }
-  } else sourceStatus.TPEx = 'fixture';
 
-  const parsedTPEx = parseTPEx(tpex);
-  if (!twse.length) throw new Error('TWSE returned no valid closing quotes.');
-  if (!parsedTPEx.length) throw new Error('TPEx returned no valid closing quotes.');
-
-  const twseTradeDate = latestDate(twse);
-  const tpexTradeDate = latestDate(parsedTPEx);
-
-  // Both Taiwan exchanges share the same trading calendar. A mismatch means
-  // one source is stale, so do not publish a mixed-date portfolio snapshot.
-  if (twseTradeDate !== tpexTradeDate) {
-    throw new Error(`Market data freshness mismatch: TWSE=${twseTradeDate || 'none'}, TPEx=${tpexTradeDate || 'none'}`);
-  }
-
-  let tpexIndexRows=[];
-  try { tpexIndexRows = await fetchJson(SOURCES.TPEx_INDEX); sourceStatus.TPEx_INDEX = 'ok'; }
-  catch (e) { sourceStatus.TPEx_INDEX = `error: ${e.message}`; }
-
-  const fresh = [...twse, ...parsedTPEx];
-  if (!fresh.length && !previousMaster?.items?.length) {
-    throw new Error('No market data returned and no previous static data exists.');
-  }
-
-  const masterMap = new Map();
-  for (const item of Array.isArray(previousMaster?.items) ? previousMaster.items : []) {
-    if (item?.symbol) masterMap.set(String(item.symbol).toUpperCase(), item);
-  }
-  const quoteMap = new Map();
-  for (const item of Array.isArray(previousQuotes?.items) ? previousQuotes.items : []) {
-    if (item?.symbol) quoteMap.set(String(item.symbol).toUpperCase(), item);
-  }
-
-  for (const item of fresh) {
-    masterMap.set(item.symbol, {
-      symbol:item.symbol,
-      name:item.name,
-      market:item.market,
-      securityType:item.securityType
-    });
-    if (item.date && item.close > 0) {
-      const old = quoteMap.get(item.symbol);
-      if (!old?.date || item.date >= old.date) {
-        let previousClose=Number(old?.previousClose||0)||0;
-        if(old?.date && item.date>old.date && Number(old.close)>0) previousClose=Number(old.close);
-        const explicitChange = Number(item.change);
-        const hasExplicitChange = Number.isFinite(explicitChange);
-        const change = hasExplicitChange ? explicitChange : (previousClose>0?item.close-previousClose:0);
-        if(!previousClose && change) previousClose=item.close-change;
-        const changePct=Number(item.changePct||0)||(previousClose>0?change/previousClose*100:0);
-        quoteMap.set(item.symbol, {
-          symbol:item.symbol,
-          name:item.name,
-          market:item.market,
-          securityType:item.securityType,
-          date:item.date,
-          close:item.close,
-          previousClose,change,changePct
-        });
-      }
+    if (previousMarketDate && sourceDate < previousMarketDate) {
+      sourceStatus[market] = `stale: source regressed ${sourceDate} < stored ${previousMarketDate}`;
+      marketTradeDates[market] = previousMarketDate;
+      marketFreshness[market] = 'stale';
+      for (const old of existingForMarket) quoteMap.set(String(old.symbol).toUpperCase(), {...old,isStale:true});
+      continue;
     }
+
+    if (expectedTradeDate && sourceDate > expectedTradeDate) {
+      sourceStatus[market] = `stale: source returned future date ${sourceDate} > expected ${expectedTradeDate}`;
+      marketTradeDates[market] = previousMarketDate;
+      marketFreshness[market] = 'stale';
+      for (const old of existingForMarket) quoteMap.set(String(old.symbol).toUpperCase(), {...old,isStale:true});
+      continue;
+    }
+
+    const sourceIsCurrent = !expectedTradeDate || sourceDate === expectedTradeDate;
+    sourceStatus[market] = `${sourceIsCurrent?'ok':'stale'}: ${result.source}${sourceIsCurrent?'':` ${sourceDate} < expected ${expectedTradeDate}`}${result.warning?` (${result.warning})`:''}`;
+    marketTradeDates[market] = sourceDate;
+    marketFreshness[market] = sourceIsCurrent ? 'fresh' : 'stale';
+
+    // Existing symbols in this market become stale unless the new official snapshot refreshes them.
+    for (const old of existingForMarket) quoteMap.set(String(old.symbol).toUpperCase(), {...old,isStale:true});
+
+    for (const item of Array.isArray(result.rows)?result.rows:[]) {
+      const symbol=String(item?.symbol||'').toUpperCase();
+      if(!validSymbol(symbol)||item.date!==sourceDate||!(Number(item.close)>0)) continue;
+      const old=quoteMap.get(symbol);
+      if(old?.date && item.date < old.date) continue;
+      const previousClose = old?.date && item.date>old.date && Number(old.close)>0 ? Number(old.close) : Number(old?.previousClose||0)||0;
+      const explicitChange = Number(item.change);
+      const change = Number.isFinite(explicitChange) && explicitChange!==0 ? explicitChange : (previousClose>0?Number(item.close)-previousClose:0);
+      const derivedPrevious = previousClose || (change ? Number(item.close)-change : 0);
+      const explicitPct = Number(item.changePct);
+      const changePct = Number.isFinite(explicitPct) && explicitPct!==0 ? explicitPct : (derivedPrevious>0?change/derivedPrevious*100:0);
+      quoteMap.set(symbol,{
+        symbol,
+        name:item.name||old?.name||'',
+        market,
+        securityType:item.securityType||old?.securityType||securityType(symbol,item.name||old?.name||''),
+        date:item.date,
+        close:Number(item.close),
+        previousClose:derivedPrevious,
+        change,
+        changePct,
+        isStale:marketFreshness[market]!=='fresh',
+      });
+      const oldMasterItem=masterMap.get(symbol)||{};
+      masterMap.set(symbol,{...oldMasterItem,symbol,name:item.name||oldMasterItem.name||'',market,securityType:item.securityType||oldMasterItem.securityType||securityType(symbol,item.name||'')});
+    }
+
+    if(result.index?.date && result.index.date<=sourceDate) indexMap.set(market,{...result.index,isStale:result.index.date!==sourceDate});
+    else { const oldIndex=indexMap.get(market); if(oldIndex) indexMap.set(market,{...oldIndex,isStale:true}); }
   }
 
-  const generatedAt = now.toISOString();
-  const master = {
-    schemaVersion:1,
-    generatedAt,
-    sourceStatus,
-    marketTradeDates:{TWSE:twseTradeDate,TPEx:tpexTradeDate},
-    items:[...masterMap.values()].sort(sortBySymbol)
-  };
+  const activeMarketDates = ['TWSE','TPEx'].map(m=>marketTradeDates[m]).filter(Boolean).sort();
+  const latestTradeDate = activeMarketDates.length ? activeMarketDates[0] : '';
+  const quality = ['TWSE','TPEx'].every(m=>marketFreshness[m]==='fresh') ? 'ok' : ([...quoteMap.values()].length ? 'partial' : 'failed');
+  const generatedAt=now.toISOString();
 
-  const indices=[];
-  const twseIndices = twseReport ? parseTWSEReportIndex(twseReport) : [];
-  const tpexIndices=parseTPExIndex(tpexIndexRows);
-  if(twseIndices.length)indices.push(twseIndices.at(-1));
-  if(tpexIndices.length)indices.push(tpexIndices.at(-1));
-
-  const quotes = {
-    schemaVersion:1,
-    generatedAt,
-    sourceStatus,
-    latestTradeDate:twseTradeDate,
-    marketTradeDates:{TWSE:twseTradeDate,TPEx:tpexTradeDate},
-    indices,
-    items:[...quoteMap.values()].sort(sortBySymbol)
-  };
-
-  await fs.writeFile(MASTER_FILE, JSON.stringify(master,null,2)+'\n', 'utf8');
-  await fs.writeFile(QUOTES_FILE, JSON.stringify(quotes,null,2)+'\n', 'utf8');
   return {
-    masterCount:master.items.length,
-    quoteCount:quotes.items.length,
-    indexCount:indices.length,
-    latestTradeDate:quotes.latestTradeDate,
-    marketTradeDates:quotes.marketTradeDates,
-    sourceStatus
+    master:{schemaVersion:1,generatedAt,sourceStatus,marketTradeDates,marketFreshness,items:[...masterMap.values()].sort(sortBySymbol)},
+    quotes:{schemaVersion:1,generatedAt,quality,expectedTradeDate,sourceStatus,marketTradeDates,marketFreshness,latestTradeDate,indices:[...indexMap.values()].sort((a,b)=>String(a.market).localeCompare(String(b.market))),items:[...quoteMap.values()].sort(sortBySymbol)},
+    summary:{quality,expectedTradeDate,latestTradeDate,marketTradeDates,marketFreshness,sourceStatus,masterCount:masterMap.size,quoteCount:quoteMap.size,indexCount:indexMap.size}
   };
 }
 
-const isMain = process.argv[1] && path.resolve(process.argv[1]) === fileURLToPath(import.meta.url);
-if (isMain) {
-  buildMarketData()
-    .then(r => console.log(JSON.stringify(r,null,2)))
-    .catch(e => { console.error(e); process.exitCode = 1; });
+export async function buildMarketData({now=new Date(),twseResult=null,tpexResult=null}={}) {
+  await fs.mkdir(DATA_DIR,{recursive:true});
+  const previousMaster=await readJson(MASTER_FILE,{schemaVersion:1,items:[]});
+  const previousQuotes=await readJson(QUOTES_FILE,{schemaVersion:1,items:[],indices:[]});
+  const [calendar,twse,tpex]=await Promise.all([fetchExpectedTradeDate(now),twseResult?Promise.resolve(twseResult):fetchLatestTWSE(now),tpexResult?Promise.resolve(tpexResult):fetchLatestTPEx()]);
+  const merged=mergeMarketSnapshots(previousMaster,previousQuotes,[twse,tpex],now,calendar.date);
+  merged.summary.calendarStatus = `${calendar.verified?'verified':'fallback'}: ${calendar.source}`;
+  merged.quotes.calendarStatus = merged.summary.calendarStatus;
+  merged.master.calendarStatus = merged.summary.calendarStatus;
+  await fs.writeFile(MASTER_FILE,JSON.stringify(merged.master,null,2)+'\n','utf8');
+  await fs.writeFile(QUOTES_FILE,JSON.stringify(merged.quotes,null,2)+'\n','utf8');
+  return merged.summary;
+}
+
+const isMain=process.argv[1]&&path.resolve(process.argv[1])===fileURLToPath(import.meta.url);
+if(isMain){
+  buildMarketData().then(summary=>{
+    console.log(JSON.stringify(summary,null,2));
+    if(summary.quality!=='ok') process.exitCode=2;
+  }).catch(error=>{console.error(error);process.exitCode=1;});
 }
