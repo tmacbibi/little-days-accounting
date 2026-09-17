@@ -1,11 +1,17 @@
 {
   "schemaVersion": 1,
-  "generatedAt": "2026-09-17T13:39:03.896Z",
+  "generatedAt": "2026-09-17T15:22:20.887Z",
   "sourceStatus": {
-    "TWSE": "error: Unexpected token '<', \"<html>\n<he\"... is not valid JSON",
-    "TPEx": "ok",
-    "TWSE_INDEX": "error: Unexpected token '<', \"<html>\n<he\"... is not valid JSON",
-    "TPEx_INDEX": "ok"
+    "TWSE": "ok: twse.com.tw MI_INDEX",
+    "TPEx": "ok: tpex.org.tw mainboard_quotes"
+  },
+  "marketTradeDates": {
+    "TWSE": "2026-09-17",
+    "TPEx": "2026-09-17"
+  },
+  "marketFreshness": {
+    "TWSE": "fresh",
+    "TPEx": "fresh"
   },
   "items": [
     {
@@ -77486,5 +77492,6 @@
       "market": "TPEx",
       "securityType": "stock"
     }
-  ]
+  ],
+  "calendarStatus": "verified: TWSE holiday schedule"
 }
