@@ -136,6 +136,17 @@ export function parseTPExIndex(rows) {
 
 function findReportTable(report, requiredFields) {
   if (!report || typeof report !== 'object') return null;
+
+  // Current TWSE RWD endpoint returns a `tables` array, where each table
+  // contains its own `fields` and `data`. Prefer this schema first.
+  for (const table of Array.isArray(report.tables) ? report.tables : []) {
+    const fields = Array.isArray(table?.fields) ? table.fields : [];
+    const normalized = fields.map(x => String(x ?? '').trim());
+    if (!requiredFields.every(field => normalized.includes(field))) continue;
+    if (Array.isArray(table?.data)) return {fields: normalized, rows: table.data};
+  }
+
+  // Backward compatibility with the older fields9/data9 style response.
   for (const [key, fields] of Object.entries(report)) {
     if (!/^fields\d+$/.test(key) || !Array.isArray(fields)) continue;
     const normalized = fields.map(x => String(x ?? '').trim());
