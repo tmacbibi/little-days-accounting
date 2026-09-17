@@ -3,8 +3,10 @@ name: Update Taiwan market data
 on:
   workflow_dispatch:
   schedule:
-    # 16:30 Asia/Taipei, Monday-Friday
-    - cron: '30 8 * * 1-5'
+    # Asia/Taipei: 15:50 and 17:20, Monday-Friday.
+    # Two runs give the official closing files time to settle and provide a same-day retry.
+    - cron: '50 7 * * 1-5'
+    - cron: '20 9 * * 1-5'
   push:
     paths:
       - 'scripts/update-market-data.mjs'
