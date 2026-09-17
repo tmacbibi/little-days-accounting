@@ -1,10 +1,10 @@
 {
   "schemaVersion": 1,
-  "generatedAt": "2026-09-16T13:36:30.891Z",
+  "generatedAt": "2026-09-17T13:39:03.896Z",
   "sourceStatus": {
-    "TWSE": "ok",
+    "TWSE": "error: Unexpected token '<', \"<html>\n<he\"... is not valid JSON",
     "TPEx": "ok",
-    "TWSE_INDEX": "ok",
+    "TWSE_INDEX": "error: Unexpected token '<', \"<html>\n<he\"... is not valid JSON",
     "TPEx_INDEX": "ok"
   },
   "items": [
@@ -71019,6 +71019,684 @@
       "securityType": "stock"
     },
     {
+      "symbol": "714678",
+      "name": "台燿凱基63購01",
+      "market": "TPEx",
+      "securityType": "stock"
+    },
+    {
+      "symbol": "714679",
+      "name": "台燿凱基63購02",
+      "market": "TPEx",
+      "securityType": "stock"
+    },
+    {
+      "symbol": "714680",
+      "name": "台燿凱基63購03",
+      "market": "TPEx",
+      "securityType": "stock"
+    },
+    {
+      "symbol": "714681",
+      "name": "台燿凱基63購04",
+      "market": "TPEx",
+      "securityType": "stock"
+    },
+    {
+      "symbol": "714682",
+      "name": "台燿凱基65購01",
+      "market": "TPEx",
+      "securityType": "stock"
+    },
+    {
+      "symbol": "714683",
+      "name": "台燿凱基65購02",
+      "market": "TPEx",
+      "securityType": "stock"
+    },
+    {
+      "symbol": "714684",
+      "name": "台燿凱基65購03",
+      "market": "TPEx",
+      "securityType": "stock"
+    },
+    {
+      "symbol": "714685",
+      "name": "青雲凱基63購04",
+      "market": "TPEx",
+      "securityType": "stock"
+    },
+    {
+      "symbol": "714686",
+      "name": "茂綸凱基63購01",
+      "market": "TPEx",
+      "securityType": "stock"
+    },
+    {
+      "symbol": "714687",
+      "name": "新應材凱基63購12",
+      "market": "TPEx",
+      "securityType": "stock"
+    },
+    {
+      "symbol": "714688",
+      "name": "群聯凱基63購22",
+      "market": "TPEx",
+      "securityType": "stock"
+    },
+    {
+      "symbol": "714689",
+      "name": "台半台新64購01",
+      "market": "TPEx",
+      "securityType": "stock"
+    },
+    {
+      "symbol": "714690",
+      "name": "台燿台新63購01",
+      "market": "TPEx",
+      "securityType": "stock"
+    },
+    {
+      "symbol": "714691",
+      "name": "台燿台新66購01",
+      "market": "TPEx",
+      "securityType": "stock"
+    },
+    {
+      "symbol": "714692",
+      "name": "台燿台新69購01",
+      "market": "TPEx",
+      "securityType": "stock"
+    },
+    {
+      "symbol": "714693",
+      "name": "印能台新65購02",
+      "market": "TPEx",
+      "securityType": "stock"
+    },
+    {
+      "symbol": "714694",
+      "name": "印能台新65購03",
+      "market": "TPEx",
+      "securityType": "stock"
+    },
+    {
+      "symbol": "714695",
+      "name": "良維台新63購01",
+      "market": "TPEx",
+      "securityType": "stock"
+    },
+    {
+      "symbol": "714696",
+      "name": "宜鼎台新66購01",
+      "market": "TPEx",
+      "securityType": "stock"
+    },
+    {
+      "symbol": "714697",
+      "name": "台燿群益63購01",
+      "market": "TPEx",
+      "securityType": "stock"
+    },
+    {
+      "symbol": "714698",
+      "name": "台燿群益63購02",
+      "market": "TPEx",
+      "securityType": "stock"
+    },
+    {
+      "symbol": "714699",
+      "name": "台燿群益63購03",
+      "market": "TPEx",
+      "securityType": "stock"
+    },
+    {
+      "symbol": "714700",
+      "name": "印能群益63購03",
+      "market": "TPEx",
+      "securityType": "stock"
+    },
+    {
+      "symbol": "714701",
+      "name": "竹陞群益64購02",
+      "market": "TPEx",
+      "securityType": "stock"
+    },
+    {
+      "symbol": "714702",
+      "name": "亞通群益64購01",
+      "market": "TPEx",
+      "securityType": "stock"
+    },
+    {
+      "symbol": "714703",
+      "name": "亞通群益66購01",
+      "market": "TPEx",
+      "securityType": "stock"
+    },
+    {
+      "symbol": "714704",
+      "name": "宜鼎群益63購08",
+      "market": "TPEx",
+      "securityType": "stock"
+    },
+    {
+      "symbol": "714705",
+      "name": "欣銓群益63購03",
+      "market": "TPEx",
+      "securityType": "stock"
+    },
+    {
+      "symbol": "714706",
+      "name": "青雲群益63購03",
+      "market": "TPEx",
+      "securityType": "stock"
+    },
+    {
+      "symbol": "714707",
+      "name": "青雲群益65購01",
+      "market": "TPEx",
+      "securityType": "stock"
+    },
+    {
+      "symbol": "714708",
+      "name": "威剛群益63購12",
+      "market": "TPEx",
+      "securityType": "stock"
+    },
+    {
+      "symbol": "714709",
+      "name": "家登群益63購08",
+      "market": "TPEx",
+      "securityType": "stock"
+    },
+    {
+      "symbol": "714710",
+      "name": "頎邦群益65購01",
+      "market": "TPEx",
+      "securityType": "stock"
+    },
+    {
+      "symbol": "714711",
+      "name": "穩懋群益63購07",
+      "market": "TPEx",
+      "securityType": "stock"
+    },
+    {
+      "symbol": "714712",
+      "name": "台燿元大63購01",
+      "market": "TPEx",
+      "securityType": "stock"
+    },
+    {
+      "symbol": "714713",
+      "name": "台燿元大64購05",
+      "market": "TPEx",
+      "securityType": "stock"
+    },
+    {
+      "symbol": "714714",
+      "name": "台燿元大65購01",
+      "market": "TPEx",
+      "securityType": "stock"
+    },
+    {
+      "symbol": "714715",
+      "name": "印能元大63購03",
+      "market": "TPEx",
+      "securityType": "stock"
+    },
+    {
+      "symbol": "714716",
+      "name": "沛亨元大63購07",
+      "market": "TPEx",
+      "securityType": "stock"
+    },
+    {
+      "symbol": "714717",
+      "name": "良維元大63購05",
+      "market": "TPEx",
+      "securityType": "stock"
+    },
+    {
+      "symbol": "714718",
+      "name": "亞通元大63購05",
+      "market": "TPEx",
+      "securityType": "stock"
+    },
+    {
+      "symbol": "714719",
+      "name": "宜鼎元大64購07",
+      "market": "TPEx",
+      "securityType": "stock"
+    },
+    {
+      "symbol": "714720",
+      "name": "昇達科元大63購04",
+      "market": "TPEx",
+      "securityType": "stock"
+    },
+    {
+      "symbol": "714721",
+      "name": "昇達科元大63購05",
+      "market": "TPEx",
+      "securityType": "stock"
+    },
+    {
+      "symbol": "714722",
+      "name": "信昌電元大63購04",
+      "market": "TPEx",
+      "securityType": "stock"
+    },
+    {
+      "symbol": "714723",
+      "name": "信昌電元大63購05",
+      "market": "TPEx",
+      "securityType": "stock"
+    },
+    {
+      "symbol": "714724",
+      "name": "威剛元大63購16",
+      "market": "TPEx",
+      "securityType": "stock"
+    },
+    {
+      "symbol": "714725",
+      "name": "茂綸元大63購01",
+      "market": "TPEx",
+      "securityType": "stock"
+    },
+    {
+      "symbol": "714726",
+      "name": "茂綸元大64購01",
+      "market": "TPEx",
+      "securityType": "stock"
+    },
+    {
+      "symbol": "714727",
+      "name": "家登元大63購02",
+      "market": "TPEx",
+      "securityType": "stock"
+    },
+    {
+      "symbol": "714728",
+      "name": "家登元大64購02",
+      "market": "TPEx",
+      "securityType": "stock"
+    },
+    {
+      "symbol": "714729",
+      "name": "群聯元大63購31",
+      "market": "TPEx",
+      "securityType": "stock"
+    },
+    {
+      "symbol": "714730",
+      "name": "群聯元大63購33",
+      "market": "TPEx",
+      "securityType": "stock"
+    },
+    {
+      "symbol": "714731",
+      "name": "環球晶元大64購04",
+      "market": "TPEx",
+      "securityType": "stock"
+    },
+    {
+      "symbol": "714732",
+      "name": "環球晶元大65購07",
+      "market": "TPEx",
+      "securityType": "stock"
+    },
+    {
+      "symbol": "714733",
+      "name": "台燿永豐63購01",
+      "market": "TPEx",
+      "securityType": "stock"
+    },
+    {
+      "symbol": "714734",
+      "name": "台燿永豐63購02",
+      "market": "TPEx",
+      "securityType": "stock"
+    },
+    {
+      "symbol": "714735",
+      "name": "台燿永豐63購03",
+      "market": "TPEx",
+      "securityType": "stock"
+    },
+    {
+      "symbol": "714736",
+      "name": "台燿永豐63購04",
+      "market": "TPEx",
+      "securityType": "stock"
+    },
+    {
+      "symbol": "714737",
+      "name": "台燿永豐64購03",
+      "market": "TPEx",
+      "securityType": "stock"
+    },
+    {
+      "symbol": "714738",
+      "name": "台燿永豐64購04",
+      "market": "TPEx",
+      "securityType": "stock"
+    },
+    {
+      "symbol": "714739",
+      "name": "台燿永豐65購01",
+      "market": "TPEx",
+      "securityType": "stock"
+    },
+    {
+      "symbol": "714740",
+      "name": "台燿永豐65購02",
+      "market": "TPEx",
+      "securityType": "stock"
+    },
+    {
+      "symbol": "714741",
+      "name": "台燿永豐66購01",
+      "market": "TPEx",
+      "securityType": "stock"
+    },
+    {
+      "symbol": "714742",
+      "name": "台燿永豐66購02",
+      "market": "TPEx",
+      "securityType": "stock"
+    },
+    {
+      "symbol": "714743",
+      "name": "台燿永豐69購01",
+      "market": "TPEx",
+      "securityType": "stock"
+    },
+    {
+      "symbol": "714744",
+      "name": "台燿永豐69購02",
+      "market": "TPEx",
+      "securityType": "stock"
+    },
+    {
+      "symbol": "714745",
+      "name": "台燿永豐73購01",
+      "market": "TPEx",
+      "securityType": "stock"
+    },
+    {
+      "symbol": "714746",
+      "name": "弘塑永豐64購02",
+      "market": "TPEx",
+      "securityType": "stock"
+    },
+    {
+      "symbol": "714747",
+      "name": "光焱永豐65購01",
+      "market": "TPEx",
+      "securityType": "stock"
+    },
+    {
+      "symbol": "714748",
+      "name": "欣銓永豐63購01",
+      "market": "TPEx",
+      "securityType": "stock"
+    },
+    {
+      "symbol": "714749",
+      "name": "博盛永豐64購03",
+      "market": "TPEx",
+      "securityType": "stock"
+    },
+    {
+      "symbol": "714750",
+      "name": "蜜望實永豐64購01",
+      "market": "TPEx",
+      "securityType": "stock"
+    },
+    {
+      "symbol": "714751",
+      "name": "營邦永豐65購01",
+      "market": "TPEx",
+      "securityType": "stock"
+    },
+    {
+      "symbol": "714752",
+      "name": "環球晶永豐64購02",
+      "market": "TPEx",
+      "securityType": "stock"
+    },
+    {
+      "symbol": "714753",
+      "name": "穩懋永豐63購08",
+      "market": "TPEx",
+      "securityType": "stock"
+    },
+    {
+      "symbol": "714754",
+      "name": "台燿中信63購01",
+      "market": "TPEx",
+      "securityType": "stock"
+    },
+    {
+      "symbol": "714755",
+      "name": "欣銓中信63購01",
+      "market": "TPEx",
+      "securityType": "stock"
+    },
+    {
+      "symbol": "714756",
+      "name": "信昌電中信63購01",
+      "market": "TPEx",
+      "securityType": "stock"
+    },
+    {
+      "symbol": "714757",
+      "name": "雷科中信63購01",
+      "market": "TPEx",
+      "securityType": "stock"
+    },
+    {
+      "symbol": "714758",
+      "name": "台燿國票67購01",
+      "market": "TPEx",
+      "securityType": "stock"
+    },
+    {
+      "symbol": "714759",
+      "name": "東捷國票66購01",
+      "market": "TPEx",
+      "securityType": "stock"
+    },
+    {
+      "symbol": "714760",
+      "name": "信昌電國票64購01",
+      "market": "TPEx",
+      "securityType": "stock"
+    },
+    {
+      "symbol": "714761",
+      "name": "信昌電國票64購02",
+      "market": "TPEx",
+      "securityType": "stock"
+    },
+    {
+      "symbol": "714762",
+      "name": "信昌電國票65購01",
+      "market": "TPEx",
+      "securityType": "stock"
+    },
+    {
+      "symbol": "714763",
+      "name": "信昌電國票65購02",
+      "market": "TPEx",
+      "securityType": "stock"
+    },
+    {
+      "symbol": "714764",
+      "name": "信昌電國票66購01",
+      "market": "TPEx",
+      "securityType": "stock"
+    },
+    {
+      "symbol": "714765",
+      "name": "宣德國票66購01",
+      "market": "TPEx",
+      "securityType": "stock"
+    },
+    {
+      "symbol": "714766",
+      "name": "風青國票67購01",
+      "market": "TPEx",
+      "securityType": "stock"
+    },
+    {
+      "symbol": "714767",
+      "name": "營邦國票65購01",
+      "market": "TPEx",
+      "securityType": "stock"
+    },
+    {
+      "symbol": "714768",
+      "name": "環球晶國票64購04",
+      "market": "TPEx",
+      "securityType": "stock"
+    },
+    {
+      "symbol": "714769",
+      "name": "台燿統一65購02",
+      "market": "TPEx",
+      "securityType": "stock"
+    },
+    {
+      "symbol": "714770",
+      "name": "台燿統一69購01",
+      "market": "TPEx",
+      "securityType": "stock"
+    },
+    {
+      "symbol": "714771",
+      "name": "台燿統一69購02",
+      "market": "TPEx",
+      "securityType": "stock"
+    },
+    {
+      "symbol": "714772",
+      "name": "台燿統一6C購01",
+      "market": "TPEx",
+      "securityType": "stock"
+    },
+    {
+      "symbol": "714773",
+      "name": "台燿統一71購02",
+      "market": "TPEx",
+      "securityType": "stock"
+    },
+    {
+      "symbol": "714774",
+      "name": "台燿統一79購01",
+      "market": "TPEx",
+      "securityType": "stock"
+    },
+    {
+      "symbol": "714775",
+      "name": "印能統一69購01",
+      "market": "TPEx",
+      "securityType": "stock"
+    },
+    {
+      "symbol": "714776",
+      "name": "金山電統一79購01",
+      "market": "TPEx",
+      "securityType": "stock"
+    },
+    {
+      "symbol": "714777",
+      "name": "青雲統一79購01",
+      "market": "TPEx",
+      "securityType": "stock"
+    },
+    {
+      "symbol": "714778",
+      "name": "信昌電統一68購03",
+      "market": "TPEx",
+      "securityType": "stock"
+    },
+    {
+      "symbol": "714779",
+      "name": "台燿國泰64購01",
+      "market": "TPEx",
+      "securityType": "stock"
+    },
+    {
+      "symbol": "714780",
+      "name": "台燿國泰64購02",
+      "market": "TPEx",
+      "securityType": "stock"
+    },
+    {
+      "symbol": "714781",
+      "name": "信昌電國泰64購03",
+      "market": "TPEx",
+      "securityType": "stock"
+    },
+    {
+      "symbol": "714782",
+      "name": "元太富邦64購03",
+      "market": "TPEx",
+      "securityType": "stock"
+    },
+    {
+      "symbol": "714783",
+      "name": "台半富邦65購01",
+      "market": "TPEx",
+      "securityType": "stock"
+    },
+    {
+      "symbol": "714784",
+      "name": "台燿富邦63購04",
+      "market": "TPEx",
+      "securityType": "stock"
+    },
+    {
+      "symbol": "714785",
+      "name": "台燿富邦63購05",
+      "market": "TPEx",
+      "securityType": "stock"
+    },
+    {
+      "symbol": "714786",
+      "name": "金山電富邦65購01",
+      "market": "TPEx",
+      "securityType": "stock"
+    },
+    {
+      "symbol": "714787",
+      "name": "晶呈富邦65購03",
+      "market": "TPEx",
+      "securityType": "stock"
+    },
+    {
+      "symbol": "714788",
+      "name": "新應材富邦66購01",
+      "market": "TPEx",
+      "securityType": "stock"
+    },
+    {
+      "symbol": "714789",
+      "name": "穩懋富邦67購01",
+      "market": "TPEx",
+      "securityType": "stock"
+    },
+    {
+      "symbol": "714790",
+      "name": "譜瑞富邦64購03",
+      "market": "TPEx",
+      "securityType": "stock"
+    },
+    {
       "symbol": "72328U",
       "name": "環球晶群益59售01",
       "market": "TPEx",
@@ -73359,8 +74037,44 @@
       "securityType": "stock"
     },
     {
+      "symbol": "73119U",
+      "name": "台燿台新63售02",
+      "market": "TPEx",
+      "securityType": "stock"
+    },
+    {
+      "symbol": "73120U",
+      "name": "良維台新63售02",
+      "market": "TPEx",
+      "securityType": "stock"
+    },
+    {
+      "symbol": "73121U",
+      "name": "穩懋群益63售08",
+      "market": "TPEx",
+      "securityType": "stock"
+    },
+    {
+      "symbol": "73122U",
+      "name": "台燿國票66售01",
+      "market": "TPEx",
+      "securityType": "stock"
+    },
+    {
+      "symbol": "73123U",
+      "name": "信昌電國票64售03",
+      "market": "TPEx",
+      "securityType": "stock"
+    },
+    {
       "symbol": "731240",
       "name": "金麗科元富61購01",
+      "market": "TPEx",
+      "securityType": "stock"
+    },
+    {
+      "symbol": "73124U",
+      "name": "信昌電國票65售03",
       "market": "TPEx",
       "securityType": "stock"
     },
