@@ -1,7 +1,7 @@
 'use strict';
 
 const $ = id => document.getElementById(id);
-const APP_VERSION = '1.5.8';
+const APP_VERSION = '1.5.9';
 const DATA_VERSION = 13;
 const VAULT_KEY = 'little_days_bookkeeping_vault_v2';
 const AUTH_KEY = 'little_days_bookkeeping_auth_v2';
@@ -1923,6 +1923,82 @@ async function fetchLatestCompletedClose(meta,symbol){
   parsed.sort((a,b)=>b.date.localeCompare(a.date));
   if(!parsed.length)throw new Error('no completed close'); return {symbol:key,name:meta?.name||'',price:parsed[0].price,date:parsed[0].date,priceType:'close',source:'TWSE'};
 }
+
+function marketApiDateToIso(v){
+  const s=String(v||'').trim().replace(/\D/g,'');
+  if(s.length===8&&Number(s.slice(0,4))>=1911)return `${s.slice(0,4)}-${s.slice(4,6)}-${s.slice(6,8)}`;
+  if(s.length===7)return rocDateToIso(s);
+  return '';
+}
+function marketApiNumber(v){
+  const s=String(v??'').trim().replace(/,/g,'').replace(/[＋+]/g,'').replace(/[−–—]/g,'-');
+  const n=Number(s);return Number.isFinite(n)?n:0;
+}
+function monthProbeDates(){
+  const now=new Date(),prev=new Date(now.getFullYear(),now.getMonth()-1,1);
+  return [now,prev];
+}
+async function fetchOfficialTwseClose(meta,symbol){
+  const key=investmentAssetKey(symbol),today=dateKey(new Date());
+  let lastError=null;
+  for(const d of monthProbeDates()){
+    try{
+      const url=`https://www.twse.com.tw/rwd/zh/afterTrading/STOCK_DAY?date=${ymdNoDash(d)}&stockNo=${encodeURIComponent(key)}&response=json`;
+      const data=await fetchJsonWithTimeout(url,8000),rows=Array.isArray(data?.data)?data.data:[];
+      const parsed=rows.map(r=>{
+        const date=twseRowDateToIso(r?.[0]),price=marketApiNumber(r?.[6]),change=marketApiNumber(r?.[7]);
+        const previousClose=price&&Number.isFinite(change)?price-change:0;
+        return {symbol:key,name:meta?.name||'',price,date,priceType:'close',market:'TWSE',previousClose,change,changePct:previousClose>0?change/previousClose*100:0,source:'TWSE official direct'};
+      }).filter(q=>q.date&&q.date<=today&&q.price>0).sort((a,b)=>b.date.localeCompare(a.date));
+      if(parsed.length)return parsed[0];
+      lastError=new Error('no dated TWSE close');
+    }catch(e){lastError=e;}
+  }
+  throw lastError||new Error('TWSE close unavailable');
+}
+async function fetchOfficialTpexRows(){
+  const endpoints=[
+    'https://www.tpex.org.tw/openapi/v1/tpex_mainboard_quotes',
+    'https://www.tpex.org.tw/openapi/v1/tpex_mainboard_daily_close_quotes'
+  ];
+  let lastError=null;
+  for(const url of endpoints){
+    try{
+      const rows=await fetchJsonWithTimeout(url,9000);
+      if(Array.isArray(rows)&&rows.length)return rows;
+      lastError=new Error('empty TPEx response');
+    }catch(e){lastError=e;}
+  }
+  throw lastError||new Error('TPEx close unavailable');
+}
+function tpexOfficialQuoteFromRows(rows,meta,symbol){
+  const key=investmentAssetKey(symbol),today=dateKey(new Date());
+  const r=(Array.isArray(rows)?rows:[]).find(x=>investmentAssetKey(pickField(x,['SecuritiesCompanyCode','Code','證券代號']))===key);
+  if(!r)return null;
+  const date=marketApiDateToIso(pickField(r,['Date','日期','TradeDate']));
+  const price=marketApiNumber(pickField(r,['Close','收盤','收盤價']));
+  if(!date||date>today||!(price>0))return null;
+  const change=marketApiNumber(pickField(r,['Change','ChangePrice','漲跌價差','漲跌']));
+  const explicitPct=marketApiNumber(pickField(r,['ChangePercent','ChangePct','漲跌幅','漲跌百分比']));
+  const previousClose=price&&Number.isFinite(change)?price-change:0;
+  return {symbol:key,name:meta?.name||pickField(r,['CompanyName','SecuritiesCompanyName','SecuritiesName','Name','證券名稱'])||'',price,date,priceType:'close',market:'TPEx',previousClose,change,changePct:explicitPct|| (previousClose>0?change/previousClose*100:0),source:'TPEx official direct'};
+}
+async function fetchOfficialLatestCloseBatch(items){
+  const out=new Map(),errors=new Map(),tpexItems=items.filter(x=>(x.meta?.market||cachedSecurityMeta(x.symbol)?.market||'TWSE')==='TPEx');
+  if(tpexItems.length){
+    try{
+      const rows=await fetchOfficialTpexRows();
+      for(const {symbol,meta} of tpexItems){const q=tpexOfficialQuoteFromRows(rows,meta,symbol);if(q)out.set(investmentAssetKey(symbol),q);else errors.set(investmentAssetKey(symbol),'TPEx no dated quote');}
+    }catch(e){for(const {symbol} of tpexItems)errors.set(investmentAssetKey(symbol),String(e?.message||e));}
+  }
+  const twseItems=items.filter(x=>(x.meta?.market||cachedSecurityMeta(x.symbol)?.market||'TWSE')!=='TPEx');
+  for(const {symbol,meta} of twseItems){
+    try{out.set(investmentAssetKey(symbol),await fetchOfficialTwseClose(meta,symbol));}
+    catch(e){errors.set(investmentAssetKey(symbol),String(e?.message||e));}
+    await new Promise(resolve=>setTimeout(resolve,120));
+  }
+  return {quotes:out,errors};
+}
 function staticSnapshotQuoteMap(snapshot,items){
   const wanted=new Set(items.map(x=>investmentAssetKey(x.symbol))),out=new Map();
   for(const r of Array.isArray(snapshot?.items)?snapshot.items:[]){
@@ -2025,7 +2101,8 @@ async function renderInvestmentMarketOverview({force=false}={}){
     const rows=[];
     for(const p of pf.active){
       const symbol=investmentAssetKey(p.symbol),r=staticMap.get(symbol),local=investmentLatestQuote(symbol,dateKey(new Date())),meta=cachedSecurityMeta(symbol)||{};
-      const price=Number(r?.close||r?.price||local?.price||0),date=String(r?.date||local?.date||''),change=Number(r?.change||local?.change||0),pct=Number(r?.changePct||local?.changePct||0),cls=marketSignedClass(change);
+      const staticDate=String(r?.date||''),localDate=String(local?.date||''),useLocal=!!localDate&&(!staticDate||localDate>=staticDate),chosen=useLocal?local:r;
+      const price=Number(chosen?.close||chosen?.price||0),date=String(chosen?.date||''),change=Number(chosen?.change||0),pct=Number(chosen?.changePct||0),cls=marketSignedClass(change);
       rows.push(`<div class="market-holding-row"><div><strong>${escapeHtml(symbol)} ${escapeHtml(r?.name||p.name||meta.name||'')}</strong><span>${escapeHtml(date||'尚無日期')} · ${escapeHtml(r?.market||meta.market||'')}</span></div><div class="market-holding-price"><strong>${marketPriceText(price)}</strong><span class="${cls}">${marketSigned(change,2)}${Number.isFinite(pct)?` · ${marketSigned(pct,2)}%`:''}</span></div></div>`);
     }
     list.innerHTML=rows.join('')||'<div class="empty-mini">目前沒有持股。</div>';
@@ -2044,7 +2121,6 @@ async function fetchIntradayQuotes(){
   const today=dateKey(new Date()),items=[];
   for(const symbol of symbols)items.push({symbol,meta:await resolveSecurityMeta(symbol).catch(()=>cachedSecurityMeta(symbol)||{market:'TWSE'})});
 
-  // 硬規則：同一標的今天正式收盤已存在本機，就完全不再抓任何市場資料。
   const finalCached=items.filter(x=>!!investmentCloseQuoteOn(x.symbol,today));
   const missing=items.filter(x=>!investmentCloseQuoteOn(x.symbol,today));
   if(!missing.length){
@@ -2053,44 +2129,61 @@ async function fetchIntradayQuotes(){
     return;
   }
 
-  toast(finalCached.length?`正在讀取其餘 ${missing.length} 檔收盤價…`:'正在讀取最新收盤價…',1200);
+  toast(finalCached.length?`正在向交易所更新其餘 ${missing.length} 檔…`:'正在向交易所讀取最新收盤價…',1400);
   const checks=investmentManualQuoteChecks();
-  let changed=false,snapshot=null,quotes=new Map();
-  try{
-    const result=await fetchStaticLatestSnapshot(missing,{force:true});
-    snapshot=result.snapshot;quotes=result.quotes;
-  }catch(e){
-    console.warn('GitHub Pages market snapshot unavailable',e);
+  let changed=false,officialCount=0,snapshot=null,staticQuotes=new Map();
+
+  // 第一層：使用者手動按更新時，直接向 TWSE / TPEx 讀取官方收盤資料。
+  let official={quotes:new Map(),errors:new Map()};
+  try{official=await fetchOfficialLatestCloseBatch(missing);}catch(e){console.warn('official direct market refresh',e);}
+  for(const {symbol,meta} of missing){
+    const key=investmentAssetKey(symbol),q=official.quotes.get(key),before=investmentLatestQuote(symbol,today);
+    if(q&&(!before?.date||q.date>=before.date)){
+      upsertInvestmentQuote({...q,name:meta?.name||q.name||'',fetchedAt:new Date().toISOString()});
+      changed=true;officialCount++;
+      checks[symbol]={checkedOn:today,closeDate:q.date,final:q.date===today,source:'official-direct',updatedAt:new Date().toISOString()};
+    }
   }
 
-  for(const {symbol,meta} of missing){
-    const q=quotes.get(symbol);
-    if(q){
-      upsertInvestmentQuote({...q,name:meta?.name||q.name||'',fetchedAt:new Date().toISOString()});
-      changed=true;
-      checks[symbol]={checkedOn:today,closeDate:q.date,final:q.date===today,source:'static-json',updatedAt:new Date().toISOString()};
-    }else{
-      checks[symbol]={checkedOn:today,closeDate:'',final:false,source:'static-json-missing',updatedAt:new Date().toISOString()};
+  // 第二層：官方直連沒有取得更近資料的標的，再退回 GitHub Pages 每日行情檔。
+  const fallbackItems=missing.filter(({symbol})=>{
+    const q=investmentLatestQuote(symbol,today);return !q||q.date<today;
+  });
+  if(fallbackItems.length){
+    try{
+      const result=await fetchStaticLatestSnapshot(fallbackItems,{force:true});snapshot=result.snapshot;staticQuotes=result.quotes;
+      for(const {symbol,meta} of fallbackItems){
+        const q=staticQuotes.get(symbol),before=investmentLatestQuote(symbol,today);
+        if(q&&(!before?.date||q.date>before.date)){
+          upsertInvestmentQuote({...q,name:meta?.name||q.name||'',fetchedAt:new Date().toISOString()});changed=true;
+        }
+        const latest=investmentLatestQuote(symbol,today);
+        checks[symbol]={checkedOn:today,closeDate:latest?.date||'',final:latest?.date===today,source:q?'static-fallback':'local-fallback',updatedAt:new Date().toISOString()};
+      }
+    }catch(e){
+      console.warn('GitHub Pages market snapshot unavailable',e);
+      for(const {symbol} of fallbackItems){const latest=investmentLatestQuote(symbol,today);checks[symbol]={checkedOn:today,closeDate:latest?.date||'',final:latest?.date===today,source:'local-fallback',updatedAt:new Date().toISOString()};}
     }
   }
 
   await persistState();renderInvestment();
 
-  const finalNow=items.filter(x=>!!investmentCloseQuoteOn(x.symbol,today)).length;
-  const quoteDates=[...quotes.values()].map(q=>q.date).filter(Boolean).sort();
-  const latestDate=quoteDates.at(-1)||'';
-  const generatedAt=snapshot?.generatedAt?String(snapshot.generatedAt):'';
+  const latestBySymbol=items.map(({symbol})=>({symbol,q:investmentLatestQuote(symbol,today)}));
+  const finalNow=latestBySymbol.filter(x=>x.q?.date===today).length;
+  const allDates=latestBySymbol.map(x=>x.q?.date).filter(Boolean).sort();
+  const newest=allDates.at(-1)||'',oldest=allDates[0]||'';
+  const staleCount=items.length-finalNow;
 
   if($('investmentIntradayBasis')){
     $('investmentIntradayBasis').textContent=finalNow===items.length
-      ?`${today} 收盤價 ${finalNow}/${items.length} 檔已快取`
-      :latestDate
-        ?`每日行情檔最新交易日 ${latestDate}${generatedAt?` · 已同步`:''}`
-        :'每日行情檔尚未產生 · 沿用本機收盤價';
+      ?`${today} 官方收盤價 ${finalNow}/${items.length} 檔已更新`
+      :newest
+        ?`最新 ${newest} · ${finalNow}/${items.length} 檔為今日收盤${oldest&&oldest!==newest?` · 最舊 ${oldest}`:''}`
+        :'官方與每日行情檔皆暫時無法取得 · 保留本機資料';
   }
-  if(finalNow===items.length)toast(`今日收盤價已更新 ${finalNow}/${items.length} 檔`,2400);
-  else if(changed)toast(`已讀取 ${latestDate||'最近交易日'} 收盤價；今日收盤產生後再更新`,2800);
-  else toast('每日行情檔尚未更新，已保留本機資料',2800);
+  if(finalNow===items.length)toast(`今日官方收盤價已更新 ${finalNow}/${items.length} 檔`,2600);
+  else if(changed)toast(`已更新 ${officialCount} 檔官方行情；${staleCount} 檔沿用最近收盤`,3000);
+  else toast('官方行情暫時未更新，已保留最近收盤價',3000);
 }
 
 function investmentSortedLedger(asOf='9999-12-31'){
@@ -2379,7 +2472,7 @@ function renderInvestment(){
   const todayCloseCount=pf.active.filter(p=>!!investmentCloseQuoteOn(p.symbol,now)).length;
   if($('investmentIntradayValue')){
     $('investmentIntradayValue').textContent=todayCloseCount===pf.active.length&&pf.active.length?'今日收盤已更新':'更新股價';
-    if($('investmentIntradayBasis'))$('investmentIntradayBasis').textContent=todayCloseCount===pf.active.length&&pf.active.length?`${now} 已快取 · 不重複讀取`:'讀取 GitHub Pages 每日收盤檔';
+    if($('investmentIntradayBasis'))$('investmentIntradayBasis').textContent=todayCloseCount===pf.active.length&&pf.active.length?`${now} 已快取 · 不重複讀取`:'手動更新會優先讀取 TWSE／TPEx 官方收盤價';
   }
   const issues=pf.issues||[];if($('investmentHealthNotice')){$('investmentHealthNotice').classList.toggle('hidden',issues.length===0);$('investmentHealthIssueCount').textContent=String(issues.length);if(issues.length){const x=issues[0];$('investmentHealthIssueText').textContent=`${x.date} ${x.symbol} 賣出 ${x.requested.toLocaleString('zh-TW')} 股，但當時可用持股僅 ${x.available.toLocaleString('zh-TW')} 股。此筆暫不納入持股計算，請修正歷史交易。`;}}
 
