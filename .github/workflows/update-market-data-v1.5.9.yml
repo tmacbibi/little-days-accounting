@@ -1,0 +1,69 @@
+name: Update Taiwan market data
+
+on:
+  workflow_dispatch:
+  schedule:
+    # Taiwan time 15:47 / 16:47 / 17:47 (UTC+8). Multiple retries reduce missed scheduled runs.
+    - cron: '47 7 * * 1-5'
+    - cron: '47 8 * * 1-5'
+    - cron: '47 9 * * 1-5'
+  push:
+    paths:
+      - 'scripts/update-market-data.mjs'
+      - 'scripts/test-market-data.mjs'
+      - '.github/workflows/update-market-data.yml'
+
+permissions:
+  contents: write
+
+concurrency:
+  group: little-days-market-data
+  cancel-in-progress: true
+
+jobs:
+  update:
+    runs-on: ubuntu-latest
+    timeout-minutes: 12
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+
+      - name: Test parser and safe-merge rules
+        run: node scripts/test-market-data.mjs
+
+      - name: Fetch TWSE and TPEx data
+        id: fetch
+        continue-on-error: true
+        run: node scripts/update-market-data.mjs
+
+      - name: Show market-data summary
+        if: always()
+        run: |
+          node -e "const fs=require('fs'); const q=JSON.parse(fs.readFileSync('data/latest-quotes.json','utf8')); console.log(JSON.stringify({quality:q.quality, expectedTradeDate:q.expectedTradeDate, latestTradeDate:q.latestTradeDate, marketTradeDates:q.marketTradeDates, marketFreshness:q.marketFreshness, sourceStatus:q.sourceStatus, calendarStatus:q.calendarStatus}, null, 2));"
+
+      - name: Commit safe market-data changes
+        if: always()
+        run: |
+          if git diff --quiet -- data/security-master.json data/latest-quotes.json; then
+            echo "No market-data changes."
+          else
+            git config user.name "little-days-market-bot"
+            git config user.email "actions@users.noreply.github.com"
+            git add data/security-master.json data/latest-quotes.json
+            git commit -m "chore: update Taiwan market data"
+            git push
+          fi
+
+      - name: Quality gate
+        if: always()
+        run: |
+          if [ "${{ steps.fetch.outcome }}" != "success" ]; then
+            echo "Market update was partial or failed. Safe/stale data was committed when available."
+            exit 1
+          fi
+          echo "Both TWSE and TPEx updated successfully."
