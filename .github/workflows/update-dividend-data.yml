@@ -16,6 +16,10 @@ on:
 permissions:
   contents: write
 
+concurrency:
+  group: little-days-dividend-calendar-main
+  cancel-in-progress: true
+
 jobs:
   update:
     runs-on: ubuntu-latest
@@ -27,20 +31,32 @@ jobs:
         uses: actions/setup-node@v4
         with:
           node-version: '22'
-      - name: Test dividend parser and app integration
-        run: |
-          node scripts/test-dividend-data.mjs
-          node scripts/test-dividend-app.mjs
+      - name: Test dividend parser
+        run: node scripts/test-dividend-data.mjs
+      - name: Test dividend app integration
+        id: app_test
+        continue-on-error: true
+        env:
+          TZ: Asia/Taipei
+        run: node scripts/test-dividend-app.mjs
       - name: Fetch official dividend data
         run: node scripts/update-dividend-data.mjs
       - name: Commit updated dividend calendar
         run: |
           if git diff --quiet -- data/dividend-calendar.json; then
             echo "No dividend-calendar changes."
-            exit 0
+          else
+            git config user.name "little-days-dividend-bot"
+            git config user.email "actions@users.noreply.github.com"
+            git add data/dividend-calendar.json
+            git commit -m "chore: update Taiwan dividend calendar"
+            git push
           fi
-          git config user.name "little-days-dividend-bot"
-          git config user.email "actions@users.noreply.github.com"
-          git add data/dividend-calendar.json
-          git commit -m "chore: update Taiwan dividend calendar"
-          git push
+      - name: Dividend workflow quality gate
+        if: always()
+        run: |
+          echo "App integration test outcome: ${{ steps.app_test.outcome }}"
+          if [ "${{ steps.app_test.outcome }}" != "success" ]; then
+            echo "Dividend calendar data was still fetched/committed safely, but app integration test failed."
+            exit 1
+          fi
