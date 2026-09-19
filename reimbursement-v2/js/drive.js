@@ -43,6 +43,11 @@ async function createFolder(name,parent='root'){
 }
 async function ensureFolder(name,parent='root'){return (await findFolder(name,parent))||createFolder(name,parent);}
 async function ensurePath(parts){let p='root';for(const name of parts){const f=await ensureFolder(name,p);p=f.id;}return p;}
+async function findFile(name,parentId){
+  const q="name = '"+esc(name)+"' and '"+esc(parentId)+"' in parents and trashed = false";
+  const r=await api('/drive/v3/files?spaces=drive&fields=files(id,name,webViewLink)&q='+encodeURIComponent(q));
+  const j=await r.json();return j.files?.[0]||null;
+}
 async function uploadBlob(blob,name,parentId){
   const boundary='-------reimburse'+Date.now();
   const meta=JSON.stringify({name,parents:[parentId]});
@@ -50,8 +55,13 @@ async function uploadBlob(blob,name,parentId){
     '--'+boundary+'\r\nContent-Type: application/json; charset=UTF-8\r\n\r\n'+meta+'\r\n',
     '--'+boundary+'\r\nContent-Type: application/pdf\r\n\r\n',blob,'\r\n--'+boundary+'--'
   ],{type:'multipart/related; boundary='+boundary});
-  const r=await api('/upload/drive/v3/files?uploadType=multipart&fields=id,name,webViewLink',{
-    method:'POST',headers:{'Content-Type':'multipart/related; boundary='+boundary},body
+  const existing=await findFile(name,parentId);
+  const path=existing
+    ? '/upload/drive/v3/files/'+existing.id+'?uploadType=multipart&fields=id,name,webViewLink'
+    : '/upload/drive/v3/files?uploadType=multipart&fields=id,name,webViewLink';
+  const r=await api(path,{
+    method:existing?'PATCH':'POST',
+    headers:{'Content-Type':'multipart/related; boundary='+boundary},body
   });
   return r.json();
 }
