@@ -1,7 +1,8 @@
 const URL_KEY='reimbursement_apps_script_url';
+const DEFAULT_BRIDGE_URL='https://script.google.com/macros/s/AKfycbz6Dw1Okq6mj7pjA3VRHZB7sxDkKAR5YNS4wYqsFKgFrQqLZkgwUMomsMietISWrTnH/exec';
 const KEY_KEY='reimbursement_bridge_key';
 
-export function getBridgeUrl(){return localStorage.getItem(URL_KEY)||'';}
+export function getBridgeUrl(){return localStorage.getItem(URL_KEY)||DEFAULT_BRIDGE_URL;}
 export function setBridgeUrl(v){v=String(v||'').trim();if(v)localStorage.setItem(URL_KEY,v);else localStorage.removeItem(URL_KEY);}
 export function getBridgeKey(){return localStorage.getItem(KEY_KEY)||'';}
 export function setBridgeKey(v){v=String(v||'').trim();if(v)localStorage.setItem(KEY_KEY,v);else localStorage.removeItem(KEY_KEY);}
