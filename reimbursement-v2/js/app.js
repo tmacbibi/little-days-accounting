@@ -2,7 +2,7 @@ import { db, uid } from './db.js';
 import { APP_VERSION, EVENT_TYPES, TRANSPORTS, EXPENSE_TYPES, calculateEvent, money } from './rules.js';
 import { html, esc, eventCard, emptyState } from './ui.js';
 import { exportBackup, importBackup } from './backup.js';
-import { getClientId, setClientId, connectDrive } from './drive.js';
+import { getBridgeUrl, setBridgeUrl, getBridgeKey, setBridgeKey, testBridge } from './drive.js';
 
 const app = document.querySelector('#app');
 const initialPage = new URLSearchParams(location.search).has('settings') ? 'settings' : 'home';
@@ -101,10 +101,11 @@ function settingsPage() {
   return shell(html`<section class="section settings-list">
     <div class="settings-card"><h2>資料安全</h2><p>資料目前儲存在本機 IndexedDB；更新 App 不會主動清空資料。</p><button class="primary" data-export>立即備份</button><label class="file-btn">恢復備份<input id="importFile" type="file" accept="application/json"></label></div>
     <div class="settings-card"><h2>Google Drive 自動歸檔</h2>
-      <p>PDF 會自動放到「報帳系統／年份／月份／請款PDF」，整批列印版放到「整批匯出」。</p>
-      <label>Google OAuth Client ID<input id="googleClientId" value="${esc(getClientId())}" placeholder="xxxxxxxx.apps.googleusercontent.com"></label>
+      <p>不用 Google Cloud。只要把專用 Google 帳號的 Apps Script 部署成 Web App，一次設定後即可自動把 PDF 存進 Google Drive。</p>
+      <label>Apps Script Web App URL<input id="bridgeUrl" value="${esc(getBridgeUrl())}" placeholder="https://script.google.com/macros/s/.../exec"></label>
+      <label>Bridge Key<input id="bridgeKey" value="${esc(getBridgeKey())}" placeholder="與 Apps Script CONFIG.SECRET 相同"></label>
       <button class="primary" id="saveDriveConfig">儲存並測試連線</button>
-      <small class="muted">一次性設定：Google Cloud 建立「網頁應用程式」OAuth Client ID，授權 JavaScript 來源填 https://tmacbibi.github.io 。ChatGPT 的 Drive 授權不能直接轉交給瀏覽器 App。</small>
+      <small class="muted">Web App 執行身分選「我」，存取權選「任何人」。Bridge Key 可避免陌生人亂塞檔案。</small>
     </div>
     <div class="settings-card"><h2>版本</h2><p>V${APP_VERSION}</p><small class="muted">正式公司表單 PDF、每頁 3 筆排版、高鐵票價、起點／迄點、Google Drive 自動歸檔。</small></div>
     <div class="settings-card"><h2>資料來源</h2><p>報帳資料仍存在本機 IndexedDB；正式 PDF 可直接列印並同步至 Google Drive。</p></div>
@@ -158,11 +159,12 @@ function bind() {
   document.querySelector('[data-create-batch]')?.addEventListener('click',async()=>{ const ids=[...state.selected]; if(!ids.length)return; const now=new Date(); const batch={id:uid('batch'),name:`${now.getFullYear()}/${String(now.getMonth()+1).padStart(2,'0')}/${String(now.getDate()).padStart(2,'0')} 本週請款`,createdAt:now.toISOString(),status:'準備中',eventIds:ids}; await db.put('batches',batch); for(const id of ids){const e=await db.get('events',id);e.batchId=batch.id;await db.put('events',e);} state.selected.clear(); await refresh(); location.href='./batch.html'; });
   document.querySelector('[data-export]')?.addEventListener('click',exportBackup);
   document.querySelector('#saveDriveConfig')?.addEventListener('click', async()=>{
-    const v=document.querySelector('#googleClientId')?.value?.trim()||'';
-    if(!v){alert('請先貼上 Google OAuth Client ID');return;}
-    setClientId(v);
-    try{await connectDrive();alert('Google Drive 連線成功，之後產製表單會自動上傳。');}
-    catch(err){alert('Google Drive 連線失敗：'+(err?.message||err));}
+    const url=document.querySelector('#bridgeUrl')?.value?.trim()||'';
+    const key=document.querySelector('#bridgeKey')?.value?.trim()||'';
+    if(!url||!key){alert('請填 Apps Script Web App URL 與 Bridge Key');return;}
+    setBridgeUrl(url);setBridgeKey(key);
+    try{await testBridge();alert('Google Drive Bridge 連線成功。之後產製表單會自動上傳。');}
+    catch(err){alert('連線失敗：'+(err?.message||err));}
   });
   document.querySelector('#importFile')?.addEventListener('change',async e=>{ if(!e.target.files[0])return; if(!confirm('恢復備份會覆蓋目前資料，確定嗎？'))return; try{await importBackup(e.target.files[0]);alert('恢復完成');await refresh();}catch(err){alert(`恢復失敗：${err.message}`);} });
 }
