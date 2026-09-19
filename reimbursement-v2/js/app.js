@@ -16,7 +16,7 @@ async function refresh() {
 
 function nav() {
   return html`<nav class="bottom-nav">
-    ${[['home','首頁','⌂'],['new','新增','＋'],['pending','待請款','☷'],['history','歷史','◷']].map(([key,label,icon]) =>
+    ${[['home','首頁','⌂'],['pending','待請款','☷'],['paid','已請款','✓'],['history','歷史','◷']].map(([key,label,icon]) =>
       `<button data-nav="${key}" class="${state.page===key?'active':''}"><span>${icon}</span><small>${label}</small></button>`).join('')}
   </nav>`;
 }
@@ -28,13 +28,13 @@ function shell(content, title='報帳助手') {
 function homePage() {
   const pending = state.events.filter(e => e.status === '待請款');
   const pendingTotal = pending.reduce((s,e)=>s+(e.computed?.claimTotal||0),0);
-  const generated = state.events.filter(e => e.status === '已產生表單').length;
+  const claimed = state.events.filter(e => e.status === '已請款' || e.status === '已產生表單').length;
   const recent = state.events.slice(0,4);
   return shell(html`
-    <section class="hero-card"><div><span class="eyebrow">本週待請款</span><strong class="hero-money">${money(pendingTotal)}</strong><small>${pending.length} 筆事件・${generated} 筆已產表</small></div><button class="primary" data-nav="new">＋ 新增報帳</button></section>
+    <section class="hero-card"><div><span class="eyebrow">本次待請款</span><strong class="hero-money">${money(pendingTotal)}</strong><small>${pending.length} 筆事件・${claimed} 筆已請款</small></div><button class="primary" data-nav="new">＋ 新增報帳</button></section>
     <section class="quick-grid">
       <button class="quick" data-nav="new"><b>＋</b><span>快速新增</span><small>30 秒完成一筆</small></button>
-      <button class="quick" data-nav="pending"><b>☷</b><span>本週請款</span><small>多選後建立批次</small></button>
+      <button class="quick" data-nav="pending"><b>☷</b><span>本次請款</span><small>多選後建立批次</small></button>
       <button class="quick" data-action="phone"><b>☎</b><span>電話補助</span><small>快速建立 600 元</small></button>
       <button class="quick" data-nav="settings"><b>↥</b><span>備份</span><small>匯出 / 匯入資料</small></button>
     </section>
@@ -76,9 +76,9 @@ function newPage() {
       </div>
       <div class="form-section"><div class="section-head"><h2>其他費用</h2><button type="button" class="ghost" data-add-expense>＋新增</button></div>${expenseRows || '<p class="muted">沒有其他費用</p>'}</div>
       <div class="preview-card"><span>預計請款</span><strong>${money(c.claimTotal)}</strong><div class="form-tags">${c.requiredForms.map(f=>`<span>${f}</span>`).join('') || '<span>尚未產生表單</span>'}</div>${c.overGeneralRows?'<p class="warning">一般請款超過 4 列，請拆分事件。</p>':''}</div>
-      <button class="primary full" type="submit">儲存為待請款</button>
+      <button class="primary full" type="submit">${state.editing?.id ? '儲存修改' : '儲存為待請款'}</button>
     </form>
-  `,'新增報帳');
+  `,state.editing?.id ? '編輯報帳' : '新增報帳');
 }
 
 function pendingPage() {
@@ -87,9 +87,14 @@ function pendingPage() {
   const total = selectedRows.reduce((s,e)=>s+(e.computed?.claimTotal||0),0);
   return shell(html`
     <section class="section"><div class="section-head"><div><h2>待請款</h2><p class="muted">長按概念改為直接勾選，多筆可建批次</p></div><button class="ghost" data-select-all>${state.selected.size?'取消選取':'全選'}</button></div>
-    ${list.length ? list.map(e=>`<label class="select-card"><input type="checkbox" data-select="${e.id}" ${state.selected.has(e.id)?'checked':''}><div>${eventCard(e)}</div></label>`).join('') : emptyState('目前沒有待請款','新增事件後會出現在這裡。')}</section>
-    ${state.selected.size?`<div class="batch-bar"><div><small>已選 ${state.selected.size} 筆</small><strong>${money(total)}</strong></div><button class="primary" data-create-batch>建立本週請款</button></div>`:''}
-  `,'本週請款');
+    ${list.length ? list.map(e=>`<div class="select-card"><input type="checkbox" data-select="${e.id}" ${state.selected.has(e.id)?'checked':''}><div>${eventCard(e)}</div></div>`).join('') : emptyState('目前沒有待請款','新增事件後會出現在這裡。')}</section>
+    ${state.selected.size?`<div class="batch-bar"><div><small>已選 ${state.selected.size} 筆</small><strong>${money(total)}</strong></div><button class="primary" data-create-batch>建立本次請款</button></div>`:''}
+  `,'本次請款');
+}
+
+function paidPage() {
+  const list = state.events.filter(e=>e.status==='已請款' || e.status==='已產生表單');
+  return shell(html`<section class="section"><div class="section-head"><div><h2>已請款</h2><p class="muted">已產製表單／已完成請款的事件</p></div><span class="muted">${list.length} 筆</span></div>${list.length?list.map(eventCard).join(''):emptyState('目前沒有已請款','完成產表與上傳後會出現在這裡。')}</section>`,'已請款');
 }
 
 function historyPage() {
@@ -117,7 +122,7 @@ function settingsPage() {
 }
 
 function render() {
-  app.innerHTML = state.page==='home'?homePage():state.page==='new'?newPage():state.page==='pending'?pendingPage():state.page==='history'?historyPage():settingsPage();
+  app.innerHTML = state.page==='home'?homePage():state.page==='new'?newPage():state.page==='pending'?pendingPage():state.page==='paid'?paidPage():state.page==='history'?historyPage():settingsPage();
   bind();
 }
 
@@ -158,9 +163,23 @@ function bind() {
   document.querySelectorAll('[data-expense-type]').forEach(el=>el.onchange=()=>{ const i=Number(el.dataset.expenseType); const d=collectForm(); d.expenses[i]={...(d.expenses[i]||{}),type:el.value}; state.editing=d; render(); });
   document.querySelectorAll('[data-expense-amount]').forEach(el=>el.onchange=()=>{ const i=Number(el.dataset.expenseAmount); const d=collectForm(); d.expenses[i]={...(d.expenses[i]||{}),amount:Number(el.value||0)}; state.editing=d; render(); });
   document.querySelectorAll('[data-expense-note]').forEach(el=>el.onchange=()=>{ const i=Number(el.dataset.expenseNote); const d=collectForm(); d.expenses[i]={...(d.expenses[i]||{}),note:el.value}; state.editing=d; render(); });
-  document.querySelectorAll('[data-select]').forEach(el=>el.onchange=()=>{ el.checked?state.selected.add(el.dataset.select):state.selected.delete(el.dataset.select); render(); });
+  document.querySelectorAll('.event-card[data-id]').forEach(card=>{
+    card.onclick=ev=>{
+      if(ev.target.closest('input,button,a,select,label')) return;
+      ev.stopPropagation();
+      const row=state.events.find(e=>e.id===card.dataset.id);
+      if(!row) return;
+      state.editing=structuredClone ? structuredClone(row) : JSON.parse(JSON.stringify(row));
+      state.page='new';
+      render();
+    };
+  });
+  document.querySelectorAll('[data-select]').forEach(el=>{
+    el.onclick=ev=>ev.stopPropagation();
+    el.onchange=()=>{ el.checked?state.selected.add(el.dataset.select):state.selected.delete(el.dataset.select); render(); };
+  });
   document.querySelector('[data-select-all]')?.addEventListener('click',()=>{ const list=state.events.filter(e=>e.status==='待請款'); if(state.selected.size)state.selected.clear(); else list.forEach(e=>state.selected.add(e.id)); render(); });
-  document.querySelector('[data-create-batch]')?.addEventListener('click',async()=>{ const ids=[...state.selected]; if(!ids.length)return; const now=new Date(); const batch={id:uid('batch'),name:`${now.getFullYear()}/${String(now.getMonth()+1).padStart(2,'0')}/${String(now.getDate()).padStart(2,'0')} 本週請款`,createdAt:now.toISOString(),status:'準備中',eventIds:ids}; await db.put('batches',batch); for(const id of ids){const e=await db.get('events',id);e.batchId=batch.id;await db.put('events',e);} state.selected.clear(); await refresh(); location.href='./batch.html'; });
+  document.querySelector('[data-create-batch]')?.addEventListener('click',async()=>{ const ids=[...state.selected]; if(!ids.length)return; const now=new Date(); const batch={id:uid('batch'),name:`${now.getFullYear()}/${String(now.getMonth()+1).padStart(2,'0')}/${String(now.getDate()).padStart(2,'0')} 本次請款`,createdAt:now.toISOString(),status:'準備中',eventIds:ids}; await db.put('batches',batch); for(const id of ids){const e=await db.get('events',id);e.batchId=batch.id;await db.put('events',e);} state.selected.clear(); await refresh(); location.href='./batch.html'; });
   document.querySelector('[data-export]')?.addEventListener('click',exportBackup);
   document.querySelector('#saveDriveConfig')?.addEventListener('click', async()=>{
     const url=document.querySelector('#bridgeUrl')?.value?.trim()||'';
