@@ -40,8 +40,16 @@ function homePage() {
   `,'報帳助手');
 }
 
+function splitLegacyRoute(route='') {
+  const parts = String(route || '').split(/[－—–-]/).map(s => s.trim()).filter(Boolean);
+  return { startLocation: parts[0] || '', endLocation: parts.slice(1).join('－') || '' };
+}
+
 function newPage() {
-  const e = state.editing || { date:new Date().toISOString().slice(0,10), eventType:'雙北內開會或洽公', transport:'無交通費', mealMode:'無餐費', expenses:[], status:'待請款' };
+  const e = state.editing || { date:new Date().toISOString().slice(0,10), eventType:'雙北內開會或洽公', startLocation:'', endLocation:'', transport:'無交通費', highSpeedRailFare:0, mealMode:'無餐費', expenses:[], status:'待請款' };
+  const legacyRoute = splitLegacyRoute(e.route);
+  const startLocation = e.startLocation ?? legacyRoute.startLocation;
+  const endLocation = e.endLocation ?? legacyRoute.endLocation;
   const c = calculateEvent(e);
   const expenseRows = (e.expenses||[]).map((x,i)=>html`<div class="expense-row"><select data-expense-type="${i}">${EXPENSE_TYPES.map(v=>`<option ${x.type===v?'selected':''}>${v}</option>`).join('')}</select><input data-expense-amount="${i}" inputmode="numeric" type="number" value="${esc(x.amount||'')}" placeholder="金額"><input data-expense-note="${i}" value="${esc(x.note||'')}" placeholder="備註"><button data-remove-expense="${i}">×</button></div>`).join('');
   return shell(html`
@@ -51,11 +59,12 @@ function newPage() {
         <label>事件名稱<input name="name" value="${esc(e.name||'')}" placeholder="例：宜蘭出差、工作會議"></label>
         <label>專案代號<input name="projectCode" value="${esc(e.projectCode||'')}" placeholder="例：CD77"></label>
         <label>事件類型<select name="eventType">${EVENT_TYPES.map(v=>`<option ${e.eventType===v?'selected':''}>${v}</option>`).join('')}</select></label>
-        <label>起訖地點<input name="route" value="${esc(e.route||'')}" placeholder="例：蘆洲－宜蘭"></label>
+        <div class="two-col"><label>起點<input name="startLocation" value="${esc(startLocation)}" placeholder="例：蘆洲"></label><label>迄點<input name="endLocation" value="${esc(endLocation)}" placeholder="例：宜蘭"></label></div>
       </div>
       <div class="form-section"><h2>交通</h2>
         <label>交通方式<select name="transport">${TRANSPORTS.map(v=>`<option ${e.transport===v?'selected':''}>${v}</option>`).join('')}</select></label>
         <div class="two-col self-drive ${e.transport==='自行開車'?'':'hidden'}"><label>總公里數<input name="km" type="number" inputmode="decimal" value="${esc(e.km||'')}"></label><label>停車費<input name="parking" type="number" inputmode="numeric" value="${esc(e.parking||'')}"></label></div>
+        <div class="high-speed-rail ${e.transport==='高鐵'?'':'hidden'}"><label>高鐵票價<input name="highSpeedRailFare" type="number" inputmode="numeric" min="0" value="${esc(e.highSpeedRailFare||'')}" placeholder="請輸入實際票價"></label></div>
       </div>
       <div class="form-section travel-only ${e.eventType==='國內出差'?'':'hidden'}"><h2>出差膳費</h2>
         <div class="segmented">${['定額膳費','實際餐費','無餐費'].map(v=>`<label><input type="radio" name="mealMode" value="${v}" ${e.mealMode===v?'checked':''}><span>${v}</span></label>`).join('')}</div>
@@ -104,8 +113,9 @@ function collectForm() {
   return {
     ...(state.editing||{}),
     date: fd.get('date'), name: fd.get('name')?.trim(), projectCode: fd.get('projectCode')?.trim(),
-    eventType: fd.get('eventType'), route: fd.get('route')?.trim(), transport: fd.get('transport'),
-    km: Number(fd.get('km')||0), parking: Number(fd.get('parking')||0), mealMode: fd.get('mealMode')||'無餐費',
+    eventType: fd.get('eventType'), startLocation: fd.get('startLocation')?.trim(), endLocation: fd.get('endLocation')?.trim(),
+    route: [fd.get('startLocation')?.trim(), fd.get('endLocation')?.trim()].filter(Boolean).join('－'), transport: fd.get('transport'),
+    km: Number(fd.get('km')||0), parking: Number(fd.get('parking')||0), highSpeedRailFare: Number(fd.get('highSpeedRailFare')||0), mealMode: fd.get('mealMode')||'無餐費',
     breakfast: fd.get('breakfast')==='on', lunch: fd.get('lunch')==='on', dinner: fd.get('dinner')==='on',
     expenses: state.editing?.expenses || [], status: state.editing?.status || '待請款'
   };
@@ -142,7 +152,7 @@ function bind() {
 
 async function seed() {
   const existing = await db.all('events'); if(existing.length) return;
-  const row={id:uid('evt'),date:new Date().toISOString().slice(0,10),name:'示範：工作會議',projectCode:'CD77',eventType:'雙北內開會或洽公',route:'蘆洲－台北',transport:'自行開車',km:80,parking:120,expenses:[{type:'會議飲料',amount:180,note:''}],status:'待請款',createdAt:new Date().toISOString()}; row.computed=calculateEvent(row); await db.put('events',row);
+  const row={id:uid('evt'),date:new Date().toISOString().slice(0,10),name:'示範：工作會議',projectCode:'CD77',eventType:'雙北內開會或洽公',startLocation:'蘆洲',endLocation:'台北',route:'蘆洲－台北',transport:'自行開車',km:80,parking:120,expenses:[{type:'會議飲料',amount:180,note:''}],status:'待請款',createdAt:new Date().toISOString()}; row.computed=calculateEvent(row); await db.put('events',row);
 }
 
 if ('serviceWorker' in navigator) {
