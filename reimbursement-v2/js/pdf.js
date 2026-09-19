@@ -35,10 +35,10 @@ function company(x,y,title){
   txt(x,title,PW/2,y+18,13,'center');
 }
 function cut(x,y){txt(x,'✂',36,y,11,'center');line(x,60,y,530,y,.55,[3,2]);}
-function profile(x,y,third=false){
-  txt(x,`部門代號：${PROFILE.department}`,70,y,9);
-  txt(x,`員工編號：${PROFILE.employeeNo}`,170,y,9);
-  txt(x,`申請人：${PROFILE.applicant}`,300,y,9);
+function profile(x,y,{left=68,center=250,applicant=426}={}){
+  txt(x,`部門代號：${PROFILE.department}`,left,y,9);
+  txt(x,`員工編號：${PROFILE.employeeNo}`,center,y,9,'center');
+  txt(x,`申請人：${PROFILE.applicant}`,applicant,y,9);
 }
 function signatures(x,tableTop,kind='normal',slot=0){
   txt(x,'總經理',520,tableTop+20,10);
@@ -61,9 +61,9 @@ function generalFrame(x,slot){
   ['年','月','日','摘    要','專案代號','數量','單價','金 額'].forEach((s,i)=>txt(x,s,(GENERAL_X[i]+GENERAL_X[i+1])/2,t+10.5,9.5,'center'));
   txt(x,'總        計',196.5,t+114.7,10,'center');
   signatures(x,t,'general',slot);
-  profile(x,t+137);
+  profile(x,t+137,{left:68,center:250,applicant:GENERAL_X[7]});
   txt(x,'實領金額：',68,t+152,8.8);
-  txt(x,'暫付款沖銷金額：',170,t+152,8.8);
+  txt(x,'暫付款沖銷金額：',250,t+152,8.8,'center');
   if(slot<2)cut(x,slot===0?269:529.4);
 }
 function fillGeneral(x,e,slot){
@@ -89,8 +89,8 @@ function travelFrame(x,slot){
   line(x,TRAVEL_X[0],ys[0],TRAVEL_X.at(-1),ys[0],1);line(x,TRAVEL_X[0],ys.at(-1),TRAVEL_X.at(-1),ys.at(-1),1);
   TRAVEL_X.forEach(xx=>line(x,xx,ys[0],xx,ys.at(-1),.7));ys.slice(1,-1).forEach(yy=>line(x,TRAVEL_X[0],yy,TRAVEL_X.at(-1),yy,.7));
   ['年','月','日','起訖地點','專案代號','交通費','膳 費','宿 費','其 他','小 計'].forEach((s,i)=>txt(x,s,(TRAVEL_X[i]+TRAVEL_X[i+1])/2,t+11.5,9.3,'center'));
-  txt(x,'總        計',155,t+125.7,10,'center');signatures(x,t,'travel',slot);profile(x,t+149);
-  txt(x,'實領金額：',46,t+166,8.8);txt(x,'暫付款沖銷金額(機票等)：',142,t+166,8.8);
+  txt(x,'總        計',155,t+125.7,10,'center');signatures(x,t,'travel',slot);profile(x,t+149,{left:46,center:250,applicant:TRAVEL_X[9]});
+  txt(x,'實領金額：',46,t+166,8.8);txt(x,'暫付款沖銷金額(機票等)：',250,t+166,8.8,'center');
   if(slot<2)cut(x,slot===0?266.5:522.5);
 }
 function fillTravel(x,e,slot){
@@ -110,7 +110,7 @@ function noFrame(x,slot){
   line(x,NO_X[0],ys[0],NO_X.at(-1),ys[0],1);line(x,NO_X[0],ys.at(-1),NO_X.at(-1),ys.at(-1),1);
   NO_X.forEach(xx=>line(x,xx,ys[0],xx,ys.at(-1),.7));ys.slice(1,-1).forEach(yy=>line(x,NO_X[0],yy,NO_X.at(-1),yy,.7));
   ['年','月','日','摘    要','專案代號','金   額'].forEach((s,i)=>txt(x,s,(NO_X[i]+NO_X[i+1])/2,t+11.5,9.3,'center'));
-  txt(x,'總        計',205,t+125.5,10,'center');signatures(x,t,'no',slot);profile(x,t+149);
+  txt(x,'總        計',205,t+125.5,10,'center');signatures(x,t,'no',slot);profile(x,t+149,{left:70,center:250,applicant:NO_X[5]});
   if(slot<2)cut(x,slot===0?255:512);
 }
 function fillNo(x,e,slot){
