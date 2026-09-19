@@ -2,7 +2,7 @@ import { db } from './db.js';
 import { APP_VERSION, money } from './rules.js';
 import { esc, eventCard, emptyState } from './ui.js';
 import { generateBatchPdfs, openPdf, downloadBlob } from './pdf.js';
-import { getClientId, uploadBatchPdfs } from './drive.js';
+import { getClientId, connectDrive, uploadBatchPdfs } from './drive.js';
 
 const root = document.querySelector('#batchApp');
 
@@ -109,6 +109,12 @@ async function load() {
     btn.textContent = '正在產製公司表單…';
     status.textContent = '正在把本批資料排入正式表單（每頁 3 筆）';
     try {
+      if (getClientId()) {
+        status.textContent = '正在連接 Google Drive…';
+        await connectDrive();
+      }
+      btn.textContent = '正在產製公司表單…';
+      status.textContent = '正在把本批資料排入正式表單（每頁 3 筆）';
       generatedFiles = await generateBatchPdfs(rows, batch.name);
       if (!generatedFiles.length) throw new Error('本批沒有可產生的表單');
       batch.status = '已產生PDF';
