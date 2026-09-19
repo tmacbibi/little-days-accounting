@@ -5,7 +5,8 @@ import { exportBackup, importBackup } from './backup.js';
 import { getClientId, setClientId, connectDrive } from './drive.js';
 
 const app = document.querySelector('#app');
-const state = { page: 'home', events: [], batches: [], editing: null, selected: new Set() };
+const initialPage = new URLSearchParams(location.search).has('settings') ? 'settings' : 'home';
+const state = { page: initialPage, events: [], batches: [], editing: null, selected: new Set() };
 
 async function refresh() {
   state.events = (await db.all('events')).sort((a,b) => String(b.createdAt).localeCompare(String(a.createdAt)));
@@ -101,7 +102,7 @@ function settingsPage() {
       <p>PDF 會自動放到「報帳系統／年份／月份／請款PDF」，整批列印版放到「整批匯出」。</p>
       <label>Google OAuth Client ID<input id="googleClientId" value="${esc(getClientId())}" placeholder="xxxxxxxx.apps.googleusercontent.com"></label>
       <button class="primary" id="saveDriveConfig">儲存並測試連線</button>
-      <small class="muted">這是 PWA 自己連 Google Drive 所需的一次性設定；ChatGPT 的 Drive 授權不能直接轉交給瀏覽器 App。</small>
+      <small class="muted">一次性設定：Google Cloud 建立「網頁應用程式」OAuth Client ID，授權 JavaScript 來源填 https://tmacbibi.github.io 。ChatGPT 的 Drive 授權不能直接轉交給瀏覽器 App。</small>
     </div>
     <div class="settings-card"><h2>版本</h2><p>V${APP_VERSION}</p><small class="muted">正式公司表單 PDF、每頁 3 筆排版、高鐵票價、起點／迄點、Google Drive 自動歸檔。</small></div>
     <div class="settings-card"><h2>資料來源</h2><p>報帳資料仍存在本機 IndexedDB；正式 PDF 可直接列印並同步至 Google Drive。</p></div>
