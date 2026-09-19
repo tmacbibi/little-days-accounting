@@ -1,4 +1,4 @@
-export const APP_VERSION = '2.0.0-alpha.6';
+export const APP_VERSION = '2.0.0-alpha.7';
 export const MILEAGE_RATE = 8;
 export const MEAL_RATES = { breakfast: 120, lunch: 180, dinner: 180 };
 
@@ -24,8 +24,11 @@ export function calculateEvent(input) {
   const parking = selfDrive ? Math.max(0, Number(input.parking || 0)) : 0;
   const highSpeedRailFare = input.transport === '高鐵' ? Math.max(0, Number(input.highSpeedRailFare || 0)) : 0;
   const taxiFare = input.transport === '計程車' ? Math.max(0, Number(input.taxiFare || 0)) : 0;
-  const legacyHighSpeedRail = input.transport === '高鐵' && highSpeedRailFare <= 0 ? expenses.filter(e => e.type === '高鐵').reduce((s,e) => s + e.amount, 0) : 0;
-  const legacyTaxi = input.transport === '計程車' && taxiFare <= 0 ? expenses.filter(e => e.type === '計程車').reduce((s,e) => s + e.amount, 0) : 0;
+  const highSpeedRailExtras = expenses.filter(e => e.type === '高鐵').reduce((s,e) => s + e.amount, 0);
+  const taxiExtras = expenses.filter(e => e.type === '計程車').reduce((s,e) => s + e.amount, 0);
+  // 若主交通已直接填金額，就避免把同一筆舊資料重複加總；但其他交通方式中的附加高鐵/計程車費仍需計入。
+  const legacyHighSpeedRail = input.transport === '高鐵' && highSpeedRailFare > 0 ? 0 : highSpeedRailExtras;
+  const legacyTaxi = input.transport === '計程車' && taxiFare > 0 ? 0 : taxiExtras;
   const actualMealAmount = isTravel && input.mealMode === '實際餐費' ? Math.max(0, Number(input.actualMealAmount || 0)) : 0;
   const legacyActualMeal = isTravel && input.mealMode === '實際餐費' && actualMealAmount <= 0 ? expenses.filter(e => e.type === '實際餐費').reduce((s,e) => s + e.amount, 0) : 0;
 
