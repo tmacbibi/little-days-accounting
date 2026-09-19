@@ -51,7 +51,7 @@ const GENERAL_TOP=[87.6,350.2,608.7];
 function generalFrame(x,slot){
   const t=GENERAL_TOP[slot], yTitle=t-57;
   company(x,yTitle,'請  款  單');
-  txt(x,'□一般請款     □請暫付款(需款日：__月__日)',68,t-25,9.5);
+  txt(x,'☑一般請款     □請暫付款(需款日：__月__日)',68,t-25,9.5);
   txt(x,'□廠商請款(付款方式□月結□現金)',68,t-11,9.5);
   const ys=[t,t+21.1,t+41.9,t+62.6,t+83.4,t+104.1,t+125.3];
   line(x,GENERAL_X[0],ys[0],GENERAL_X.at(-1),ys[0],1);
@@ -72,7 +72,7 @@ function fillGeneral(x,e,slot){
   const [yy,mm,dd]=roc(e.date), rows=(e.computed?.generalRows||[]).slice(0,4);
   rows.forEach((r,i)=>{
     const cy=(ys[i+1]+ys[i+2])/2;
-    if(i===0){txt(x,yy,(GENERAL_X[0]+GENERAL_X[1])/2,cy,8.5,'center');txt(x,mm,(GENERAL_X[1]+GENERAL_X[2])/2,cy,8.5,'center');txt(x,dd,(GENERAL_X[2]+GENERAL_X[3])/2,cy,8.5,'center');}
+    txt(x,yy,(GENERAL_X[0]+GENERAL_X[1])/2,cy,8.5,'center');txt(x,mm,(GENERAL_X[1]+GENERAL_X[2])/2,cy,8.5,'center');txt(x,dd,(GENERAL_X[2]+GENERAL_X[3])/2,cy,8.5,'center');
     const ls=wrap(x,r.summary,GENERAL_X[4]-GENERAL_X[3]-8,8.3,2);
     ls.forEach((s,j)=>txt(x,s,GENERAL_X[3]+3,cy+(j-(ls.length-1)/2)*9,8.3));
     fitTxt(x,e.projectCode||'',(GENERAL_X[4]+GENERAL_X[5])/2,cy,GENERAL_X[5]-GENERAL_X[4]-5,8.5);
