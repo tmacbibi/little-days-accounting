@@ -1,4 +1,4 @@
-export const APP_VERSION = '2.0.0-alpha.4';
+export const APP_VERSION = '2.0.0-alpha.5';
 export const MILEAGE_RATE = 8;
 export const MEAL_RATES = { breakfast: 120, lunch: 180, dinner: 180 };
 
@@ -23,7 +23,11 @@ export function calculateEvent(input) {
   const mileage = selfDrive ? Math.max(0, Number(input.km || 0)) * MILEAGE_RATE : 0;
   const parking = selfDrive ? Math.max(0, Number(input.parking || 0)) : 0;
   const highSpeedRailFare = input.transport === '高鐵' ? Math.max(0, Number(input.highSpeedRailFare || 0)) : 0;
-  const legacyHighSpeedRail = highSpeedRailFare > 0 ? 0 : expenses.filter(e => e.type === '高鐵').reduce((s,e) => s + e.amount, 0);
+  const taxiFare = input.transport === '計程車' ? Math.max(0, Number(input.taxiFare || 0)) : 0;
+  const legacyHighSpeedRail = input.transport === '高鐵' && highSpeedRailFare <= 0 ? expenses.filter(e => e.type === '高鐵').reduce((s,e) => s + e.amount, 0) : 0;
+  const legacyTaxi = input.transport === '計程車' && taxiFare <= 0 ? expenses.filter(e => e.type === '計程車').reduce((s,e) => s + e.amount, 0) : 0;
+  const actualMealAmount = isTravel && input.mealMode === '實際餐費' ? Math.max(0, Number(input.actualMealAmount || 0)) : 0;
+  const legacyActualMeal = isTravel && input.mealMode === '實際餐費' && actualMealAmount <= 0 ? expenses.filter(e => e.type === '實際餐費').reduce((s,e) => s + e.amount, 0) : 0;
 
   const fixedMeal = isTravel && input.mealMode === '定額膳費'
     ? (input.breakfast ? MEAL_RATES.breakfast : 0)
@@ -32,21 +36,28 @@ export function calculateEvent(input) {
     : 0;
 
   const sumType = (...types) => expenses.filter(e => types.includes(e.type)).reduce((s,e) => s + e.amount, 0);
-  const travelTraffic = isTravel ? mileage + parking + highSpeedRailFare + legacyHighSpeedRail + sumType('計程車') : 0;
+  const travelTraffic = isTravel ? mileage + parking + highSpeedRailFare + legacyHighSpeedRail + taxiFare + legacyTaxi : 0;
   const travelLodging = isTravel ? sumType('宿費') : 0;
   const travelOther = isTravel ? sumType('其他') : 0;
   const travelTotal = travelTraffic + fixedMeal + travelLodging + travelOther;
 
   const generalAllowedTravel = new Set(['實際餐費','會議餐食','會議飲料','通話費補助']);
   const generalDetails = isTravel
-    ? expenses.filter(e => generalAllowedTravel.has(e.type))
-    : expenses.filter(e => !(highSpeedRailFare > 0 && e.type === '高鐵'));
+    ? [
+        ...((actualMealAmount > 0 || legacyActualMeal > 0) ? [{type:'實際餐費', summary:'實際餐費', amount:actualMealAmount + legacyActualMeal}] : []),
+        ...expenses.filter(e => generalAllowedTravel.has(e.type) && e.type !== '實際餐費')
+      ]
+    : expenses.filter(e =>
+        !(input.transport === '高鐵' && e.type === '高鐵') &&
+        !(input.transport === '計程車' && e.type === '計程車')
+      );
 
-  const generalMainAmount = isTravel ? 0 : mileage + parking + highSpeedRailFare + legacyHighSpeedRail;
+  const generalMainAmount = isTravel ? 0 : mileage + parking + highSpeedRailFare + legacyHighSpeedRail + taxiFare + legacyTaxi;
   const generalMainParts = [];
   if (mileage > 0) generalMainParts.push('里程補助');
   if (parking > 0) generalMainParts.push('停車費');
   if (highSpeedRailFare > 0 || legacyHighSpeedRail > 0) generalMainParts.push('高鐵票價');
+  if (taxiFare > 0 || legacyTaxi > 0) generalMainParts.push('計程車');
   const generalMainSummary = generalMainParts.join('＋');
   const generalAmount = generalMainAmount + generalDetails.reduce((s,e) => s + e.amount, 0);
   const generalRows = [
@@ -60,7 +71,7 @@ export function calculateEvent(input) {
   if (mileage > 0) requiredForms.push('無外來憑證單');
 
   return {
-    mileage, parking, highSpeedRailFare, fixedMeal,
+    mileage, parking, highSpeedRailFare, taxiFare, actualMealAmount, fixedMeal,
     travelTraffic, travelLodging, travelOther, travelTotal,
     generalMainAmount, generalMainSummary, generalDetails, generalRows, generalAmount,
     claimTotal: isTravel ? travelTotal + generalAmount : generalAmount,
