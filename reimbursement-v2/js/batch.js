@@ -2,7 +2,7 @@ import { db } from './db.js';
 import { APP_VERSION, money } from './rules.js';
 import { esc, eventCard, emptyState } from './ui.js';
 import { generateBatchPdfs, openPdf, downloadBlob } from './pdf.js';
-import { getClientId, connectDrive, uploadBatchPdfs } from './drive.js';
+import { getBridgeUrl, getBridgeKey, uploadBatchPdfs } from './drive.js';
 
 const root = document.querySelector('#batchApp');
 
@@ -109,10 +109,6 @@ async function load() {
     btn.textContent = '正在產製公司表單…';
     status.textContent = '正在把本批資料排入正式表單（每頁 3 筆）';
     try {
-      if (getClientId()) {
-        status.textContent = '正在連接 Google Drive…';
-        await connectDrive();
-      }
       btn.textContent = '正在產製公司表單…';
       status.textContent = '正在把本批資料排入正式表單（每頁 3 筆）';
       generatedFiles = await generateBatchPdfs(rows, batch.name);
@@ -122,16 +118,19 @@ async function load() {
       await db.put('batches', batch);
       showFiles(generatedFiles, false);
 
-      if (!getClientId()) {
-        status.innerHTML = 'PDF 已完成，但 Google Drive 尚差一次 OAuth Client ID 設定。<a href="./?settings=drive">前往設定</a>';
+      if (!getBridgeUrl() || !getBridgeKey()) {
+        status.innerHTML = 'PDF 已完成；Google Drive 尚差一次 Apps Script Bridge 設定。<a href="./?settings=drive">前往設定</a>';
         btn.textContent = 'PDF 已產生（待 Drive 設定）';
+        btn.disabled = false;
         return;
       }
 
       btn.textContent = '正在上傳 Google Drive…';
       status.textContent = '正在建立月份資料夾並上傳 PDF';
       const batchDate = rows[0]?.date ? new Date(rows[0].date + 'T00:00:00') : new Date();
-      const uploaded = await uploadBatchPdfs(generatedFiles, batchDate);
+      const uploaded = await uploadBatchPdfs(generatedFiles, batchDate,(i,n,f)=>{
+        status.textContent = `正在上傳 Google Drive（${i+1}/${n}）：${f.name}`;
+      });
       batch.status = '已產表並上傳';
       batch.driveFiles = uploaded.map(x=>({id:x.id,name:x.name,webViewLink:x.webViewLink||''}));
       batch.uploadedAt = new Date().toISOString();
