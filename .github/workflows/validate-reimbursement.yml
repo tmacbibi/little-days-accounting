@@ -1,0 +1,37 @@
+name: validate reimbursement pwa
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'reimbursement-v2/**'
+      - '.github/workflows/validate-reimbursement.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  validate:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Check JavaScript syntax
+        run: |
+          node --check reimbursement-v2/js/app.js
+          node --check reimbursement-v2/js/batch.js
+          node --check reimbursement-v2/js/db.js
+          node --check reimbursement-v2/js/rules.js
+          node --check reimbursement-v2/js/ui.js
+          node --check reimbursement-v2/js/backup.js
+          node --check reimbursement-v2/js/pdf.js
+          node --check reimbursement-v2/js/drive.js
+      - name: Check required files
+        run: |
+          test -f reimbursement-v2/index.html
+          test -f reimbursement-v2/batch.html
+          test -f reimbursement-v2/manifest.webmanifest
+          test -f reimbursement-v2/sw.js
