@@ -102,6 +102,10 @@ function settingsPage() {
     <div class="settings-card"><h2>資料安全</h2><p>資料目前儲存在本機 IndexedDB；更新 App 不會主動清空資料。</p><button class="primary" data-export>立即備份</button><label class="file-btn">恢復備份<input id="importFile" type="file" accept="application/json"></label></div>
     <div class="settings-card"><h2>Google Drive 自動歸檔</h2>
       <p>不用 Google Cloud。只要把專用 Google 帳號的 Apps Script 部署成 Web App，一次設定後即可自動把 PDF 存進 Google Drive。</p>
+      <div class="file-actions">
+        <a class="ghost link-button" target="_blank" rel="noopener" href="https://script.google.com/home/projects/create">① 開啟 Apps Script 建立專案</a>
+        <a class="ghost link-button" target="_blank" rel="noopener" href="https://github.com/tmacbibi/little-days-accounting/blob/main/reimbursement-v2/apps-script/Code.gs">② 查看要貼上的 Code.gs</a>
+      </div>
       <label>Apps Script Web App URL<input id="bridgeUrl" value="${esc(getBridgeUrl())}" placeholder="https://script.google.com/macros/s/.../exec"></label>
       <label>Bridge Key<input id="bridgeKey" value="${esc(getBridgeKey())}" placeholder="與 Apps Script CONFIG.SECRET 相同"></label>
       <button class="primary" id="saveDriveConfig">儲存並測試連線</button>
