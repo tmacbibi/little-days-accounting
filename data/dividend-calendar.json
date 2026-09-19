@@ -1,6 +1,6 @@
 {
   "schemaVersion": 2,
-  "generatedAt": "2026-09-18T13:33:55.973Z",
+  "generatedAt": "2026-09-19T13:05:46.190Z",
   "sourcePolicy": "official-only",
   "coverage": {
     "etf": "ex-date + record-date + expected payment date + per-unit distribution",
@@ -17,7 +17,7 @@
       "id": "TWSE_OPENAPI_TWT48U_ALL",
       "url": "https://openapi.twse.com.tw/v1/exchangeReport/TWT48U_ALL",
       "status": "ok",
-      "rows": 52
+      "rows": 23
     }
   ],
   "warnings": [],
@@ -4425,42 +4425,6 @@
       "perShare": 0.29,
       "source": "TWSE_ETFORTUNE",
       "sourceUrl": "https://www.twse.com.tw/zh/ETFortune/dividendList"
-    },
-    {
-      "symbol": "1517",
-      "name": "利奇",
-      "market": "TWSE",
-      "securityType": "stock",
-      "exDate": "2026-09-16",
-      "recordDate": "",
-      "expectedPayDate": "",
-      "perShare": 0.2,
-      "source": "TWSE_OPENAPI_TWT48U_ALL",
-      "sourceUrl": "https://openapi.twse.com.tw/v1/exchangeReport/TWT48U_ALL"
-    },
-    {
-      "symbol": "2330",
-      "name": "台積電",
-      "market": "TWSE",
-      "securityType": "stock",
-      "exDate": "2026-09-16",
-      "recordDate": "",
-      "expectedPayDate": "",
-      "perShare": 7.000001,
-      "source": "TWSE_OPENAPI_TWT48U_ALL",
-      "sourceUrl": "https://openapi.twse.com.tw/v1/exchangeReport/TWT48U_ALL"
-    },
-    {
-      "symbol": "4763",
-      "name": "材料*-KY",
-      "market": "TWSE",
-      "securityType": "stock",
-      "exDate": "2026-09-16",
-      "recordDate": "",
-      "expectedPayDate": "",
-      "perShare": 3.05,
-      "source": "TWSE_OPENAPI_TWT48U_ALL",
-      "sourceUrl": "https://openapi.twse.com.tw/v1/exchangeReport/TWT48U_ALL"
     },
     {
       "symbol": "00710B",
