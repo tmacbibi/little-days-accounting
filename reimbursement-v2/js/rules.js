@@ -1,4 +1,4 @@
-export const APP_VERSION = '2.0.0-alpha.2';
+export const APP_VERSION = '2.0.0-alpha.3';
 export const MILEAGE_RATE = 8;
 export const MEAL_RATES = { breakfast: 120, lunch: 180, dinner: 180 };
 
@@ -22,6 +22,8 @@ export function calculateEvent(input) {
   const selfDrive = input.transport === '自行開車';
   const mileage = selfDrive ? Math.max(0, Number(input.km || 0)) * MILEAGE_RATE : 0;
   const parking = selfDrive ? Math.max(0, Number(input.parking || 0)) : 0;
+  const highSpeedRailFare = input.transport === '高鐵' ? Math.max(0, Number(input.highSpeedRailFare || 0)) : 0;
+  const legacyHighSpeedRail = highSpeedRailFare > 0 ? 0 : expenses.filter(e => e.type === '高鐵').reduce((s,e) => s + e.amount, 0);
 
   const fixedMeal = isTravel && input.mealMode === '定額膳費'
     ? (input.breakfast ? MEAL_RATES.breakfast : 0)
@@ -30,7 +32,7 @@ export function calculateEvent(input) {
     : 0;
 
   const sumType = (...types) => expenses.filter(e => types.includes(e.type)).reduce((s,e) => s + e.amount, 0);
-  const travelTraffic = isTravel ? mileage + parking + sumType('高鐵','計程車') : 0;
+  const travelTraffic = isTravel ? mileage + parking + highSpeedRailFare + legacyHighSpeedRail + sumType('計程車') : 0;
   const travelLodging = isTravel ? sumType('宿費') : 0;
   const travelOther = isTravel ? sumType('其他') : 0;
   const travelTotal = travelTraffic + fixedMeal + travelLodging + travelOther;
@@ -38,12 +40,14 @@ export function calculateEvent(input) {
   const generalAllowedTravel = new Set(['實際餐費','會議餐食','會議飲料','通話費補助']);
   const generalDetails = isTravel
     ? expenses.filter(e => generalAllowedTravel.has(e.type))
-    : expenses;
+    : expenses.filter(e => !(highSpeedRailFare > 0 && e.type === '高鐵'));
 
-  const generalMainAmount = isTravel ? 0 : mileage + parking;
-  const generalMainSummary = generalMainAmount > 0
-    ? (mileage > 0 && parking > 0 ? '里程補助＋停車費' : mileage > 0 ? '里程補助' : '停車費')
-    : '';
+  const generalMainAmount = isTravel ? 0 : mileage + parking + highSpeedRailFare + legacyHighSpeedRail;
+  const generalMainParts = [];
+  if (mileage > 0) generalMainParts.push('里程補助');
+  if (parking > 0) generalMainParts.push('停車費');
+  if (highSpeedRailFare > 0 || legacyHighSpeedRail > 0) generalMainParts.push('高鐵票價');
+  const generalMainSummary = generalMainParts.join('＋');
   const generalAmount = generalMainAmount + generalDetails.reduce((s,e) => s + e.amount, 0);
   const generalRows = [
     ...(generalMainAmount > 0 ? [{ summary: generalMainSummary, amount: generalMainAmount }] : []),
@@ -56,7 +60,7 @@ export function calculateEvent(input) {
   if (mileage > 0) requiredForms.push('無外來憑證單');
 
   return {
-    mileage, parking, fixedMeal,
+    mileage, parking, highSpeedRailFare, fixedMeal,
     travelTraffic, travelLodging, travelOther, travelTotal,
     generalMainAmount, generalMainSummary, generalDetails, generalRows, generalAmount,
     claimTotal: isTravel ? travelTotal + generalAmount : generalAmount,
