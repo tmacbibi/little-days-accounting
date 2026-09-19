@@ -2,6 +2,7 @@ import { db, uid } from './db.js';
 import { APP_VERSION, EVENT_TYPES, TRANSPORTS, EXPENSE_TYPES, calculateEvent, money } from './rules.js';
 import { html, esc, eventCard, emptyState } from './ui.js';
 import { exportBackup, importBackup } from './backup.js';
+import { getClientId, setClientId, connectDrive } from './drive.js';
 
 const app = document.querySelector('#app');
 const state = { page: 'home', events: [], batches: [], editing: null, selected: new Set() };
@@ -96,8 +97,14 @@ function historyPage() {
 function settingsPage() {
   return shell(html`<section class="section settings-list">
     <div class="settings-card"><h2>資料安全</h2><p>資料目前儲存在本機 IndexedDB；更新 App 不會主動清空資料。</p><button class="primary" data-export>立即備份</button><label class="file-btn">恢復備份<input id="importFile" type="file" accept="application/json"></label></div>
-    <div class="settings-card"><h2>版本</h2><p>V${APP_VERSION}</p><small class="muted">PWA V2 第一版：快速新增、即時計算、待請款、多選批次、備份。</small></div>
-    <div class="settings-card"><h2>資料來源</h2><p>目前：本機資料庫。PDF 產製與 Google Drive 自動歸檔正在串接中；完成前不會假裝已上傳。</p></div>
+    <div class="settings-card"><h2>Google Drive 自動歸檔</h2>
+      <p>PDF 會自動放到「報帳系統／年份／月份／請款PDF」，整批列印版放到「整批匯出」。</p>
+      <label>Google OAuth Client ID<input id="googleClientId" value="${esc(getClientId())}" placeholder="xxxxxxxx.apps.googleusercontent.com"></label>
+      <button class="primary" id="saveDriveConfig">儲存並測試連線</button>
+      <small class="muted">這是 PWA 自己連 Google Drive 所需的一次性設定；ChatGPT 的 Drive 授權不能直接轉交給瀏覽器 App。</small>
+    </div>
+    <div class="settings-card"><h2>版本</h2><p>V${APP_VERSION}</p><small class="muted">正式公司表單 PDF、每頁 3 筆排版、高鐵票價、起點／迄點、Google Drive 自動歸檔。</small></div>
+    <div class="settings-card"><h2>資料來源</h2><p>報帳資料仍存在本機 IndexedDB；正式 PDF 可直接列印並同步至 Google Drive。</p></div>
   `,'設定');
 }
 
@@ -147,6 +154,13 @@ function bind() {
   document.querySelector('[data-select-all]')?.addEventListener('click',()=>{ const list=state.events.filter(e=>e.status==='待請款'); if(state.selected.size)state.selected.clear(); else list.forEach(e=>state.selected.add(e.id)); render(); });
   document.querySelector('[data-create-batch]')?.addEventListener('click',async()=>{ const ids=[...state.selected]; if(!ids.length)return; const now=new Date(); const batch={id:uid('batch'),name:`${now.getFullYear()}/${String(now.getMonth()+1).padStart(2,'0')}/${String(now.getDate()).padStart(2,'0')} 本週請款`,createdAt:now.toISOString(),status:'準備中',eventIds:ids}; await db.put('batches',batch); for(const id of ids){const e=await db.get('events',id);e.batchId=batch.id;await db.put('events',e);} state.selected.clear(); await refresh(); location.href='./batch.html'; });
   document.querySelector('[data-export]')?.addEventListener('click',exportBackup);
+  document.querySelector('#saveDriveConfig')?.addEventListener('click', async()=>{
+    const v=document.querySelector('#googleClientId')?.value?.trim()||'';
+    if(!v){alert('請先貼上 Google OAuth Client ID');return;}
+    setClientId(v);
+    try{await connectDrive();alert('Google Drive 連線成功，之後產製表單會自動上傳。');}
+    catch(err){alert('Google Drive 連線失敗：'+(err?.message||err));}
+  });
   document.querySelector('#importFile')?.addEventListener('change',async e=>{ if(!e.target.files[0])return; if(!confirm('恢復備份會覆蓋目前資料，確定嗎？'))return; try{await importBackup(e.target.files[0]);alert('恢復完成');await refresh();}catch(err){alert(`恢復失敗：${err.message}`);} });
 }
 
