@@ -1,8 +1,8 @@
-const CACHE = 'reimburse-v2-0-0-alpha-1';
+const CACHE = 'reimburse-v2-0-0-alpha-2';
 const ASSETS = [
   './', './index.html', './styles.css', './manifest.webmanifest',
   './js/app.js', './js/db.js', './js/rules.js', './js/ui.js', './js/backup.js',
-  './icons/icon-192.png', './icons/icon-512.png'
+  './icons/icon-192.png', './icons/icon-512.png', './batch.html', './js/batch.js'
 ];
 
 self.addEventListener('install', event => {
