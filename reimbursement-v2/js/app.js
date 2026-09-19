@@ -48,7 +48,7 @@ function splitLegacyRoute(route='') {
 }
 
 function newPage() {
-  const e = state.editing || { date:new Date().toISOString().slice(0,10), eventType:'雙北內開會或洽公', startLocation:'', endLocation:'', transport:'無交通費', highSpeedRailFare:0, mealMode:'無餐費', expenses:[], status:'待請款' };
+  const e = state.editing || { date:new Date().toISOString().slice(0,10), eventType:'雙北內開會或洽公', startLocation:'', endLocation:'', transport:'無交通費', highSpeedRailFare:0, taxiFare:0, mealMode:'無餐費', actualMealAmount:0, expenses:[], status:'待請款' };
   const legacyRoute = splitLegacyRoute(e.route);
   const startLocation = e.startLocation ?? legacyRoute.startLocation;
   const endLocation = e.endLocation ?? legacyRoute.endLocation;
@@ -67,10 +67,12 @@ function newPage() {
         <label>交通方式<select name="transport">${TRANSPORTS.map(v=>`<option ${e.transport===v?'selected':''}>${v}</option>`).join('')}</select></label>
         <div class="two-col self-drive ${e.transport==='自行開車'?'':'hidden'}"><label>總公里數<input name="km" type="number" inputmode="decimal" value="${esc(e.km||'')}"></label><label>停車費<input name="parking" type="number" inputmode="numeric" value="${esc(e.parking||'')}"></label></div>
         <div class="high-speed-rail ${e.transport==='高鐵'?'':'hidden'}"><label>高鐵票價<input name="highSpeedRailFare" type="number" inputmode="numeric" min="0" value="${esc(e.highSpeedRailFare||'')}" placeholder="請輸入實際票價"></label></div>
+        <div class="taxi-fare ${e.transport==='計程車'?'':'hidden'}"><label>計程車費<input name="taxiFare" type="number" inputmode="numeric" min="0" value="${esc(e.taxiFare||'')}" placeholder="請輸入實際車資"></label></div>
       </div>
       <div class="form-section travel-only ${e.eventType==='國內出差'?'':'hidden'}"><h2>出差膳費</h2>
         <div class="segmented">${['定額膳費','實際餐費','無餐費'].map(v=>`<label><input type="radio" name="mealMode" value="${v}" ${e.mealMode===v?'checked':''}><span>${v}</span></label>`).join('')}</div>
         <div class="meal-checks ${e.mealMode==='定額膳費'?'':'hidden'}"><label><input type="checkbox" name="breakfast" ${e.breakfast?'checked':''}>早餐 120</label><label><input type="checkbox" name="lunch" ${e.lunch?'checked':''}>午餐 180</label><label><input type="checkbox" name="dinner" ${e.dinner?'checked':''}>晚餐 180</label></div>
+        <div class="actual-meal ${e.mealMode==='實際餐費'?'':'hidden'}"><label>實際餐費金額<input name="actualMealAmount" type="number" inputmode="numeric" min="0" value="${esc(e.actualMealAmount||'')}" placeholder="請輸入實際餐費"></label></div>
       </div>
       <div class="form-section"><div class="section-head"><h2>其他費用</h2><button type="button" class="ghost" data-add-expense>＋新增</button></div>${expenseRows || '<p class="muted">沒有其他費用</p>'}</div>
       <div class="preview-card"><span>預計請款</span><strong>${money(c.claimTotal)}</strong><div class="form-tags">${c.requiredForms.map(f=>`<span>${f}</span>`).join('') || '<span>尚未產生表單</span>'}</div>${c.overGeneralRows?'<p class="warning">一般請款超過 4 列，請拆分事件。</p>':''}</div>
@@ -123,7 +125,7 @@ function collectForm() {
     date: fd.get('date'), name: fd.get('name')?.trim(), projectCode: fd.get('projectCode')?.trim(),
     eventType: fd.get('eventType'), startLocation: fd.get('startLocation')?.trim(), endLocation: fd.get('endLocation')?.trim(),
     route: [fd.get('startLocation')?.trim(), fd.get('endLocation')?.trim()].filter(Boolean).join('－'), transport: fd.get('transport'),
-    km: Number(fd.get('km')||0), parking: Number(fd.get('parking')||0), highSpeedRailFare: Number(fd.get('highSpeedRailFare')||0), mealMode: fd.get('mealMode')||'無餐費',
+    km: Number(fd.get('km')||0), parking: Number(fd.get('parking')||0), highSpeedRailFare: Number(fd.get('highSpeedRailFare')||0), taxiFare: Number(fd.get('taxiFare')||0), mealMode: fd.get('mealMode')||'無餐費', actualMealAmount: Number(fd.get('actualMealAmount')||0),
     breakfast: fd.get('breakfast')==='on', lunch: fd.get('lunch')==='on', dinner: fd.get('dinner')==='on',
     expenses: state.editing?.expenses || [], status: state.editing?.status || '待請款'
   };
