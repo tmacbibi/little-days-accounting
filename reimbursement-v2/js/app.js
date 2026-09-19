@@ -97,7 +97,7 @@ function settingsPage() {
   return shell(html`<section class="section settings-list">
     <div class="settings-card"><h2>資料安全</h2><p>資料目前儲存在本機 IndexedDB；更新 App 不會主動清空資料。</p><button class="primary" data-export>立即備份</button><label class="file-btn">恢復備份<input id="importFile" type="file" accept="application/json"></label></div>
     <div class="settings-card"><h2>版本</h2><p>V${APP_VERSION}</p><small class="muted">PWA V2 第一版：快速新增、即時計算、待請款、多選批次、備份。</small></div>
-    <div class="settings-card"><h2>資料來源</h2><p>目前：本機資料庫。下一階段會接既有 Google Sheet，再逐步切換 Supabase。</p></div>
+    <div class="settings-card"><h2>資料來源</h2><p>目前：本機資料庫。PDF 產製與 Google Drive 自動歸檔正在串接中；完成前不會假裝已上傳。</p></div>
   `,'設定');
 }
 
