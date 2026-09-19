@@ -1,6 +1,8 @@
 import { db } from './db.js';
 import { APP_VERSION, money } from './rules.js';
 import { esc, eventCard, emptyState } from './ui.js';
+import { generateBatchPdfs, openPdf, downloadBlob } from './pdf.js';
+import { getClientId, uploadBatchPdfs } from './drive.js';
 
 const root = document.querySelector('#batchApp');
 
@@ -73,13 +75,78 @@ async function load() {
         </section>
 
         <section class="section batch-actions">
-          <button class="primary full" id="generateBatch">產生本批表單</button>
-          <p class="muted center">下一階段會直接接正式 PDF 引擎與 Google Drive。</p>
+          <button class="primary full" id="generateBatch">產生正式 PDF 並上傳 Google Drive</button>
+          <p class="muted center">會依公司正式格式產製，一張 A4 可放上／中／下 3 筆；超過 3 筆自動換頁。</p>
+          <div id="generateStatus" class="generate-status"></div>
+          <div id="generatedActions" class="generated-actions hidden"></div>
         </section>
       </main>
     </div>`;
 
-  // PDF / Google Drive 串接完成後再啟用此按鈕，避免讓使用者誤以為已成功上傳。
+  let generatedFiles = [];
+  const btn = document.querySelector('#generateBatch');
+  const status = document.querySelector('#generateStatus');
+  const actions = document.querySelector('#generatedActions');
+
+  function showFiles(files, uploaded=false) {
+    const combined = files.find(f => f.kind === '整批');
+    actions.classList.remove('hidden');
+    actions.innerHTML = `
+      <div class="result-card">
+        <strong>${uploaded ? 'PDF 已產生並上傳 Google Drive' : 'PDF 已產生'}</strong>
+        <small>${files.length} 個 PDF 檔</small>
+        ${combined ? '<button class="primary full" id="openCombined">開啟整批 PDF／列印</button>' : ''}
+        <div class="file-actions">
+          ${files.map((f,i)=>`<button class="ghost file-download" data-file="${i}">下載 ${esc(f.name)}</button>`).join('')}
+        </div>
+      </div>`;
+    document.querySelector('#openCombined')?.addEventListener('click',()=>openPdf(combined.blob));
+    document.querySelectorAll('.file-download').forEach(b=>b.onclick=()=>downloadBlob(files[Number(b.dataset.file)].blob,files[Number(b.dataset.file)].name));
+  }
+
+  btn?.addEventListener('click', async () => {
+    btn.disabled = true;
+    btn.textContent = '正在產製公司表單…';
+    status.textContent = '正在把本批資料排入正式表單（每頁 3 筆）';
+    try {
+      generatedFiles = await generateBatchPdfs(rows, batch.name);
+      if (!generatedFiles.length) throw new Error('本批沒有可產生的表單');
+      batch.status = '已產生PDF';
+      batch.generatedAt = new Date().toISOString();
+      await db.put('batches', batch);
+      showFiles(generatedFiles, false);
+
+      if (!getClientId()) {
+        status.innerHTML = 'PDF 已完成，但 Google Drive 尚差一次 OAuth Client ID 設定。<a href="./?settings=drive">前往設定</a>';
+        btn.textContent = 'PDF 已產生（待 Drive 設定）';
+        return;
+      }
+
+      btn.textContent = '正在上傳 Google Drive…';
+      status.textContent = '正在建立月份資料夾並上傳 PDF';
+      const batchDate = rows[0]?.date ? new Date(rows[0].date + 'T00:00:00') : new Date();
+      const uploaded = await uploadBatchPdfs(generatedFiles, batchDate);
+      batch.status = '已產表並上傳';
+      batch.driveFiles = uploaded.map(x=>({id:x.id,name:x.name,webViewLink:x.webViewLink||''}));
+      batch.uploadedAt = new Date().toISOString();
+      await db.put('batches', batch);
+      for (const e of rows) {
+        e.status = '已產生表單';
+        e.updatedAt = new Date().toISOString();
+        await db.put('events', e);
+      }
+      document.querySelector('.batch-hero p').textContent = `${rows.length} 筆事件・已產表並上傳`;
+      status.textContent = '完成：正式 PDF 已存入 Google Drive「報帳系統／年／月／請款PDF」與「整批匯出」。';
+      showFiles(generatedFiles, true);
+      btn.textContent = '重新產生並覆核';
+      btn.disabled = false;
+    } catch (err) {
+      console.error(err);
+      status.textContent = '失敗：' + (err?.message || err);
+      btn.textContent = '重新嘗試產生 PDF';
+      btn.disabled = false;
+    }
+  });
 }
 
 load();
