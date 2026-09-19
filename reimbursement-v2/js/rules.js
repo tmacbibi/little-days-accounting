@@ -1,4 +1,4 @@
-export const APP_VERSION = '2.0.0-alpha.5';
+export const APP_VERSION = '2.0.0-alpha.6';
 export const MILEAGE_RATE = 8;
 export const MEAL_RATES = { breakfast: 120, lunch: 180, dinner: 180 };
 
