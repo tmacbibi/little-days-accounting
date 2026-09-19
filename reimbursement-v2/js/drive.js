@@ -20,7 +20,7 @@ export async function connectDrive(){
       client_id:clientId,scope:SCOPE,
       callback:r=>{if(r.error)reject(new Error(r.error));else{token=r.access_token;resolve(token);}}
     });
-    c.requestAccessToken({prompt:token?'':'consent'});
+    c.requestAccessToken({prompt:''});
   });
 }
 async function auth(){if(!token)await connectDrive();return token;}
