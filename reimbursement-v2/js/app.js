@@ -169,7 +169,7 @@ function bind() {
       ev.stopPropagation();
       const row=state.events.find(e=>e.id===card.dataset.id);
       if(!row) return;
-      state.editing=structuredClone ? structuredClone(row) : JSON.parse(JSON.stringify(row));
+      state.editing=typeof structuredClone==='function' ? structuredClone(row) : JSON.parse(JSON.stringify(row));
       state.page='new';
       render();
     };
