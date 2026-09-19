@@ -79,12 +79,7 @@ async function load() {
       </main>
     </div>`;
 
-  document.querySelector('#generateBatch')?.addEventListener('click', async () => {
-    batch.status = '等待PDF串接';
-    await db.put('batches', batch);
-    document.querySelector('.batch-hero p').textContent = `${rows.length} 筆事件・等待PDF串接`;
-    alert('批次內容已整理完成。下一步我會把這顆按鈕直接接上正式 PDF 產製與 Google Drive。');
-  });
+  // PDF / Google Drive 串接完成後再啟用此按鈕，避免讓使用者誤以為已成功上傳。
 }
 
 load();
