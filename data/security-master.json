@@ -1,13 +1,13 @@
 {
   "schemaVersion": 1,
-  "generatedAt": "2026-09-18T11:06:53.507Z",
+  "generatedAt": "2026-09-21T14:32:43.954Z",
   "sourceStatus": {
     "TWSE": "ok: twse.com.tw MI_INDEX",
     "TPEx": "ok: tpex.org.tw mainboard_quotes"
   },
   "marketTradeDates": {
-    "TWSE": "2026-09-18",
-    "TPEx": "2026-09-18"
+    "TWSE": "2026-09-21",
+    "TPEx": "2026-09-21"
   },
   "marketFreshness": {
     "TWSE": "fresh",
@@ -4233,6 +4233,12 @@
       "securityType": "stock"
     },
     {
+      "symbol": "2321",
+      "name": "東訊",
+      "market": "TWSE",
+      "securityType": "stock"
+    },
+    {
       "symbol": "2323",
       "name": "中環",
       "market": "TWSE",
@@ -6867,6 +6873,12 @@
       "securityType": "stock"
     },
     {
+      "symbol": "3356",
+      "name": "奇偶",
+      "market": "TWSE",
+      "securityType": "stock"
+    },
+    {
       "symbol": "3357",
       "name": "臺慶科",
       "market": "TPEx",
@@ -7401,6 +7413,12 @@
       "securityType": "stock"
     },
     {
+      "symbol": "3591",
+      "name": "艾笛森",
+      "market": "TWSE",
+      "securityType": "stock"
+    },
+    {
       "symbol": "3592",
       "name": "瑞鼎",
       "market": "TWSE",
@@ -7709,6 +7727,12 @@
     {
       "symbol": "3709",
       "name": "鑫聯大投控",
+      "market": "TPEx",
+      "securityType": "stock"
+    },
+    {
+      "symbol": "3710",
+      "name": "連展投控",
       "market": "TPEx",
       "securityType": "stock"
     },
@@ -76293,6 +76317,12 @@
       "securityType": "stock"
     },
     {
+      "symbol": "8059",
+      "name": "凱碩",
+      "market": "TPEx",
+      "securityType": "stock"
+    },
+    {
       "symbol": "8064",
       "name": "東捷",
       "market": "TPEx",
@@ -76661,6 +76691,12 @@
     {
       "symbol": "8272",
       "name": "全景軟體",
+      "market": "TPEx",
+      "securityType": "stock"
+    },
+    {
+      "symbol": "8277",
+      "name": "商丞",
       "market": "TPEx",
       "securityType": "stock"
     },
