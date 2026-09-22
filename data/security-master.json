@@ -1,17 +1,17 @@
 {
   "schemaVersion": 1,
-  "generatedAt": "2026-09-21T16:01:04.650Z",
+  "generatedAt": "2026-09-22T12:50:13.343Z",
   "sourceStatus": {
-    "TWSE": "stale: twse.com.tw MI_INDEX 2026-09-21 < expected 2026-09-22",
-    "TPEx": "stale: tpex.org.tw mainboard_quotes 2026-09-21 < expected 2026-09-22"
+    "TWSE": "ok: twse.com.tw MI_INDEX",
+    "TPEx": "ok: tpex.org.tw mainboard_quotes"
   },
   "marketTradeDates": {
-    "TWSE": "2026-09-21",
-    "TPEx": "2026-09-21"
+    "TWSE": "2026-09-22",
+    "TPEx": "2026-09-22"
   },
   "marketFreshness": {
-    "TWSE": "stale",
-    "TPEx": "stale"
+    "TWSE": "fresh",
+    "TPEx": "fresh"
   },
   "items": [
     {
@@ -76101,6 +76101,12 @@
       "securityType": "stock"
     },
     {
+      "symbol": "7812",
+      "name": "稜研科技*-創",
+      "market": "TWSE",
+      "securityType": "stock"
+    },
+    {
       "symbol": "7814",
       "name": "海昌生技",
       "market": "TPEx",
@@ -76182,6 +76188,12 @@
       "symbol": "7855",
       "name": "和運租車",
       "market": "TWSE",
+      "securityType": "stock"
+    },
+    {
+      "symbol": "7856",
+      "name": "漢測",
+      "market": "TPEx",
       "securityType": "stock"
     },
     {
