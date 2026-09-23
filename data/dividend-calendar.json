@@ -1,6 +1,6 @@
 {
   "schemaVersion": 2,
-  "generatedAt": "2026-09-22T14:01:01.288Z",
+  "generatedAt": "2026-09-23T14:12:39.369Z",
   "sourcePolicy": "official-only",
   "coverage": {
     "etf": "ex-date + record-date + expected payment date + per-unit distribution",
@@ -17,7 +17,7 @@
       "id": "TWSE_OPENAPI_TWT48U_ALL",
       "url": "https://openapi.twse.com.tw/v1/exchangeReport/TWT48U_ALL",
       "status": "ok",
-      "rows": 23
+      "rows": 16
     }
   ],
   "warnings": [],
@@ -4473,18 +4473,6 @@
       "perShare": 0.38,
       "source": "TWSE_ETFORTUNE",
       "sourceUrl": "https://www.twse.com.tw/zh/ETFortune/dividendList"
-    },
-    {
-      "symbol": "5306",
-      "name": "桂盟",
-      "market": "TWSE",
-      "securityType": "stock",
-      "exDate": "2026-09-17",
-      "recordDate": "",
-      "expectedPayDate": "",
-      "perShare": 1.074628,
-      "source": "TWSE_OPENAPI_TWT48U_ALL",
-      "sourceUrl": "https://openapi.twse.com.tw/v1/exchangeReport/TWT48U_ALL"
     },
     {
       "symbol": "00728",
