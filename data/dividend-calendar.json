@@ -1,6 +1,6 @@
 {
   "schemaVersion": 2,
-  "generatedAt": "2026-09-24T14:11:01.007Z",
+  "generatedAt": "2026-09-25T14:34:33.661Z",
   "sourcePolicy": "official-only",
   "coverage": {
     "etf": "ex-date + record-date + expected payment date + per-unit distribution",
@@ -17,7 +17,7 @@
       "id": "TWSE_OPENAPI_TWT48U_ALL",
       "url": "https://openapi.twse.com.tw/v1/exchangeReport/TWT48U_ALL",
       "status": "ok",
-      "rows": 16
+      "rows": 15
     }
   ],
   "warnings": [],
