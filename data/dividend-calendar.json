@@ -1,6 +1,6 @@
 {
   "schemaVersion": 2,
-  "generatedAt": "2026-09-29T15:44:47.081Z",
+  "generatedAt": "2026-09-30T15:53:17.392Z",
   "sourcePolicy": "official-only",
   "coverage": {
     "etf": "ex-date + record-date + expected payment date + per-unit distribution",
@@ -11,13 +11,13 @@
       "id": "TWSE_ETFORTUNE",
       "url": "https://www.twse.com.tw/zh/ETFortune/dividendList",
       "status": "ok",
-      "rows": 385
+      "rows": 400
     },
     {
       "id": "TWSE_OPENAPI_TWT48U_ALL",
       "url": "https://openapi.twse.com.tw/v1/exchangeReport/TWT48U_ALL",
       "status": "ok",
-      "rows": 15
+      "rows": 11
     }
   ],
   "warnings": [],
@@ -4535,54 +4535,6 @@
       "sourceUrl": "https://www.twse.com.tw/zh/ETFortune/dividendList"
     },
     {
-      "symbol": "1442",
-      "name": "名軒",
-      "market": "TWSE",
-      "securityType": "stock",
-      "exDate": "2026-09-23",
-      "recordDate": "",
-      "expectedPayDate": "",
-      "perShare": 2.4,
-      "source": "TWSE_OPENAPI_TWT48U_ALL",
-      "sourceUrl": "https://openapi.twse.com.tw/v1/exchangeReport/TWT48U_ALL"
-    },
-    {
-      "symbol": "1808",
-      "name": "潤隆",
-      "market": "TWSE",
-      "securityType": "stock",
-      "exDate": "2026-09-23",
-      "recordDate": "",
-      "expectedPayDate": "",
-      "perShare": 1.5,
-      "source": "TWSE_OPENAPI_TWT48U_ALL",
-      "sourceUrl": "https://openapi.twse.com.tw/v1/exchangeReport/TWT48U_ALL"
-    },
-    {
-      "symbol": "2542",
-      "name": "興富發",
-      "market": "TWSE",
-      "securityType": "stock",
-      "exDate": "2026-09-23",
-      "recordDate": "",
-      "expectedPayDate": "",
-      "perShare": 4,
-      "source": "TWSE_OPENAPI_TWT48U_ALL",
-      "sourceUrl": "https://openapi.twse.com.tw/v1/exchangeReport/TWT48U_ALL"
-    },
-    {
-      "symbol": "5258",
-      "name": "虹堡",
-      "market": "TWSE",
-      "securityType": "stock",
-      "exDate": "2026-09-23",
-      "recordDate": "",
-      "expectedPayDate": "",
-      "perShare": 1.007326,
-      "source": "TWSE_OPENAPI_TWT48U_ALL",
-      "sourceUrl": "https://openapi.twse.com.tw/v1/exchangeReport/TWT48U_ALL"
-    },
-    {
       "symbol": "1235",
       "name": "興泰",
       "market": "TWSE",
@@ -4782,6 +4734,198 @@
       "exDate": "2026-10-08",
       "recordDate": "2026-10-17",
       "expectedPayDate": "2026-11-05",
+      "perShare": null,
+      "source": "TWSE_ETFORTUNE",
+      "sourceUrl": "https://www.twse.com.tw/zh/ETFortune/dividendList"
+    },
+    {
+      "symbol": "00401A",
+      "name": "主動摩根台灣鑫收",
+      "market": "TWSE",
+      "securityType": "etf",
+      "exDate": "2026-10-15",
+      "recordDate": "2026-10-21",
+      "expectedPayDate": "2026-11-05",
+      "perShare": null,
+      "source": "TWSE_ETFORTUNE",
+      "sourceUrl": "https://www.twse.com.tw/zh/ETFortune/dividendList"
+    },
+    {
+      "symbol": "1463",
+      "name": "強盛新",
+      "market": "TWSE",
+      "securityType": "stock",
+      "exDate": "2026-10-15",
+      "recordDate": "",
+      "expectedPayDate": "",
+      "perShare": 0.1273,
+      "source": "TWSE_OPENAPI_TWT48U_ALL",
+      "sourceUrl": "https://openapi.twse.com.tw/v1/exchangeReport/TWT48U_ALL"
+    },
+    {
+      "symbol": "00904",
+      "name": "台新臺灣半導體30",
+      "market": "TWSE",
+      "securityType": "etf",
+      "exDate": "2026-10-16",
+      "recordDate": "2026-10-24",
+      "expectedPayDate": "2026-11-06",
+      "perShare": null,
+      "source": "TWSE_ETFORTUNE",
+      "sourceUrl": "https://www.twse.com.tw/zh/ETFortune/dividendList"
+    },
+    {
+      "symbol": "00936",
+      "name": "台新永續高息中小",
+      "market": "TWSE",
+      "securityType": "etf",
+      "exDate": "2026-10-16",
+      "recordDate": "2026-10-24",
+      "expectedPayDate": "2026-11-06",
+      "perShare": null,
+      "source": "TWSE_ETFORTUNE",
+      "sourceUrl": "https://www.twse.com.tw/zh/ETFortune/dividendList"
+    },
+    {
+      "symbol": "00947",
+      "name": "台新臺灣IC設計",
+      "market": "TWSE",
+      "securityType": "etf",
+      "exDate": "2026-10-16",
+      "recordDate": "2026-10-24",
+      "expectedPayDate": "2026-11-06",
+      "perShare": null,
+      "source": "TWSE_ETFORTUNE",
+      "sourceUrl": "https://www.twse.com.tw/zh/ETFortune/dividendList"
+    },
+    {
+      "symbol": "00962",
+      "name": "台新AI優息動能",
+      "market": "TWSE",
+      "securityType": "etf",
+      "exDate": "2026-10-16",
+      "recordDate": "2026-10-24",
+      "expectedPayDate": "2026-11-06",
+      "perShare": null,
+      "source": "TWSE_ETFORTUNE",
+      "sourceUrl": "https://www.twse.com.tw/zh/ETFortune/dividendList"
+    },
+    {
+      "symbol": "00730",
+      "name": "富邦臺灣優質高息",
+      "market": "TWSE",
+      "securityType": "etf",
+      "exDate": "2026-10-19",
+      "recordDate": "2026-10-25",
+      "expectedPayDate": "2026-11-12",
+      "perShare": null,
+      "source": "TWSE_ETFORTUNE",
+      "sourceUrl": "https://www.twse.com.tw/zh/ETFortune/dividendList"
+    },
+    {
+      "symbol": "00733",
+      "name": "富邦臺灣中小",
+      "market": "TWSE",
+      "securityType": "etf",
+      "exDate": "2026-10-19",
+      "recordDate": "2026-10-25",
+      "expectedPayDate": "2026-11-12",
+      "perShare": null,
+      "source": "TWSE_ETFORTUNE",
+      "sourceUrl": "https://www.twse.com.tw/zh/ETFortune/dividendList"
+    },
+    {
+      "symbol": "00900",
+      "name": "富邦特選高股息30",
+      "market": "TWSE",
+      "securityType": "etf",
+      "exDate": "2026-10-19",
+      "recordDate": "2026-10-25",
+      "expectedPayDate": "2026-11-12",
+      "perShare": null,
+      "source": "TWSE_ETFORTUNE",
+      "sourceUrl": "https://www.twse.com.tw/zh/ETFortune/dividendList"
+    },
+    {
+      "symbol": "00922",
+      "name": "國泰台灣領袖50",
+      "market": "TWSE",
+      "securityType": "etf",
+      "exDate": "2026-10-19",
+      "recordDate": "2026-10-25",
+      "expectedPayDate": "2026-11-12",
+      "perShare": null,
+      "source": "TWSE_ETFORTUNE",
+      "sourceUrl": "https://www.twse.com.tw/zh/ETFortune/dividendList"
+    },
+    {
+      "symbol": "00927",
+      "name": "群益半導體收益",
+      "market": "TWSE",
+      "securityType": "etf",
+      "exDate": "2026-10-19",
+      "recordDate": "2026-10-25",
+      "expectedPayDate": "2026-11-13",
+      "perShare": null,
+      "source": "TWSE_ETFORTUNE",
+      "sourceUrl": "https://www.twse.com.tw/zh/ETFortune/dividendList"
+    },
+    {
+      "symbol": "00943",
+      "name": "兆豐電子高息等權",
+      "market": "TWSE",
+      "securityType": "etf",
+      "exDate": "2026-10-19",
+      "recordDate": "2026-10-25",
+      "expectedPayDate": "2026-11-06",
+      "perShare": null,
+      "source": "TWSE_ETFORTUNE",
+      "sourceUrl": "https://www.twse.com.tw/zh/ETFortune/dividendList"
+    },
+    {
+      "symbol": "00944",
+      "name": "野村趨勢動能高息",
+      "market": "TWSE",
+      "securityType": "etf",
+      "exDate": "2026-10-19",
+      "recordDate": "2026-10-25",
+      "expectedPayDate": "2026-11-13",
+      "perShare": null,
+      "source": "TWSE_ETFORTUNE",
+      "sourceUrl": "https://www.twse.com.tw/zh/ETFortune/dividendList"
+    },
+    {
+      "symbol": "00985A",
+      "name": "主動野村台灣50",
+      "market": "TWSE",
+      "securityType": "etf",
+      "exDate": "2026-10-19",
+      "recordDate": "2026-10-25",
+      "expectedPayDate": "2026-11-13",
+      "perShare": null,
+      "source": "TWSE_ETFORTUNE",
+      "sourceUrl": "https://www.twse.com.tw/zh/ETFortune/dividendList"
+    },
+    {
+      "symbol": "00992A",
+      "name": "主動群益科技創新",
+      "market": "TWSE",
+      "securityType": "etf",
+      "exDate": "2026-10-19",
+      "recordDate": "2026-10-25",
+      "expectedPayDate": "2026-11-13",
+      "perShare": null,
+      "source": "TWSE_ETFORTUNE",
+      "sourceUrl": "https://www.twse.com.tw/zh/ETFortune/dividendList"
+    },
+    {
+      "symbol": "00996A",
+      "name": "主動兆豐台灣豐收",
+      "market": "TWSE",
+      "securityType": "etf",
+      "exDate": "2026-10-19",
+      "recordDate": "2026-10-25",
+      "expectedPayDate": "2026-11-06",
       "perShare": null,
       "source": "TWSE_ETFORTUNE",
       "sourceUrl": "https://www.twse.com.tw/zh/ETFortune/dividendList"
