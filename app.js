@@ -1,7 +1,8 @@
 'use strict';
 
 const $ = id => document.getElementById(id);
-const APP_VERSION = '1.5.9';
+const APP_VERSION = '1.5.10';
+const DIVIDEND_WATCH_SYMBOLS = ['00919','00878','0056','0050','00406A','00981A'];
 const DATA_VERSION = 13;
 const VAULT_KEY = 'little_days_bookkeeping_vault_v2';
 const AUTH_KEY = 'little_days_bookkeeping_auth_v2';
@@ -34,7 +35,7 @@ const HISTORICAL_CATEGORY_SPLITS = {
 const DEFAULT_CATEGORIES = [
   {id:'food',name:'餐飲',icon:'🍽️',hidden:false,subs:['上班餐飲','家庭餐飲','個人餐飲']},
   {id:'social',name:'交際應酬',icon:'🥂',hidden:false,subs:['同事聚餐','朋友聚餐／請客','其他交際']},
-  {id:'transport',name:'交通',icon:'🚗',hidden:false,subs:['停車','充電／加油','大眾運輸','計程車','保養／維修','其他交通']},
+  {id:'transport',name:'交通',icon:'🚗',hidden:false,subs:['停車','充電費','加油費','充電／加油','大眾運輸','計程車','保養／維修','其他交通']},
   {id:'family',name:'家庭',icon:'👨‍👩‍👧‍👧',hidden:false,subs:['子女教育','子女用品','家庭活動','孝親／長輩','其他家庭']},
   {id:'shopping',name:'購物',icon:'🛍️',hidden:false,subs:['個人購物','服飾','3C／家電','網購','其他購物']},
   {id:'home',name:'居家生活',icon:'🏠',hidden:false,subs:['水電瓦斯','電話網路','日用品','家具家電／居家維修','其他居家']},
@@ -273,6 +274,8 @@ async function loadVault(){
 }
 function loadLegacyJson(key,fallback){ try{return JSON.parse(localStorage.getItem(key))??fallback;}catch{return fallback;} }
 function normalizeData(){
+  const transport=categories.find(c=>c.id==='transport');
+  if(transport)transport.subs=[...new Set([...(transport.subs||[]),'充電費','加油費'])];
   categories.forEach(c=>{ if(typeof c.favorite!=='boolean')c.favorite=['food','social','transport'].includes(c.id); if(!Array.isArray(c.subs)||!c.subs.length)c.subs=['其他']; });
   if(!Array.isArray(quickTemplates)||!quickTemplates.length)quickTemplates=clone(DEFAULT_QUICK_TEMPLATES);
   quickTemplates=quickTemplates.map((q,i)=>({...q,id:q.id||`qt-${uid()}`,icon:q.icon||'⚡',name:q.name||`快速模板 ${i+1}`,type:q.type||'expense',amount:ntd(q.amount||0)}));
@@ -516,21 +519,21 @@ function collectHomeReminders(){
   if(totalBudget&&spent>totalBudget)items.push({icon:'⚠️',title:`本月預算已超出 ${money(spent-totalBudget)}`,meta:`已花 ${money(spent)}／預算 ${money(totalBudget)}`,tone:'warn'});
   const wm=sum(expensesOfMonth().filter(t=>t.categoryId==='food'&&t.subcategory==='上班餐飲')),days=averageBaseDays(viewMonth),avg=days?wm/days:0; const prev=addMonths(viewMonth,-1),prevDays=daysInMonthOf(prev),prevWm=sum(expensesOfMonth(prev).filter(t=>t.categoryId==='food'&&t.subcategory==='上班餐飲')),prevAvg=prevDays?prevWm/prevDays:0;
   if(avg&&prevAvg&&avg>prevAvg*1.2)items.push({icon:'🍱',title:'上班餐飲平均偏高',meta:`目前每日 ${money(avg)}，高於上月平均`,tone:'soft'});
-  const dueDividends=dividendNeedsConfirmation();
-  dueDividends.slice(0,2).forEach(e=>items.unshift({icon:'💰',title:`${e.symbol} ${e.shortName||e.name||''} ${e.status==='due'?'今天預計入帳':'待確認入帳'}`,meta:`${e.estimatedAmount==null?'金額待確認':`預估 ${money(e.estimatedAmount)}`} · 預計 ${e.expectedPayDate}`,tone:'income',action:()=>confirmDividendEvent(e.id)}));
-  if(!dueDividends.length){
-    const horizon=addDaysKey(today,45),events=[];
-    dividendEvents.map(e=>dividendDerived(e,today)).filter(e=>!['paid','cancelled'].includes(e.status)).forEach(e=>{
-      if(e.exDate&&e.exDate>=today&&e.exDate<=horizon)events.push({date:e.exDate,type:'ex',e});
-      if(e.expectedPayDate&&e.expectedPayDate>=today&&e.expectedPayDate<=horizon)events.push({date:e.expectedPayDate,type:'pay',e});
-    });
-    events.sort((a,b)=>a.date.localeCompare(b.date)).slice(0,2).reverse().forEach(({date,type,e})=>{
-      const d=parseDateKey(date),n=new Date(),sameMonth=d.getFullYear()===n.getFullYear()&&d.getMonth()===n.getMonth(),prefix=sameMonth?'本月':'接下來',md=`${d.getMonth()+1}/${d.getDate()}`;
-      if(type==='ex')items.unshift({icon:'🗓️',title:`${prefix} ${e.symbol} ${e.shortName||e.name||''} 預計在 ${md} 除息`,meta:e.perShare>0?`每股配息 ${e.perShare}`:'配息金額待確認',tone:'info',action:()=>openDividendEventEditor(e.id)});
-      else items.unshift({icon:'🧧',title:`${prefix} ${e.symbol} ${e.shortName||e.name||''} 預計在 ${md} 入帳${e.estimatedAmount==null?'':` ${money(e.estimatedAmount)}`}`,meta:'入帳後可一鍵確認並加入收入',tone:'income',action:()=>openDividendEventEditor(e.id)});
-    });
+  const horizon=addDaysKey(today,45),dividendReminders=[],events=[];
+  const derived=dividendEvents.map(e=>dividendDerived(e,today)).filter(e=>!['paid','cancelled'].includes(e.status));
+  for(const e of derived){
+    if(['due','overdue'].includes(e.status))dividendReminders.push({icon:'💰',title:`${e.symbol} ${e.shortName||e.name||''} ${e.status==='due'?'今天預計入帳':'待確認入帳'}`,meta:`${e.estimatedAmount==null?'金額待確認':`預估 ${money(e.estimatedAmount)}`} · 預計 ${e.expectedPayDate}`,tone:'income',action:()=>confirmDividendEvent(e.id)});
+    else if(e.expectedPayDate&&e.expectedPayDate>=today&&e.expectedPayDate<=horizon)events.push({date:e.expectedPayDate,type:'pay',e});
+    if(e.exDate&&e.exDate>=today&&e.exDate<=horizon)events.push({date:e.exDate,type:'ex',e});
   }
-  return items.slice(0,5);
+  events.sort((a,b)=>a.date.localeCompare(b.date)).forEach(({date,type,e})=>{
+    const d=parseDateKey(date),n=new Date(),sameMonth=d.getFullYear()===n.getFullYear()&&d.getMonth()===n.getMonth(),prefix=sameMonth?'本月':'接下來',md=`${d.getMonth()+1}/${d.getDate()}`;
+    dividendReminders.push({icon:type==='ex'?'🗓️':'🧧',title:`${prefix} ${e.symbol} ${e.shortName||e.name||''} ${md} ${type==='ex'?'除息':'預計入帳'}`,meta:type==='ex'?(e.perShare>0?`每股配息 ${e.perShare}`:'配息金額待公告'):`${e.estimatedAmount==null?'金額待確認':`預估 ${money(e.estimatedAmount)}`} · 入帳後確認加入收入`,tone:type==='ex'?'info':'income',action:()=>openDividendEventEditor(e.id)});
+  });
+  const covered=new Set([...events.map(x=>x.e.symbol),...derived.filter(e=>['due','overdue'].includes(e.status)).map(e=>e.symbol)]);
+  const waiting=DIVIDEND_WATCH_SYMBOLS.filter(symbol=>!covered.has(symbol));
+  if(waiting.length)dividendReminders.push({icon:'🔎',title:'持股配息追蹤',meta:`${waiting.join('、')}：未有未來 45 天可提醒的配息事件${settings.dividendLastSyncError?' · 資料更新失敗，請稍後重試':''}`,tone:'info',action:()=>{setPage('investment');}});
+  return [...dividendReminders,...items.slice(0,5)];
 }
 function renderHomeReminders(){
   const panel=$('homeReminderPanel'),list=$('homeReminderList'),items=collectHomeReminders(); if(!panel||!list)return; panel.classList.toggle('hidden',!items.length); if(!items.length)return; $('homeReminderCount').textContent=String(items.length); $('homeReminderTitle').textContent=items.length===1?'有 1 件事情值得注意':`有 ${items.length} 件事情值得注意`; list.innerHTML='';
@@ -600,6 +603,21 @@ function renderInsightBars(targetId,emptyId,rows,total,color){
     box.appendChild(row);
   }
 }
+function isChargingExpense(t){
+  if(t.type!=='expense'||t.categoryId!=='transport')return false;
+  if(['充電費','充電'].includes(t.subcategory))return true;
+  return t.subcategory==='充電／加油'&&/充電|特斯拉|Tesla|U-?POWER|EVOASIS|EVALUE|超充/i.test(`${t.title||''} ${t.note||''}`)&&!(/加油|汽油|柴油/.test(`${t.title||''} ${t.note||''}`));
+}
+function insightCompositionRows(state){
+  if(!state.groupBy)return [];
+  const groups=new Map();
+  for(const t of state.items||[]){
+    const key=state.groupBy==='expense-category'?(t.categoryId||'other'):state.groupBy==='expense-sub'?(t.subcategory||'未分類'):state.groupBy==='income-category'?(t.incomeCategory||'其他收入'):(t.investmentSymbol||t.subcategory||t.title||'未分類');
+    if(!groups.has(key))groups.set(key,{key,label:state.groupBy==='expense-category'?categoryById(key).name:key,icon:state.groupBy==='expense-category'?categoryById(key).icon:state.icon,amount:0,items:[]});
+    const row=groups.get(key);row.items.push(t);if(!t.pendingAmount)row.amount+=Number(t.amount||0);
+  }
+  return [...groups.values()].sort((a,b)=>b.amount-a.amount);
+}
 function openInsightDetail(config){
   const items=[...(config.items||[])].sort((a,b)=>{
     const dk=String(b.date||'').localeCompare(String(a.date||''));
@@ -611,6 +629,7 @@ function openInsightDetail(config){
   show($('insightDetailScreen'));
 }
 function closeInsightDetail(){ hide($('insightDetailScreen')); insightDetailState=null; }
+function backInsightDetail(){if(insightDetailState?.parent){insightDetailState=insightDetailState.parent;renderInsightDetail();}else closeInsightDetail();}
 function openTxnFromInsight(id){
   const txn=txns.find(t=>t.id===id); if(!txn)return;
   if(txn.date){ selectedDate=txn.date; viewMonth=startOfMonth(parseDateKey(txn.date)); }
@@ -636,6 +655,7 @@ function renderInsightDetail(){
   const count=items.length;
   const avg=count?money(total/count):'—';
   const baseDays=Number(state.baseDays)||0;
+  $('closeInsightDetailBtn').textContent=state.parent?'‹ 上一層':'完成';
   $('insightDetailTitle').textContent=state.title||'分類明細';
   $('insightDetailIcon').textContent=state.icon||'•';
   $('insightDetailPeriod').textContent=state.periodLabel||formatMonth(viewMonth);
@@ -650,6 +670,18 @@ function renderInsightDetail(){
   const list=$('insightDetailList'), empty=$('insightDetailEmpty');
   list.innerHTML='';
   empty.classList.toggle('hidden',items.length>0);
+  const composition=insightCompositionRows(state);
+  $('insightDetailListHeading').textContent=state.groupBy?'組成與比例':'細項清單';
+  if(state.groupBy){
+    for(const r of composition){
+      const row=document.createElement('button');row.type='button';row.className='analysis-row is-clickable';
+      const pct=total?r.amount/total*100:0;
+      row.innerHTML=`<div class="txn-icon">${escapeHtml(r.icon||'•')}</div><div class="analysis-main"><div class="topline"><strong>${escapeHtml(r.label)}</strong><span>${pct.toFixed(1)}%</span></div><div class="bar-track"><div class="bar-fill" style="width:${pct}%;background:var(--accent)"></div></div><small>${r.items.length} 筆${r.items.some(t=>t.pendingAmount)?' · 含待填金額':''}</small></div><div class="analysis-amount">${money(r.amount)}</div><span class="row-chevron">›</span>`;
+      row.onclick=()=>openInsightDetail({title:r.label,icon:r.icon,lead:r.label,periodLabel:state.periodLabel,items:r.items,baseDays:state.baseDays,parent:state,groupBy:state.groupBy==='expense-category'?'expense-sub':state.groupBy==='income-category'?'income-source':null,desc:'先看組成與比例，再點選查看逐筆紀錄。'});
+      list.appendChild(row);
+    }
+    return;
+  }
   for(const t of items){
     const row=document.createElement('div');
     row.className='txn-row'+(t.virtual?'':' detail-clickable')+(t.pendingAmount?' pending-txn':'');
@@ -664,7 +696,7 @@ function renderInsightDetail(){
 function openExpenseDetailByCategory(categoryId,title=null,periodLabel=formatMonth(viewMonth),items=null,baseDays=0){
   const cat=categoryById(categoryId);
   const list=items||expensesOfMonth().filter(t=>!isHistoricalSummary(t)&&t.categoryId===categoryId);
-  openInsightDetail({title:title||cat.name,icon:cat.icon,lead:title||cat.name,periodLabel,items:list,baseDays,desc:`查看 ${title||cat.name} 的每一筆細項；點一下可再編輯。`});
+  openInsightDetail({title:title||cat.name,icon:cat.icon,lead:title||cat.name,periodLabel,items:list,baseDays,groupBy:'expense-sub',desc:`查看 ${title||cat.name} 的每一筆細項；點一下可再編輯。`});
 }
 function openExpenseDetailBySubcategory(categoryId,subcategory,label,icon,periodLabel=formatMonth(viewMonth),items=null,baseDays=0){
   const list=items||expensesOfMonth().filter(t=>!isHistoricalSummary(t)&&t.categoryId===categoryId&&t.subcategory===subcategory);
@@ -673,7 +705,7 @@ function openExpenseDetailBySubcategory(categoryId,subcategory,label,icon,period
 function openIncomeDetailByCategory(name,periodLabel=formatMonth(viewMonth),items=null,baseDays=0){
   const icons={'薪資':'💼','獎金':'🎁','股息':'💹','老婆分紅':'👩‍❤️‍👨','退款':'↩️','其他收入':'💰'};
   const list=items||incomesOfMonth().filter(t=>!isHistoricalSummary(t)&&((t.incomeCategory||'其他收入')===name));
-  openInsightDetail({title:name,icon:icons[name]||'💰',lead:name,periodLabel,items:list,baseDays,desc:`查看 ${name} 的每一筆收入紀錄；點一下可再編輯。`});
+  openInsightDetail({title:name,icon:icons[name]||'💰',lead:name,periodLabel,items:list,baseDays,groupBy:'income-source',desc:`查看 ${name} 的每一筆收入紀錄；點一下可再編輯。`});
 }
 function openInvestmentDetailByKey(name,periodLabel=formatMonth(viewMonth),items=null){
   const list=items||investmentsOfMonth().filter(t=>!isHistoricalSummary(t)&&((t.title||t.investmentCategory||'投資')===name));
@@ -691,7 +723,7 @@ function openBalanceDetail(kind,periodLabel=formatMonth(viewMonth),items=null,ba
     kind==='investment'?investmentsOfMonth().filter(t=>!isHistoricalSummary(t)):
     expensesOfMonth().filter(t=>!isHistoricalSummary(t))
   );
-  openInsightDetail({title:cfg.title,icon:cfg.icon,lead:cfg.title,periodLabel,items:list,baseDays:kind==='expense'?baseDays:0,desc:`${cfg.desc}；點任一筆可查看或編輯。`});
+  openInsightDetail({title:cfg.title,icon:cfg.icon,lead:cfg.title,periodLabel,items:list,baseDays:kind==='expense'?baseDays:0,groupBy:kind==='expense'?'expense-category':kind==='income'?'income-category':null,desc:`${cfg.desc}；點任一筆可查看或編輯。`});
 }
 function renderHomeInsight(ex,inc,inv,balance){
   const title=$('homeInsightTitle'), sub=$('homeInsightSub'), empty=$('homeInsightEmpty');
@@ -752,6 +784,7 @@ function renderHomeInsight(ex,inc,inv,balance){
   const total=sum(ex), categoryRows=categoryTotals(ex).map(([id,amount])=>({label:categoryById(id).name,icon:categoryById(id).icon,amount,action:()=>openExpenseDetailByCategory(id,categoryById(id).name,formatMonth(viewMonth),ex.filter(t=>!isHistoricalSummary(t)&&t.categoryId===id),baseDays)}));
   const top=categoryRows[0];
   const workMealAmount=sum(ex.filter(t=>t.categoryId==='food'&&t.subcategory==='上班餐飲'));
+  const chargingItems=ex.filter(isChargingExpense),chargingAmount=sum(chargingItems),legacyEnergyAmount=sum(ex.filter(t=>t.categoryId==='transport'&&t.subcategory==='充電／加油'&&!isChargingExpense(t)));
   const familyMealAmount=sum(ex.filter(t=>t.categoryId==='food'&&t.subcategory==='家庭餐飲'));
   const socialAmount=sum(ex.filter(t=>t.categoryId==='social'));
   const fixedAmount=sum(ex.filter(t=>t.categoryId==='fixed'));
@@ -763,11 +796,12 @@ function renderHomeInsight(ex,inc,inv,balance){
   ]);
   const quickCards=[
     {icon:'🍱',label:'上班餐飲',value:money(workMealAmount),meta:baseDays?`平均每日 ${money(workMealAmount/baseDays)}`:'尚未開始',action:()=>openExpenseDetailBySubcategory('food','上班餐飲','上班餐飲','🍱',formatMonth(viewMonth),ex.filter(t=>!isHistoricalSummary(t)&&t.categoryId==='food'&&t.subcategory==='上班餐飲'),baseDays)},
+    {icon:'⚡',label:'充電費',value:money(chargingAmount),meta:legacyEnergyAmount?`舊充電／加油另有 ${money(legacyEnergyAmount)} 待分類`:total?`占支出 ${(chargingAmount/total*100).toFixed(1)}%`:'本月尚無充電費',action:()=>openInsightDetail({title:'充電費',icon:'⚡',lead:'充電費',periodLabel:formatMonth(viewMonth),items:chargingItems,baseDays,desc:'只計入充電費；舊充電／加油需可辨識為充電，才納入。'})},
     {icon:'🍽️',label:'家庭餐飲',value:money(familyMealAmount),meta:total?`${Math.round((familyMealAmount/(total||1))*100)}%`:'本月尚無支出',action:()=>openExpenseDetailBySubcategory('food','家庭餐飲','家庭餐飲','🍽️',formatMonth(viewMonth),ex.filter(t=>!isHistoricalSummary(t)&&t.categoryId==='food'&&t.subcategory==='家庭餐飲'),baseDays)},
     {icon:'🥂',label:'交際應酬',value:money(socialAmount),meta:total?`${Math.round((socialAmount/(total||1))*100)}%`:'本月尚無支出',action:()=>openExpenseDetailByCategory('social','交際應酬',formatMonth(viewMonth),ex.filter(t=>!isHistoricalSummary(t)&&t.categoryId==='social'),baseDays)},
     {icon:'🏠',label:'居家生活',value:money(homeAmount),meta:total?`${Math.round((homeAmount/(total||1))*100)}%`:'本月尚無支出',action:()=>openExpenseDetailByCategory('home','居家生活',formatMonth(viewMonth),ex.filter(t=>!isHistoricalSummary(t)&&t.categoryId==='home'),baseDays)},
     {icon:'🧾',label:'固定費用',value:money(fixedAmount),meta:total?`${Math.round((fixedAmount/(total||1))*100)}%`:'本月尚無支出',action:()=>openExpenseDetailByCategory('fixed','固定費用',formatMonth(viewMonth),ex.filter(t=>!isHistoricalSummary(t)&&t.categoryId==='fixed'),baseDays)}
-  ].filter(item=>item.value!==money(0) || ex.length===0 || item.label==='上班餐飲');
+  ].filter(item=>item.value!==money(0) || ex.length===0 || ['上班餐飲','充電費'].includes(item.label));
   renderHomeQuickCards(quickCards);
   renderInsightBars('homeInsightBars','homeInsightEmpty',categoryRows,total,'var(--accent)');
 }
@@ -1101,7 +1135,7 @@ function findMentionedCategory(text){ for(const c of categories){ if(text.includ
 function inferExpenseCategory(text,dateStr){
   const t=text.toLowerCase(); const direct=findMentionedCategory(text); if(direct)return direct;
   if(/同事|同仁|朋友|聚餐|請客|應酬|尾牙|春酒/.test(t))return {categoryId:'social',subcategory:/同事|同仁/.test(t)?'同事聚餐':'朋友聚餐／請客'};
-  if(/停車|停車費/.test(t))return {categoryId:'transport',subcategory:'停車'}; if(/充電|加油|汽油/.test(t))return {categoryId:'transport',subcategory:'充電／加油'}; if(/捷運|公車|高鐵|台鐵|火車/.test(t))return {categoryId:'transport',subcategory:'大眾運輸'}; if(/計程車|uber|taxi/.test(t))return {categoryId:'transport',subcategory:'計程車'};
+  if(/停車|停車費/.test(t))return {categoryId:'transport',subcategory:'停車'}; if(/充電/.test(t))return {categoryId:'transport',subcategory:'充電費'}; if(/加油|汽油/.test(t))return {categoryId:'transport',subcategory:'加油費'}; if(/捷運|公車|高鐵|台鐵|火車/.test(t))return {categoryId:'transport',subcategory:'大眾運輸'}; if(/計程車|uber|taxi/.test(t))return {categoryId:'transport',subcategory:'計程車'};
   if(/學費|補習|才藝|課程|小孩用品|女兒|孩子|小孩/.test(t)&&!/吃|餐|飯|壽司|火鍋|燒肉/.test(t))return {categoryId:'family',subcategory:/學費|補習|才藝|課程/.test(t)?'子女教育':'子女用品'};
   if(/水費|電費|瓦斯/.test(t))return {categoryId:'home',subcategory:'水電瓦斯'}; if(/電話|網路|手機費/.test(t))return {categoryId:'home',subcategory:'電話網路'}; if(/全聯|家樂福|costco|好市多|日用品|衛生紙/.test(t))return {categoryId:'home',subcategory:'日用品'};
   if(/衣服|鞋|褲|外套|polo|服飾/.test(t))return {categoryId:'shopping',subcategory:'服飾'}; if(/iphone|ipad|電腦|耳機|家電|3c/.test(t))return {categoryId:'shopping',subcategory:'3C／家電'};
@@ -1546,10 +1580,14 @@ function investmentSignedPrivateMoney(value){if(!investmentValuesVisible)return'
 function investmentPrivatePct(value){return investmentValuesVisible?investmentPct(value):'****';}
 function setInvestmentValuesVisible(visible){
   investmentValuesVisible=!!visible;
-  renderInvestment();
+  const scrollX=window.scrollX,scrollY=window.scrollY;
+  const containers=[...document.querySelectorAll('.sheet-content, .sheet, main')].map(el=>({el,top:el.scrollTop,left:el.scrollLeft}));
+  renderInvestment({preserveScroll:true});
+  containers.forEach(({el,top,left})=>{el.scrollTop=top;el.scrollLeft=left;});
+  window.scrollTo({left:scrollX,top:scrollY,behavior:'instant'});
   if(investmentDetailSymbol&&$('investmentSecurityDetailScreen')&&!$('investmentSecurityDetailScreen').classList.contains('hidden'))renderInvestmentSecurityDetail();
 }
-function toggleInvestmentValuesVisible(){setInvestmentValuesVisible(!investmentValuesVisible);}
+function toggleInvestmentValuesVisible(event){event?.preventDefault();event?.stopPropagation();setInvestmentValuesVisible(!investmentValuesVisible);}
 function investmentSecurityCache(){ if(!settings.investmentSecurityCache||typeof settings.investmentSecurityCache!=='object')settings.investmentSecurityCache={}; return settings.investmentSecurityCache; }
 function securityCacheFresh(meta){
   if(!meta)return false;
@@ -1686,13 +1724,14 @@ async function syncOfficialDividendCalendar({force=false,silent=true}={}){
       const calendar=await loadStaticDividendCalendar();
       if(!settings.dividendAutoStartDate)settings.dividendAutoStartDate=today;
       const autoStart=String(settings.dividendAutoStartDate||today);
-      const existingByKey=new Map(dividendEvents.filter(e=>e.exDate).map((e,i)=>[officialDividendEventKey(e),i]));
+      const existingByKey=new Map(dividendEvents.map((e,i)=>[officialDividendEventKey(e),i]).filter(([key])=>!key.endsWith('|')));
       let changed=0,created=0,updated=0,frozen=0;
       for(const row of calendar.items){
         const symbol=investmentAssetKey(row?.symbol),exDate=String(row?.exDate||''),recordDate=String(row?.recordDate||''),officialPay=String(row?.expectedPayDate||'');
         if(!symbol||!/^[0-9]{4}-[0-9]{2}-[0-9]{2}$/.test(exDate))continue;
         const key=`${symbol}|${exDate}`,idx=existingByKey.get(key),prior=idx==null?null:dividendEvents[idx];
-        if(!prior&&exDate<autoStart)continue;
+        // Backfill already-ex-dividend events whose official payment is still ahead.
+        if(!prior&&exDate<autoStart&&!(officialPay&&officialPay>=today))continue;
         let entitledShares=prior?.entitledShares==null||prior?.entitledShares===''?null:Number(prior.entitledShares),entitlementFrozenAt=String(prior?.entitlementFrozenAt||'');
         if(entitledShares==null&&today>=exDate){entitledShares=investmentSharesAsOf(symbol,investmentPreviousDayKey(exDate));entitlementFrozenAt=today;if(entitledShares>0)frozen++;}
         const currentShares=investmentSharesAsOf(symbol,today);
@@ -2445,7 +2484,7 @@ async function ensureYearBoundaryPrices(year,{force=false}={}){
     }finally{investmentBoundaryFetchInFlight.delete(key);}
   })();investmentBoundaryFetchInFlight.set(key,task);return task;
 }
-function renderInvestment(){
+function renderInvestment({preserveScroll=false}={}){
   if(!$('investmentScreen'))return;
   const now=dateKey(new Date()),currentYear=new Date().getFullYear(),pf=investmentPortfolio(now),t=pf.totals,yearReturn=investmentYearReturn(currentYear),assetGrowth=investmentYearAssetGrowth(currentYear),yearIncome=investmentYearlyIncomeBreakdown(currentYear),yearRealized=investmentRealizedForYear(currentYear),yearInvest=investmentYearInvestStats(currentYear);
   $('invMarketValue').textContent=investmentPrivateMoney(t.marketValue);
@@ -2536,7 +2575,7 @@ function renderInvestment(){
   renderInvestmentIncomeAnalysis();
   renderInvestmentActivity();
   setTimeout(()=>ensureLatestClosePrices(),0);
-  renderDividendCalendar();
+  renderDividendCalendar({preserveScroll});
 }
 function renderInvestmentHoldingsOverview(pf=investmentPortfolio(dateKey(new Date()))){
   const box=$('investmentHoldingsCards'),empty=$('investmentHoldingsCardsEmpty');if(!box)return;box.innerHTML='';const total=pf.active.reduce((sum,p)=>sum+Math.max(0,p.marketValue),0);
@@ -2737,7 +2776,7 @@ async function confirmDividendEvent(id){
   if(!confirm(`${e.symbol} ${e.shortName||e.name||''}\n預估股息 ${money(suggested)}\n\n確認今天已入帳？`)){openDividendEventEditor(id);return;}
   e.actualPayDate=dateKey(new Date());e.actualAmount=ntd(suggested);syncDividendEventLedger(e);await persistState();renderAll();toast('股息已確認並自動加入收入');
 }
-function renderDividendCalendar(){
+function renderDividendCalendar({preserveScroll=false}={}){
   const box=$('investmentDividendEvents'),empty=$('investmentDividendEmpty'),status=$('investmentDividendSyncStatus');if(!box)return;box.innerHTML='';
   const currentYear=new Date().getFullYear(),currentMonth=new Date().getMonth()+1;
   if(!Number.isFinite(Number(investmentDividendYear)))investmentDividendYear=currentYear;
@@ -2749,7 +2788,7 @@ function renderDividendCalendar(){
   if($('investmentDividendPendingTotal'))$('investmentDividendPendingTotal').textContent=investmentPrivateMoney(stats.pending);
   if(status){const generated=String(settings.dividendCalendarGeneratedAt||''),err=settings.dividendLastSyncError,last=String(settings.dividendLastSyncAt||'');status.textContent=err?'官方資料暫時無法更新，已保留既有行事曆':generated?`官方資料 ${generated.slice(0,10)} · App 最近同步 ${last?last.slice(0,10):'--'}`:'尚未同步官方股息行事曆';}
 
-  const picker=$('investmentDividendMonthPicker');if(picker){picker.innerHTML='';for(let m=1;m<=12;m++){const monthRows=stats.events.filter(e=>Number(String(investmentDividendEventDate(e)).slice(5,7))===m),b=document.createElement('button');b.type='button';b.className=m===investmentDividendMonth?'active':'';b.innerHTML=`<strong>${m} 月</strong><span>${monthRows.length} 筆</span>`;b.onclick=()=>{investmentDividendMonth=m;renderDividendCalendar();};picker.appendChild(b);}requestAnimationFrame(()=>picker.querySelector('.active')?.scrollIntoView({behavior:'auto',block:'nearest',inline:'center'}));}
+  const picker=$('investmentDividendMonthPicker');if(picker){picker.innerHTML='';for(let m=1;m<=12;m++){const monthRows=stats.events.filter(e=>Number(String(investmentDividendEventDate(e)).slice(5,7))===m),b=document.createElement('button');b.type='button';b.className=m===investmentDividendMonth?'active':'';b.innerHTML=`<strong>${m} 月</strong><span>${monthRows.length} 筆</span>`;b.onclick=()=>{investmentDividendMonth=m;renderDividendCalendar();};picker.appendChild(b);}if(!preserveScroll)requestAnimationFrame(()=>{const active=picker.querySelector('.active');if(active)picker.scrollLeft=Math.max(0,active.offsetLeft-picker.offsetLeft-(picker.clientWidth-active.clientWidth)/2);});}
 
   const rows=stats.events.filter(e=>Number(String(investmentDividendEventDate(e)).slice(5,7))===investmentDividendMonth).sort((a,b)=>String(investmentDividendEventDate(a)).localeCompare(String(investmentDividendEventDate(b))));
   let monthPaid=0,monthPending=0;for(const e of rows){if(e.status==='paid')monthPaid+=ntd(e.actualAmount||0);else if(e.status!=='cancelled'&&e.estimatedAmount!=null)monthPending+=ntd(e.estimatedAmount||0);}
@@ -2938,7 +2977,7 @@ function bindEvents(){
   $('cancelEditBtn').onclick=closeEditor; $('saveTxnBtn').onclick=saveTxn; $('expenseTypeBtn').onclick=()=>setEditType('expense'); $('incomeTypeBtn').onclick=()=>setEditType('income'); $('investmentTypeBtn').onclick=()=>setEditType('investment'); document.querySelectorAll('[data-payment]').forEach(b=>b.onclick=()=>setPayment(b.dataset.payment));
   $('subcategoryPickerBtn').onclick=openSubcategoryPicker; $('closeSubcategorySheetBtn').onclick=()=>hide($('subcategorySheet')); $('subcategorySheet').addEventListener('click',e=>{if(e.target===$('subcategorySheet'))hide($('subcategorySheet'));}); installAnalysisSwipe();
   $('closeTxnMenuBtn').onclick=closeTxnMenu; $('editTxnBtn').onclick=()=>{const t=txns.find(x=>x.id===actionTxnId);if(!t)return;const linked=bookkeepingLinkTarget(t);if(isCompletedInvestmentBuy(linked)){closeTxnMenu();openInvestmentTxnEditor(linked.id);return;}if(t.recurringId)openRecurringEditScope();else{closeTxnMenu();openEditor(t);}}; $('deleteTxnBtn').onclick=deleteTxn; $('deleteOccurrenceBtn').onclick=deleteOccurrenceOnly; $('stopRecurringFromBtn').onclick=stopRecurringFromOccurrence; $('cancelRecurringDeleteBtn').onclick=closeRecurringDelete; $('editOccurrenceOnlyBtn').onclick=editOccurrenceOnly; $('editRecurringFromBtn').onclick=editRecurringFromOccurrence; $('cancelRecurringEditScopeBtn').onclick=closeRecurringEditScope;
-  $('editBudgetBtn').onclick=openBudgetEditor; $('cancelBudgetBtn').onclick=()=>hide($('budgetEditorScreen')); $('saveBudgetBtn').onclick=saveBudgetEditor; $('closeInsightDetailBtn').onclick=closeInsightDetail; $('insightDetailAnalysisBtn').onclick=()=>{closeInsightDetail();setPage('analysis');}; $('goAnalysisBtn').onclick=()=>setPage('analysis'); document.querySelectorAll('.summary-action[data-insight]').forEach(b=>b.onclick=()=>{homeInsightMode=b.dataset.insight;renderHome();}); document.querySelectorAll('[data-page]').forEach(b=>b.onclick=()=>setPage(b.dataset.page)); document.querySelectorAll('[data-back-home]').forEach(b=>b.onclick=()=>setPage('home'));
+  $('editBudgetBtn').onclick=openBudgetEditor; $('cancelBudgetBtn').onclick=()=>hide($('budgetEditorScreen')); $('saveBudgetBtn').onclick=saveBudgetEditor; $('closeInsightDetailBtn').onclick=backInsightDetail; $('insightDetailAnalysisBtn').onclick=()=>{closeInsightDetail();setPage('analysis');}; $('goAnalysisBtn').onclick=()=>setPage('analysis'); document.querySelectorAll('.summary-action[data-insight]').forEach(b=>b.onclick=()=>{homeInsightMode=b.dataset.insight;renderHome();}); document.querySelectorAll('[data-page]').forEach(b=>b.onclick=()=>setPage(b.dataset.page)); document.querySelectorAll('[data-back-home]').forEach(b=>b.onclick=()=>setPage('home'));
   $('openSettingsBtn').onclick=()=>{renderBackupStatus();show($('settingsScreen'));}; $('closeSettingsBtn').onclick=returnHomeFromSettings; $('manageBudgetBtn').onclick=()=>{hide($('settingsScreen'));setPage('budget');}; $('settingsHomeBtn').onclick=returnHomeFromSettings; $('updateHomeBtn').onclick=returnHomeFromSettings; $('checkUpdateBtn').onclick=checkForUpdate; $('updateNowBtn').onclick=updateNow; $('exportBtn').onclick=exportBackup; $('importBtn').onclick=()=>$('importFileInput').click(); $('importFileInput').onchange=e=>{const f=e.target.files?.[0];if(f)importBackupFile(f);e.target.value='';};
   $('manageQuickTemplatesBtn').onclick=openQuickTemplateManager; $('manageQuickTemplatesHomeBtn').onclick=openQuickTemplateManager; $('closeQuickTemplateManagerBtn').onclick=()=>hide($('quickTemplateManagerScreen')); $('addQuickTemplateBtn').onclick=()=>openQuickTemplateEditor(); $('cancelQuickTemplateEditBtn').onclick=()=>hide($('quickTemplateEditorScreen')); $('saveQuickTemplateBtn').onclick=saveQuickTemplate; $('quickTemplateTypeInput').onchange=syncQuickTemplateTypeFields; $('quickTemplateCategoryInput').onchange=()=>renderQuickTemplateSubcategories();
   $('wipeBtn').onclick=async()=>{if(confirm('確定要清除全部記帳資料、預算、自訂類別與投資帳本？安全密碼與 Face ID 設定會保留。')){txns=[];budgets={};categories=clone(DEFAULT_CATEGORIES);quickTemplates=clone(DEFAULT_QUICK_TEMPLATES);settings={};recurring=[];investmentLedger=[];investmentQuotes=[];dividendEvents=[];annualIncomeSummaries=[];await persistState();hide($('settingsScreen'));renderAll();toast('已清除');}};
