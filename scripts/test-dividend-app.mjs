@@ -109,3 +109,37 @@ vm.runInContext(`renderInvestment=opts=>{if(!opts?.preserveScroll)throw new Erro
 assert.equal(restoredScroll.top,123);
 assert.equal(vm.runInContext(`investmentValuesVisible`,sandbox),true);
 console.log('nested composition/back navigation and eye scroll-preservation tests passed');
+
+// Confirmed income sources are reconciled without multiplying linked records
+// or adding month/year rollups on top of their constituent individual stocks.
+vm.runInContext(`
+ investmentLedger=[
+ {id:'div-a',kind:'dividend',symbol:'00919',date:'2026-08-28',amount:100,bookkeepingTxnId:'book-a'},
+ {id:'div-b',kind:'dividend',symbol:'00878',date:'2026-08-28',amount:200},
+ {id:'div-old',kind:'dividend',symbol:'00919',date:'2025-08-28',amount:50},
+ {id:'future',kind:'dividend',symbol:'00919',date:'2026-10-15',amount:999},
+ {id:'void',kind:'dividend',symbol:'00919',date:'2026-08-28',amount:333,voided:true},
+ {id:'pending',kind:'dividend',symbol:'00919',date:'2026-08-28',amount:444,status:'pending'}
+ ];
+ txns=[{id:'book-a',type:'income',incomeCategory:'股息',investmentLedgerId:'div-a',investmentSymbol:'00919',date:'2026-08-28',amount:100},
+ {id:'month',type:'income',incomeCategory:'股息',title:'股息收入（月彙總）',date:'2026-08-28',amount:350}];
+ dividendEvents=[{id:'linked',symbol:'00919',ledgerTxnId:'div-a',actualPayDate:'2026-08-28',actualAmount:100},
+ {id:'manual',symbol:'00981A',actualPayDate:'2026-09-10',actualAmount:40},
+ {id:'upcoming',symbol:'00919',exDate:'2026-09-16',expectedPayDate:'2026-10-15',perShare:1,entitledShares:100}];
+ annualIncomeSummaries=[{year:2025,dividendIncome:80,spouseBonus:0}];
+`,sandbox);
+assert.equal(vm.runInContext(`sum(recordedDividendItems())`,sandbox),470);
+assert.equal(vm.runInContext(`allRecordedDividendIncome()`,sandbox),470);
+assert.equal(vm.runInContext(`dividendBySecurity().find(r=>r.symbol==='00919').cumulative`,sandbox),150);
+assert.equal(vm.runInContext(`dividendBySecurity().find(r=>r.symbol==='00919').year`,sandbox),100);
+assert.equal(vm.runInContext(`dividendBySecurity().find(r=>r.symbol==='00919').pending`,sandbox),100);
+assert.equal(vm.runInContext(`dividendBySecurity().find(r=>r.symbol==='00878').cumulative`,sandbox),200);
+assert.equal(vm.runInContext(`dividendBySecurity().find(r=>r.symbol==='').cumulative`,sandbox),80);
+assert.equal(vm.runInContext(`investmentIncomeForRange('2026-01-01','2026-12-31').dividend`,sandbox),390);
+assert.equal(vm.runInContext(`dividendRecordSymbol({title:'2026 年股息月彙總',note:'個股明細另存投資帳本'})`,sandbox),'');
+assert.equal(vm.runInContext(`dividendRecordSymbol({title:'00919 股息'})`,sandbox),'00919');
+assert.equal(vm.runInContext(`dividendPeriodRange('2026 年 8 月').end`,sandbox),'2026-08-31');
+vm.runInContext(`openIncomeDetailByCategory('股息','2026 年')`,sandbox);
+assert.equal(vm.runInContext(`insightDetailState.groupBy`,sandbox),'dividend-symbol');
+assert.equal(vm.runInContext(`sum(insightDetailState.items)`,sandbox),390);
+console.log('per-security dividend totals, linked-record deduplication, aggregate residuals and paid/pending separation passed');

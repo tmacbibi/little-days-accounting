@@ -523,3 +523,6 @@ html,body{font-size:16px}
   .investment-allocation-legend-bars .investment-allocation-legend-item{grid-template-columns:10px minmax(0,1fr) auto auto!important;gap:6px!important}
   .investment-allocation-legend-bars .investment-allocation-legend-item b{font-size:12px}.investment-allocation-legend-bars .investment-allocation-legend-item strong{font-size:14px!important;min-width:43px}
 }
+
+/* Per-security dividend income, V1.5.11 */
+.dividend-security-list{display:grid;gap:12px}.dividend-security-card{width:100%;appearance:none;text-align:left;border:1px solid var(--line);border-radius:20px;padding:16px;background:#fff;color:var(--text);cursor:pointer}.dividend-security-head{display:flex;justify-content:space-between;align-items:center;gap:12px}.dividend-security-head strong{font-size:22px}.dividend-security-head span{font-size:16px;color:var(--muted);white-space:nowrap}.dividend-security-values{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:14px}.dividend-security-values div{background:#f5f8f3;border-radius:13px;padding:10px;min-width:0}.dividend-security-values span{display:block;font-size:15px;color:var(--muted)}.dividend-security-values b{display:block;font-size:21px;margin-top:5px;overflow-wrap:anywhere}.dividend-security-card:focus-visible{outline:3px solid var(--accent);outline-offset:3px}

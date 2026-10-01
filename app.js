@@ -1,7 +1,7 @@
 'use strict';
 
 const $ = id => document.getElementById(id);
-const APP_VERSION = '1.5.10';
+const APP_VERSION = '1.5.11';
 const DIVIDEND_WATCH_SYMBOLS = ['00919','00878','0056','0050','00406A','00981A'];
 const DATA_VERSION = 13;
 const VAULT_KEY = 'little_days_bookkeeping_vault_v2';
@@ -609,6 +609,7 @@ function isChargingExpense(t){
   return t.subcategory==='充電／加油'&&/充電|特斯拉|Tesla|U-?POWER|EVOASIS|EVALUE|超充/i.test(`${t.title||''} ${t.note||''}`)&&!(/加油|汽油|柴油/.test(`${t.title||''} ${t.note||''}`));
 }
 function insightCompositionRows(state){
+  if(state.groupBy==='dividend-symbol')return dividendBySecurity(state.dividendRange.start,state.dividendRange.end).filter(r=>r.period>0).map(r=>({...r,key:r.symbol,label:r.label,icon:'💹',amount:r.period}));
   if(!state.groupBy)return [];
   const groups=new Map();
   for(const t of state.items||[]){
@@ -661,12 +662,18 @@ function renderInsightDetail(){
   $('insightDetailPeriod').textContent=state.periodLabel||formatMonth(viewMonth);
   $('insightDetailLead').textContent=state.lead||state.title||'細項明細';
   $('insightDetailDesc').textContent=state.desc||'點任一筆細項即可查看或編輯。';
-  $('insightDetailSub').textContent=count?`共 ${count} 筆 · 合計 ${money(total)}`:'目前沒有細項';
+  $('insightDetailSub').textContent=count?`共 ${count} 筆 · 合計 ${state.privateValues?investmentPrivateMoney(total):money(total)}`:'目前沒有細項';
   renderStatCards('insightDetailStats',[
     {label:'合計金額',value:money(total),note:state.totalNote||'依目前篩選條件計算'},
     {label:'記錄筆數',value:`${count} 筆`,note:state.countNote||'點任一筆可再查看或編輯'},
     {label:baseDays?'平均每日':'平均每筆',value:baseDays?money(total/baseDays):avg,note:baseDays?`以 ${baseDays} 天平均`:'依這個清單平均'}
   ]);
+  if(state.dividendStats){const d=state.dividendStats,display=state.privateValues?investmentPrivateMoney:money;renderStatCards('insightDetailStats',[
+    {label:'本期已領',value:display(d.period),note:'依所選期間實際入帳'},
+    {label:'今年已領',value:display(d.year),note:`${new Date().getFullYear()} 年實際入帳`},
+    {label:'累計已領',value:display(d.cumulative),note:'全部已有入帳紀錄'},
+    {label:'預計領息',value:display(d.pending),note:d.pendingUnknown?'另有金額待確認的配息':'尚未計入已領股息'}
+  ]);}
   const list=$('insightDetailList'), empty=$('insightDetailEmpty');
   list.innerHTML='';
   empty.classList.toggle('hidden',items.length>0);
@@ -676,20 +683,21 @@ function renderInsightDetail(){
     for(const r of composition){
       const row=document.createElement('button');row.type='button';row.className='analysis-row is-clickable';
       const pct=total?r.amount/total*100:0;
-      row.innerHTML=`<div class="txn-icon">${escapeHtml(r.icon||'•')}</div><div class="analysis-main"><div class="topline"><strong>${escapeHtml(r.label)}</strong><span>${pct.toFixed(1)}%</span></div><div class="bar-track"><div class="bar-fill" style="width:${pct}%;background:var(--accent)"></div></div><small>${r.items.length} 筆${r.items.some(t=>t.pendingAmount)?' · 含待填金額':''}</small></div><div class="analysis-amount">${money(r.amount)}</div><span class="row-chevron">›</span>`;
-      row.onclick=()=>openInsightDetail({title:r.label,icon:r.icon,lead:r.label,periodLabel:state.periodLabel,items:r.items,baseDays:state.baseDays,parent:state,groupBy:state.groupBy==='expense-category'?'expense-sub':state.groupBy==='income-category'?'income-source':null,desc:'先看組成與比例，再點選查看逐筆紀錄。'});
+      row.innerHTML=`<div class="txn-icon">${escapeHtml(r.icon||'•')}</div><div class="analysis-main"><div class="topline"><strong>${escapeHtml(r.label)}</strong><span>${pct.toFixed(1)}%</span></div><div class="bar-track"><div class="bar-fill" style="width:${pct}%;background:var(--accent)"></div></div><small>${r.items.length} 筆${state.groupBy==='dividend-symbol'?` · 今年 ${money(r.year)} · 累計 ${money(r.cumulative)}`:r.items.some(t=>t.pendingAmount)?' · 含待填金額':''}</small></div><div class="analysis-amount">${money(r.amount)}</div><span class="row-chevron">›</span>`;
+      row.onclick=()=>{if(state.groupBy==='dividend-symbol'){openDividendSecurityIncome(r,state.periodLabel,state);return;}if(state.groupBy==='income-category'&&r.label==='股息'){openDividendIncomeDetail(state.periodLabel,state);return;}openInsightDetail({title:r.label,icon:r.icon,lead:r.label,periodLabel:state.periodLabel,items:r.items,baseDays:state.baseDays,parent:state,groupBy:state.groupBy==='expense-category'?'expense-sub':state.groupBy==='income-category'?'income-source':null,desc:'先看組成與比例，再點選查看逐筆紀錄。'});};
       list.appendChild(row);
     }
     return;
   }
   for(const t of items){
     const row=document.createElement('div');
-    row.className='txn-row'+(t.virtual?'':' detail-clickable')+(t.pendingAmount?' pending-txn':'');
-    if(!t.virtual){row.setAttribute('role','button'); row.tabIndex=0;}
+    const clickable=!t.virtual||t.dividendLedgerId||t.dividendEventId;
+    row.className='txn-row'+(clickable?' detail-clickable':'')+(t.pendingAmount?' pending-txn':'');
+    if(clickable){row.setAttribute('role','button'); row.tabIndex=0;}
     const cls=t.type==='income'?'income':t.type==='investment'?'investment':'expense';
-    const amountText=t.pendingAmount?'待填金額':`${t.type==='expense'?'-':''}${money(t.amount)}`;
+    const amountText=t.pendingAmount?'待填金額':`${t.type==='expense'?'-':''}${state.privateValues?investmentPrivateMoney(t.amount):money(t.amount)}`;
     row.innerHTML=`<div class="txn-icon">${detailIconByTxn(t)}</div><div class="txn-main"><strong>${escapeHtml(t.title||state.title||'未命名')}</strong><span>${escapeHtml(detailMetaByTxn(t))}</span>${t.note?`<span class="detail-note">備註：${escapeHtml(t.note)}</span>`:''}</div><div class="txn-amount ${cls}">${amountText}</div><div class="detail-chevron">›</div>`;
-    if(!t.virtual){row.onclick=()=>openTxnFromInsight(t.id);row.onkeydown=e=>{if(e.key==='Enter'||e.key===' '){e.preventDefault();openTxnFromInsight(t.id);}};}
+    if(clickable){row.onclick=()=>{if(t.dividendLedgerId){closeInsightDetail();openInvestmentTxnEditor(t.dividendLedgerId);}else if(t.dividendEventId){closeInsightDetail();openDividendEventEditor(t.dividendEventId);}else openTxnFromInsight(t.id);};row.onkeydown=e=>{if(e.key==='Enter'||e.key===' '){e.preventDefault();row.onclick();}};}
     list.appendChild(row);
   }
 }
@@ -704,6 +712,7 @@ function openExpenseDetailBySubcategory(categoryId,subcategory,label,icon,period
 }
 function openIncomeDetailByCategory(name,periodLabel=formatMonth(viewMonth),items=null,baseDays=0){
   const icons={'薪資':'💼','獎金':'🎁','股息':'💹','老婆分紅':'👩‍❤️‍👨','退款':'↩️','其他收入':'💰'};
+  if(name==='股息'){openDividendIncomeDetail(periodLabel);return;}
   const list=items||incomesOfMonth().filter(t=>!isHistoricalSummary(t)&&((t.incomeCategory||'其他收入')===name));
   openInsightDetail({title:name,icon:icons[name]||'💰',lead:name,periodLabel,items:list,baseDays,groupBy:'income-source',desc:`查看 ${name} 的每一筆收入紀錄；點一下可再編輯。`});
 }
@@ -1821,22 +1830,79 @@ function dividendDerived(e,today=dateKey(new Date())){
 function dividendStatusLabel(status){return ({planned:'預定',exed:'已除息／待入帳',due:'今天預計入帳',overdue:'待確認入帳',paid:'已入帳',cancelled:'已取消'})[status]||status;}
 function dividendStatusIcon(status){return ({planned:'🗓️',exed:'⏳',due:'💰',overdue:'🔔',paid:'✅',cancelled:'⛔'})[status]||'💰';}
 function annualSummaryForYear(year){return annualIncomeSummaries.find(x=>Number(x.year)===Number(year))||null;}
+function dividendRecordSymbol(t){
+  const explicit=investmentAssetKey(t.investmentSymbol||t.symbol||'');if(explicit)return explicit;
+  const matches=String(t.title||'').toUpperCase().match(/(?:^|[^0-9A-Z])(\d{4,6}[A-Z]?)(?=$|[^0-9A-Z])/g)||[];
+  return matches.map(m=>m.replace(/^[^0-9A-Z]/,'')).find(m=>!(m.length===4&&Number(m)>=1900&&Number(m)<=2200))||'';
+}
+function recordedDividendItems(asOf=dateKey(new Date())){
+  const records=[],linkedBookkeeping=new Set(),linkedLedger=new Set(),linkedEvents=new Set(),aggregates=[];
+  const add=(t,amount,symbol,extra={})=>records.push({...t,...extra,type:'income',incomeCategory:'股息',investmentSymbol:symbol||'',amount:ntd(amount),title:symbol?`${symbol} 股息`:'未分配個股的歷史股息'});
+  for(const t of investmentLedger){
+    if(t.voided||t.kind!=='dividend'||!t.date||t.date>asOf||t.pendingAmount||t.status==='pending')continue;
+    add(t,investmentTxnCash(t),dividendRecordSymbol(t),{id:`dividend-ledger-${t.id}`,virtual:true,dividendLedgerId:t.id});
+    linkedLedger.add(t.id);if(t.bookkeepingTxnId)linkedBookkeeping.add(t.bookkeepingTxnId);if(t.dividendEventId)linkedEvents.add(t.dividendEventId);
+  }
+  for(const e of dividendEvents){
+    if(e.statusOverride==='cancelled'||!e.actualPayDate||e.actualPayDate>asOf||e.actualAmount==null||linkedLedger.has(e.ledgerTxnId)||linkedEvents.has(e.id))continue;
+    add({...e,date:e.actualPayDate},e.actualAmount,e.symbol,{id:`dividend-event-${e.id}`,virtual:true,dividendEventId:e.id});
+    if(e.bookkeepingTxnId)linkedBookkeeping.add(e.bookkeepingTxnId);
+  }
+  for(const t of txns){
+    if(t.voided||t.type!=='income'||t.incomeCategory!=='股息'||t.pendingAmount||!t.date||t.date>asOf||linkedBookkeeping.has(t.id)||linkedLedger.has(t.investmentLedgerId))continue;
+    if(/月彙總|月汇总|月總計/.test(t.title||'')){aggregates.push(t);continue;}
+    add(t,t.amount,dividendRecordSymbol(t));
+  }
+  const months=new Map();for(const t of aggregates){const key=t.date.slice(0,7);if(!months.has(key))months.set(key,[]);months.get(key).push(t);}
+  for(const [month,rows] of months){
+    const known=sum(records.filter(t=>t.date.slice(0,7)===month)),residual=Math.max(0,sum(rows)-known);
+    if(residual)add(rows[0],residual,'',{id:`dividend-unassigned-${month}`,virtual:true,note:'月彙總扣除已有個股明細後的剩餘金額，尚無資料可分配至個股。'});
+  }
+  for(const a of annualIncomeSummaries){
+    const year=String(a.year),residual=Math.max(0,ntd(a.dividendIncome)-sum(records.filter(t=>t.date.slice(0,4)===year)));
+    if(residual&&`${year}-01-01`<=asOf)add({date:`${year}-12-31`},residual,'',{id:`dividend-unassigned-year-${year}`,virtual:true,annualSummary:true,note:'年度摘要扣除已有明細後的剩餘金額，無法精確分配至個股或月份。'});
+  }
+  return records.sort((a,b)=>String(b.date).localeCompare(String(a.date)));
+}
+function dividendPeriodRange(label){
+  const m=String(label||'').match(/(\d{4})\s*年(?:\s*(\d{1,2})\s*月)?/);
+  if(!m)return {start:'0000-01-01',end:dateKey(new Date())};
+  return m[2]?{start:`${m[1]}-${m[2].padStart(2,'0')}-01`,end:monthEndKey(`${m[1]}-${m[2].padStart(2,'0')}`)}:{start:`${m[1]}-01-01`,end:`${m[1]}-12-31`};
+}
+function dividendBySecurity(start='0000-01-01',end=dateKey(new Date())){
+  const all=recordedDividendItems(),today=dateKey(new Date()),year=String(new Date().getFullYear()),map=new Map();
+  const ensure=symbol=>{if(!map.has(symbol))map.set(symbol,{symbol,label:symbol||'未分配個股的歷史股息',period:0,year:0,cumulative:0,pending:0,pendingUnknown:false,items:[]});return map.get(symbol);};
+  DIVIDEND_WATCH_SYMBOLS.forEach(ensure);
+  for(const t of all){const r=ensure(t.investmentSymbol);r.cumulative+=t.amount;if(t.date.startsWith(year))r.year+=t.amount;if(t.date>=start&&t.date<=end){r.period+=t.amount;r.items.push(t);}}
+  for(const e of dividendEvents.map(e=>dividendDerived(e,today)).filter(e=>!['paid','cancelled'].includes(e.status))){const r=ensure(e.symbol);if(e.estimatedAmount==null)r.pendingUnknown=true;else r.pending+=e.estimatedAmount;}
+  return [...map.values()].sort((a,b)=>b.period-a.period||b.cumulative-a.cumulative||a.label.localeCompare(b.label));
+}
+function openDividendIncomeDetail(periodLabel=formatMonth(viewMonth),parent=null){
+  const range=dividendPeriodRange(periodLabel),items=recordedDividendItems().filter(t=>t.date>=range.start&&t.date<=range.end);
+  openInsightDetail({title:'各檔股息',icon:'💹',lead:'每檔持股領了多少股息',periodLabel,items,parent,groupBy:'dividend-symbol',dividendRange:range,countNote:'個股入帳與未分配歷史摘要',desc:'依實際入帳統計；點各檔查看入帳紀錄。無法分配的舊彙總另外列出。'});
+}
+function openDividendSecurityIncome(row,periodLabel,parent=null,privateValues=false){
+  openInsightDetail({title:row.label,icon:'💹',lead:`${row.label} 股息`,periodLabel,items:row.items,parent,dividendStats:row,privateValues,desc:'已領股息依實際入帳日計算；預計領息尚未加入已領總額。'});
+}
+function renderDividendSecurityIncome(start,end){
+  const box=$('investmentDividendBySecurity');if(!box)return;box.innerHTML='';const rows=dividendBySecurity(start,end),total=rows.reduce((s,r)=>s+r.period,0);
+  for(const r of rows){const b=document.createElement('button');b.type='button';b.className='dividend-security-card';const pct=total?r.period/total*100:0;
+    b.innerHTML=`<div class="dividend-security-head"><strong>${escapeHtml(r.label)}</strong><span>${pct.toFixed(1)}% · ›</span></div><div class="dividend-security-values"><div><span>本期已領</span><b>${investmentPrivateMoney(r.period)}</b></div><div><span>今年已領</span><b>${investmentPrivateMoney(r.year)}</b></div><div><span>累計已領</span><b>${investmentPrivateMoney(r.cumulative)}</b></div><div><span>預計領息</span><b>${investmentPrivateMoney(r.pending)}${r.pendingUnknown?'＋待確認':''}</b></div></div>`;
+    b.onclick=()=>openDividendSecurityIncome(r,`${$('investmentIncomeStartMonth').value} ～ ${$('investmentIncomeEndMonth').value}`,null,true);box.appendChild(b);
+  }
+}
 function detailedDividendIncomeForYear(year){
-  return investmentLedger.filter(t=>t.kind==='dividend'&&Number(String(t.date).slice(0,4))===Number(year)).reduce((sum,t)=>sum+investmentTxnCash(t),0);
+  return sum(recordedDividendItems().filter(t=>Number(t.date.slice(0,4))===Number(year)));
 }
-function annualDividendDisplay(year){const a=annualSummaryForYear(year);return a?ntd(a.dividendIncome):detailedDividendIncomeForYear(year);}
-function allRecordedDividendIncome(){
-  const summaryYears=new Set(annualIncomeSummaries.filter(a=>Number(a.dividendIncome)>0).map(a=>Number(a.year)));
-  const detailed=investmentLedger.filter(t=>t.kind==='dividend'&&!summaryYears.has(Number(String(t.date||'').slice(0,4)))).reduce((sum,t)=>sum+investmentTxnCash(t),0);
-  const annual=annualIncomeSummaries.reduce((sum,a)=>sum+ntd(a.dividendIncome||0),0);
-  return ntd(detailed+annual);
-}
+function annualDividendDisplay(year){return detailedDividendIncomeForYear(year);}
+function allRecordedDividendIncome(){return sum(recordedDividendItems());}
+
 function detailedSpouseBonusForYear(year){
   return txns.filter(t=>!t.voided&&t.type==='income'&&(t.incomeCategory||'')==='老婆分紅'&&Number(String(t.date||'').slice(0,4))===Number(year)).reduce((sum,t)=>sum+ntd(t.amount||0),0);
 }
 function investmentYearlyIncomeBreakdown(year){
   const y=Number(year),summary=annualSummaryForYear(y);
-  const dividend=summary?ntd(summary.dividendIncome||0):detailedDividendIncomeForYear(y);
+  const dividend=detailedDividendIncomeForYear(y);
   const spouse=summary?ntd(summary.spouseBonus||0):detailedSpouseBonusForYear(y);
   return {year:y,dividend,spouse,total:ntd(dividend+spouse),source:summary?'annual':'detail'};
 }
@@ -1849,8 +1915,8 @@ function investmentIncomeForRange(start,end){
   let dividend=0,spouse=0;const warnings=[];const sy=Number(start.slice(0,4)),ey=Number(end.slice(0,4));
   for(let y=sy;y<=ey;y++){
     const ys=`${y}-01-01`,ye=`${y}-12-31`,from=start>ys?start:ys,to=end<ye?end:ye,summary=annualSummaryForYear(y),fullYear=from===ys&&to===ye;
-    if(summary&&fullYear){dividend+=ntd(summary.dividendIncome||0);spouse+=ntd(summary.spouseBonus||0);continue;}
-    dividend+=investmentLedger.filter(t=>!t.voided&&t.kind==='dividend'&&t.date>=from&&t.date<=to).reduce((sum,t)=>sum+investmentTxnCash(t),0);
+    if(summary&&fullYear){dividend+=detailedDividendIncomeForYear(y);spouse+=ntd(summary.spouseBonus||0);continue;}
+    dividend+=sum(recordedDividendItems().filter(t=>!t.annualSummary&&t.date>=from&&t.date<=to));
     spouse+=txns.filter(t=>!t.voided&&t.type==='income'&&(t.incomeCategory||'')==='老婆分紅'&&t.date>=from&&t.date<=to).reduce((sum,t)=>sum+ntd(t.amount||0),0);
     if(summary&&!fullYear)warnings.push(`${y} 年只有年度摘要；部分月份無法精確拆分，這段期間只計入現有逐筆資料。`);
   }
@@ -2599,6 +2665,7 @@ function renderInvestmentIncomeAnalysis(){
 }
 function renderInvestmentIncomeRange(){
   const s=$('investmentIncomeStartMonth'),e=$('investmentIncomeEndMonth');if(!s||!e)return;const start=monthStartKey(s.value),end=monthEndKey(e.value),r=investmentIncomeForRange(start,end);
+  renderDividendSecurityIncome(start,end);
   $('investmentPeriodDividend').textContent=investmentPrivateMoney(r.dividend);$('investmentPeriodSpouse').textContent=investmentPrivateMoney(r.spouse);$('investmentPeriodTotal').textContent=investmentPrivateMoney(r.total);
   const warn=$('investmentIncomeRangeWarning');warn.classList.toggle('hidden',!r.warnings.length);warn.textContent=r.warnings.join(' ');
 }
