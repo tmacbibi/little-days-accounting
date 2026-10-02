@@ -3,6 +3,7 @@ import { APP_VERSION, money } from './rules.js';
 import { esc, eventCard, emptyState } from './ui.js';
 import { generateBatchPdfs, openPdf, downloadBlob } from './pdf.js';
 import { getBridgeUrl, getBridgeKey, uploadBatchPdfs } from './drive.js';
+import { syncQuietly } from './sync.js';
 
 const root = document.querySelector('#batchApp');
 
@@ -115,7 +116,9 @@ async function load() {
       if (!generatedFiles.length) throw new Error('本批沒有可產生的表單');
       batch.status = '已產生PDF';
       batch.generatedAt = new Date().toISOString();
+      batch.updatedAt = new Date().toISOString();
       await db.put('batches', batch);
+      syncQuietly();
       showFiles(generatedFiles, false);
 
       if (!getBridgeUrl() || !getBridgeKey()) {
@@ -134,12 +137,14 @@ async function load() {
       batch.status = '已產表並上傳';
       batch.driveFiles = uploaded.map(x=>({id:x.id,name:x.name,webViewLink:x.webViewLink||''}));
       batch.uploadedAt = new Date().toISOString();
+      batch.updatedAt = new Date().toISOString();
       await db.put('batches', batch);
       for (const e of rows) {
         e.status = '已請款';
         e.updatedAt = new Date().toISOString();
         await db.put('events', e);
       }
+      syncQuietly();
       document.querySelector('.batch-hero p').textContent = `${rows.length} 筆事件・已請款`;
       status.textContent = '完成：正式 PDF 已存入 Google Drive「報帳系統／年／月／請款PDF」與「整批匯出」。';
       showFiles(generatedFiles, true);
