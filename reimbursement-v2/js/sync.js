@@ -1,9 +1,10 @@
 import { db } from './db.js';
 
 const URL_KEY = 'reimbursement_sync_script_url';
+const DEFAULT_SYNC_URL = 'https://script.google.com/macros/s/AKfycbyUoh-_rQ1mgzBBJyH9SlmQ75f8GrShyLcFh9296ptX08DSHwO3Tg_ZmxxmI623akNu/exec';
 const KEY_KEY = 'reimbursement_sync_script_key';
 
-export function getSyncUrl(){ return localStorage.getItem(URL_KEY) || ''; }
+export function getSyncUrl(){ return localStorage.getItem(URL_KEY) || DEFAULT_SYNC_URL; }
 export function setSyncUrl(v){ v=String(v||'').trim(); if(v) localStorage.setItem(URL_KEY,v); else localStorage.removeItem(URL_KEY); }
 export function getSyncKey(){ return localStorage.getItem(KEY_KEY) || ''; }
 export function setSyncKey(v){ v=String(v||'').trim(); if(v) localStorage.setItem(KEY_KEY,v); else localStorage.removeItem(KEY_KEY); }
