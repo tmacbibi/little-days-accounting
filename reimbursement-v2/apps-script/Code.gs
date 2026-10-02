@@ -1,6 +1,7 @@
 const CONFIG = {
   SECRET: 'PASTE_YOUR_PRIVATE_KEY_HERE',
-  ROOT_FOLDER: '報帳系統'
+  ROOT_FOLDER: '報帳申請管理系統',
+  OUTPUT_FOLDER: 'Output'
 };
 
 function doGet(e) {
@@ -52,23 +53,21 @@ function doPost(e) {
     const target = p.kind === '整批' ? '整批匯出' : '請款PDF';
 
     const root = ensureFolder_(DriveApp.getRootFolder(), CONFIG.ROOT_FOLDER);
-    const yearDir = ensureFolder_(root, year);
+    const outputRoot = ensureFolder_(root, CONFIG.OUTPUT_FOLDER);
+    const yearDir = ensureFolder_(outputRoot, year);
     const monthDir = ensureFolder_(yearDir, monthFolder);
     const targetDir = ensureFolder_(monthDir, target);
 
     const bytes = Utilities.base64Decode(encoded);
     const blob = Utilities.newBlob(bytes, MimeType.PDF, fileName);
 
-    const duplicates = targetDir.getFilesByName(fileName);
-    while (duplicates.hasNext()) duplicates.next().setTrashed(true);
-
-    const file = targetDir.createFile(blob);
+    const file = createNonDestructiveFile_(targetDir, blob, fileName);
     const result = {
       ok: true,
       requestId: requestId,
       fileId: file.getId(),
       fileName: file.getName(),
-      target: CONFIG.ROOT_FOLDER + '/' + year + '/' + monthFolder + '/' + target,
+      target: CONFIG.ROOT_FOLDER + '/' + CONFIG.OUTPUT_FOLDER + '/' + year + '/' + monthFolder + '/' + target,
       url: file.getUrl()
     };
 
@@ -84,6 +83,16 @@ function doPost(e) {
 function ensureFolder_(parent, name) {
   const found = parent.getFoldersByName(name);
   return found.hasNext() ? found.next() : parent.createFolder(name);
+}
+
+function createNonDestructiveFile_(folder, blob, fileName) {
+  const existing = folder.getFilesByName(fileName);
+  if (!existing.hasNext()) return folder.createFile(blob).setName(fileName);
+
+  const stamp = Utilities.formatDate(new Date(), Session.getScriptTimeZone() || 'Asia/Taipei', 'yyyyMMdd_HHmmss');
+  const dot = fileName.toLowerCase().endsWith('.pdf') ? fileName.length - 4 : fileName.length;
+  const versioned = fileName.slice(0, dot) + '_更新_' + stamp + fileName.slice(dot);
+  return folder.createFile(blob).setName(versioned);
 }
 
 function sanitizeFileName_(name) {
