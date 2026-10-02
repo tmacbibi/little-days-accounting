@@ -1,5 +1,5 @@
 import { db, uid } from './db.js';
-import { APP_VERSION, EVENT_TYPES, TRANSPORTS, EXPENSE_TYPES, calculateEvent, money } from './rules.js';
+import { APP_VERSION, EVENT_TYPES, TRANSPORTS, EXPENSE_TYPES, DEFAULT_START_LOCATION, PRESET_MILEAGE_ROUTES, calculateEvent, money } from './rules.js';
 import { html, esc, eventCard, emptyState } from './ui.js';
 import { exportBackup, importBackup } from './backup.js';
 import { getBridgeUrl, setBridgeUrl, getBridgeKey, setBridgeKey, testBridge } from './drive.js';
@@ -47,11 +47,50 @@ function splitLegacyRoute(route='') {
   return { startLocation: parts[0] || '', endLocation: parts.slice(1).join('－') || '' };
 }
 
+function normalizePlace(value='') {
+  return String(value || '').trim().replace(/\s+/g,'').replace(/臺/g,'台').toLowerCase();
+}
+
+function mileageSuggestions(events, startLocation) {
+  const startKey = normalizePlace(startLocation);
+  const items = new Map();
+
+  if (startKey === normalizePlace(DEFAULT_START_LOCATION)) {
+    PRESET_MILEAGE_ROUTES.forEach((item, index) => {
+      items.set(normalizePlace(item.endLocation), { ...item, source: '預設', order: 100 + index, uses: 0 });
+    });
+  }
+
+  const history = [...events]
+    .filter(e => Number(e.km || 0) > 0)
+    .sort((a,b) => String(b.updatedAt || b.createdAt || '').localeCompare(String(a.updatedAt || a.createdAt || '')));
+
+  history.forEach((e, index) => {
+    const legacy = splitLegacyRoute(e.route);
+    const start = e.startLocation ?? legacy.startLocation;
+    const end = e.endLocation ?? legacy.endLocation;
+    if (!end || normalizePlace(start) !== startKey) return;
+
+    const key = normalizePlace(end);
+    const existing = items.get(key);
+    if (existing?.source === '歷史') {
+      existing.uses += 1;
+      return;
+    }
+    items.set(key, { endLocation: end, km: Number(e.km), source: '歷史', order: index, uses: 1 });
+  });
+
+  return [...items.values()]
+    .sort((a,b) => (a.source === b.source ? (b.uses - a.uses || a.order - b.order) : (a.source === '歷史' ? -1 : 1)))
+    .slice(0,8);
+}
+
 function newPage() {
-  const e = state.editing || { date:new Date().toISOString().slice(0,10), eventType:'雙北內開會或洽公', startLocation:'', endLocation:'', transport:'無交通費', highSpeedRailFare:0, taxiFare:0, mealMode:'無餐費', actualMealAmount:0, expenses:[], status:'待請款' };
+  const e = state.editing || { date:new Date().toISOString().slice(0,10), eventType:'雙北內開會或洽公', startLocation:DEFAULT_START_LOCATION, endLocation:'', transport:'無交通費', highSpeedRailFare:0, taxiFare:0, mealMode:'無餐費', actualMealAmount:0, expenses:[], status:'待請款' };
   const legacyRoute = splitLegacyRoute(e.route);
   const startLocation = e.startLocation ?? legacyRoute.startLocation;
   const endLocation = e.endLocation ?? legacyRoute.endLocation;
+  const mileageOptions = mileageSuggestions(state.events, startLocation);
   const c = calculateEvent(e);
   const expenseRows = (e.expenses||[]).map((x,i)=>html`<div class="expense-row"><select data-expense-type="${i}">${EXPENSE_TYPES.map(v=>`<option ${x.type===v?'selected':''}>${v}</option>`).join('')}</select><input data-expense-amount="${i}" inputmode="numeric" type="number" value="${esc(x.amount||'')}" placeholder="金額"><input data-expense-note="${i}" value="${esc(x.note||'')}" placeholder="備註"><button data-remove-expense="${i}">×</button></div>`).join('');
   return shell(html`
@@ -65,7 +104,7 @@ function newPage() {
       </div>
       <div class="form-section"><h2>交通</h2>
         <label>交通方式<select name="transport">${TRANSPORTS.map(v=>`<option ${e.transport===v?'selected':''}>${v}</option>`).join('')}</select></label>
-        <div class="two-col self-drive ${e.transport==='自行開車'?'':'hidden'}"><label>總公里數<input name="km" type="number" inputmode="decimal" value="${esc(e.km||'')}"></label><label>停車費<input name="parking" type="number" inputmode="numeric" value="${esc(e.parking||'')}"></label></div>
+        <div class="self-drive ${e.transport==='自行開車'?'':'hidden'}"><div class="two-col"><label>總公里數<input name="km" type="number" inputmode="decimal" value="${esc(e.km||'')}"></label><label>停車費<input name="parking" type="number" inputmode="numeric" value="${esc(e.parking||'')}"></label></div><div class="mileage-suggestions"><div class="mileage-suggestion-head"><span>常用來回里程</span><small>依過往輸入＋預設值，可點一下帶入</small></div><div class="mileage-chips">${mileageOptions.map(item=>`<button type="button" class="mileage-chip" data-mileage-end="${esc(item.endLocation)}" data-mileage-km="${item.km}"><b>${esc(item.endLocation)}</b><span>${item.km} km</span><small>${item.source}</small></button>`).join('')}</div></div></div>
         <div class="high-speed-rail ${e.transport==='高鐵'?'':'hidden'}"><label>高鐵票價<input name="highSpeedRailFare" type="number" inputmode="numeric" min="0" value="${esc(e.highSpeedRailFare||'')}" placeholder="請輸入實際票價"></label></div>
         <div class="taxi-fare ${e.transport==='計程車'?'':'hidden'}"><label>計程車費<input name="taxiFare" type="number" inputmode="numeric" min="0" value="${esc(e.taxiFare||'')}" placeholder="請輸入實際車資"></label></div>
       </div>
@@ -158,6 +197,15 @@ function bind() {
     ev.preventDefault(); const row=collectForm(); if(!row.name){alert('請輸入事件名稱');return;} row.id=row.id||uid('evt'); row.createdAt=row.createdAt||new Date().toISOString(); row.updatedAt=new Date().toISOString(); row.computed=calculateEvent(row); if(row.computed.overGeneralRows){alert('一般請款超過4列，請先拆分事件。');return;} await db.put('events',row); state.editing=null; state.page='home'; await refresh();
   });
   form?.querySelectorAll('input,select').forEach(el=>{ if(el.closest('.expense-row'))return; el.onchange=()=>{ const draft=collectForm(); state.editing=draft; render(); }; });
+  document.querySelectorAll('[data-mileage-km]').forEach(btn=>btn.addEventListener('click',()=>{
+    const draft=collectForm();
+    draft.startLocation = draft.startLocation || DEFAULT_START_LOCATION;
+    draft.endLocation = btn.dataset.mileageEnd || '';
+    draft.route = [draft.startLocation, draft.endLocation].filter(Boolean).join('－');
+    draft.km = Number(btn.dataset.mileageKm || 0);
+    state.editing = draft;
+    render();
+  }));
   document.querySelector('[data-add-expense]')?.addEventListener('click',()=>{ const draft=collectForm(); draft.expenses=[...(draft.expenses||[]),{type:'會議飲料',amount:'',note:''}]; state.editing=draft; render(); });
   document.querySelectorAll('[data-remove-expense]').forEach(btn=>btn.onclick=()=>{ const draft=collectForm(); draft.expenses.splice(Number(btn.dataset.removeExpense),1); state.editing=draft; render(); });
   document.querySelectorAll('[data-expense-type]').forEach(el=>el.onchange=()=>{ const i=Number(el.dataset.expenseType); const d=collectForm(); d.expenses[i]={...(d.expenses[i]||{}),type:el.value}; state.editing=d; render(); });
