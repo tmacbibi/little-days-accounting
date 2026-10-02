@@ -146,7 +146,7 @@ async function load() {
       }
       syncQuietly();
       document.querySelector('.batch-hero p').textContent = `${rows.length} 筆事件・已請款`;
-      status.textContent = '完成：正式 PDF 已存入 Google Drive「報帳系統／年／月／請款PDF」與「整批匯出」。';
+      status.textContent = '完成：正式 PDF 已存入 Google Drive「報帳申請管理系統／Output／年／月／請款PDF」與「整批匯出」。';
       showFiles(generatedFiles, true);
       btn.textContent = '重新產生並覆核';
       btn.disabled = false;
