@@ -1,6 +1,6 @@
 const CONFIG = {
   SECRET: 'PASTE_YOUR_SYNC_KEY_HERE',
-  VERSION: '1.0.0'
+  VERSION: '1.0.1'
 };
 
 const SHEETS = {
