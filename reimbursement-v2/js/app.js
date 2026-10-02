@@ -151,7 +151,7 @@ function settingsPage() {
         <a class="ghost link-button" target="_blank" rel="noopener" href="https://github.com/tmacbibi/little-days-accounting/blob/main/reimbursement-v2/sync-script/SETUP.md">① 查看一次性設定步驟</a>
         <a class="ghost link-button" target="_blank" rel="noopener" href="https://github.com/tmacbibi/little-days-accounting/blob/main/reimbursement-v2/sync-script/Code.gs">② 查看同步程式 Code.gs</a>
       </div>
-      <label>資料同步 Web App URL<input id="syncUrl" value="${esc(getSyncUrl())}" placeholder="https://script.google.com/macros/s/.../exec"></label>
+      <label>資料同步 Web App URL<input id="syncUrl" value="${esc(getSyncUrl())}" placeholder="https://script.google.com/macros/s/.../exec"></label><small class="muted">已預設為這次部署的同步網址；之後若重新部署才需要更換。</small>
       <label>Sync Key<input id="syncKey" value="${esc(getSyncKey())}" placeholder="與同步 Apps Script CONFIG.SECRET 相同"></label>
       <div class="sync-actions"><button class="primary" id="saveSyncConfig">儲存並立即同步</button><button class="ghost sync-now-btn" id="syncNow">重新同步</button></div>
       <div id="syncStatus" class="sync-status">${hasSyncConfig() ? '已設定；開啟 App 與每次儲存後會自動同步。' : '尚未設定跨裝置同步。'}</div>
