@@ -69,15 +69,24 @@ function doPost(e) {
 }
 
 function setup() {
-  const ss=getDb_();
+  const ss=SpreadsheetApp.getActiveSpreadsheet();
+  if(!ss) throw new Error('請從「報帳資料庫」Google Sheet 的「擴充功能 → Apps Script」執行 setup()');
+  PropertiesService.getScriptProperties().setProperty('DB_SPREADSHEET_ID', ss.getId());
   ensureSchema_(ss);
   writeMeta_(ss,'createdAt',new Date().toISOString());
-  SpreadsheetApp.getUi().alert('報帳資料庫已初始化完成。');
+  SpreadsheetApp.getUi().alert('報帳資料庫已初始化完成，且已記住資料庫 ID。');
 }
 
 function getDb_() {
+  const props=PropertiesService.getScriptProperties();
+  const id=props.getProperty('DB_SPREADSHEET_ID');
+  if(id) return SpreadsheetApp.openById(id);
+
+  // 僅在從試算表／編輯器執行時有 active spreadsheet；
+  // Web App 執行時 getActiveSpreadsheet() 不可用，因此一定要先跑 setup()。
   const ss=SpreadsheetApp.getActiveSpreadsheet();
-  if(!ss) throw new Error('請把這支 Apps Script 建立在「報帳資料庫」Google Sheet 內');
+  if(!ss) throw new Error('資料庫尚未綁定，請先從報帳資料庫執行一次 setup()');
+  props.setProperty('DB_SPREADSHEET_ID', ss.getId());
   return ss;
 }
 
