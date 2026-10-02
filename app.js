@@ -1,7 +1,7 @@
 'use strict';
 
 const $ = id => document.getElementById(id);
-const APP_VERSION = '1.5.11';
+const APP_VERSION = '1.5.12';
 const DIVIDEND_WATCH_SYMBOLS = ['00919','00878','0056','0050','00406A','00981A'];
 const DATA_VERSION = 13;
 const VAULT_KEY = 'little_days_bookkeeping_vault_v2';
@@ -69,6 +69,9 @@ let selectedPayment = 'card';
 let availableVersion = null;
 let recognition = null;
 let voiceSessionActive = false;
+let voiceSessionGeneration = 0;
+let voiceRestartTimer = null;
+let voiceStartTimer = null;
 let voiceAccumulated = '';
 let voiceInterim = '';
 let unlocked = false;
@@ -1249,17 +1252,72 @@ function openVoiceSheet(){
   show($('voiceSheet')); const base=parseDateKey(selectedDate); $('voiceBaseDateText').textContent=`未指定日期時，會記在 ${base.getMonth()+1}/${base.getDate()}。`;  voiceAccumulated='';voiceInterim=''; $('liveTranscript').textContent='尚未收到語音…'; $('voiceFallbackInput').value=''; hide($('voiceFallbackInput')); hide($('voiceFallbackBtn')); $('voiceStatus').textContent='正在聽你說'; $('voiceHint').textContent='你可以慢慢說；在你按「完成」之前，不會新增任何紀錄。';
   if(speechSupported())startVoiceSession(); else{ $('voiceStatus').textContent='請用 iPhone 鍵盤麥克風'; $('voiceHint').textContent='這個環境不能直接持續收音，點下面輸入框後用鍵盤麥克風說完，再按完成。'; show($('voiceFallbackInput')); $('voiceFallbackInput').focus(); }
 }
-function startVoiceSession(){
-  voiceSessionActive=true; const SR=window.SpeechRecognition||window.webkitSpeechRecognition; if(!SR)return; recognition=new SR(); recognition.lang='zh-TW'; recognition.interimResults=true; recognition.continuous=true; recognition.maxAlternatives=1; $('voiceOrb').classList.add('listening');
-  recognition.onresult=e=>{ let finalChunk='';voiceInterim=''; for(let i=e.resultIndex;i<e.results.length;i++){const s=e.results[i][0].transcript;if(e.results[i].isFinal)finalChunk+=s;else voiceInterim+=s;} if(finalChunk)voiceAccumulated+=(voiceAccumulated?' ':'')+finalChunk.trim(); $('liveTranscript').textContent=(voiceAccumulated+(voiceInterim?' '+voiceInterim:'')).trim()||'尚未收到語音…'; };
-  recognition.onerror=e=>{ console.warn('speech',e.error); if(['not-allowed','service-not-allowed'].includes(e.error)){ voiceSessionActive=false;$('voiceOrb').classList.remove('listening');show($('voiceFallbackInput'));$('voiceFallbackInput').focus();$('voiceStatus').textContent='改用 iPhone 鍵盤麥克風'; } };
-  recognition.onend=()=>{ $('voiceOrb').classList.remove('listening'); if(voiceSessionActive){ setTimeout(()=>{ try{recognition.start();$('voiceOrb').classList.add('listening');}catch{} },220); } };
-  try{recognition.start();}catch{ show($('voiceFallbackInput')); }
+function clearVoiceTimers(){
+  clearTimeout(voiceRestartTimer);clearTimeout(voiceStartTimer);voiceRestartTimer=null;voiceStartTimer=null;
 }
-function stopVoiceSession(){ voiceSessionActive=false; try{recognition?.stop?.();}catch{} try{recognition?.abort?.();}catch{} recognition=null; $('voiceOrb').classList.remove('listening'); }
+function detachVoiceRecognition(rec){
+  if(!rec)return;
+  rec.onstart=null;rec.onresult=null;rec.onerror=null;rec.onend=null;
+}
+function useVoiceFallback(message='語音暫時無法啟動，請用鍵盤麥克風或輸入文字。'){
+  stopVoiceSession();
+  if(!$('voiceFallbackInput').value.trim())$('voiceFallbackInput').value=`${voiceAccumulated} ${voiceInterim}`.trim();
+  $('voiceStatus').textContent='改用鍵盤麥克風';$('voiceHint').textContent=message;
+  show($('voiceFallbackInput'));show($('voiceFallbackBtn'));$('voiceFallbackInput').focus();
+}
+function startVoiceSession(){
+  stopVoiceSession();
+  if(!speechSupported()){useVoiceFallback();return;}
+  voiceSessionActive=true;startVoiceRecognition(voiceSessionGeneration);
+}
+function startVoiceRecognition(generation){
+  if(!voiceSessionActive||generation!==voiceSessionGeneration)return;
+  const SR=window.SpeechRecognition||window.webkitSpeechRecognition;
+  let rec;
+  try{rec=new SR();}catch{useVoiceFallback();return;}
+  recognition=rec;
+  rec.lang='zh-TW';rec.interimResults=true;rec.continuous=true;rec.maxAlternatives=1;
+  const current=()=>voiceSessionActive&&generation===voiceSessionGeneration&&recognition===rec;
+  const started=()=>{clearTimeout(voiceStartTimer);voiceStartTimer=null;$('voiceOrb').classList.add('listening');$('voiceStatus').textContent='正在聽你說';};
+  rec.onstart=()=>{if(current())started();};
+  rec.onresult=e=>{
+    if(!current())return;started();
+    let finalChunk='';voiceInterim='';
+    for(let i=e.resultIndex;i<e.results.length;i++){const text=e.results[i][0].transcript;if(e.results[i].isFinal)finalChunk+=text;else voiceInterim+=text;}
+    if(finalChunk.trim())voiceAccumulated+=(voiceAccumulated?' ':'')+finalChunk.trim();
+    $('liveTranscript').textContent=(voiceAccumulated+(voiceInterim?' '+voiceInterim:'')).trim()||'尚未收到語音…';
+  };
+  rec.onerror=e=>{
+    if(!current())return;
+    if(e.error==='no-speech')return; // onend reconnects this same logical session.
+    console.warn('speech',e.error);
+    useVoiceFallback(['not-allowed','service-not-allowed','audio-capture'].includes(e.error)?'無法取得麥克風，請用鍵盤麥克風或輸入文字，再按完成。':'語音連線中斷，已保留辨識內容；可用鍵盤麥克風或文字繼續。');
+  };
+  rec.onend=()=>{
+    if(!current())return;
+    clearVoiceTimers();detachVoiceRecognition(rec);recognition=null;$('voiceOrb').classList.remove('listening');
+    // Preserve an interim phrase before a browser-initiated disconnect.
+    if(voiceInterim.trim()){voiceAccumulated+=(voiceAccumulated?' ':'')+voiceInterim.trim();voiceInterim='';}
+    $('voiceStatus').textContent='正在接續收音…';
+    voiceRestartTimer=setTimeout(()=>{
+      if(!voiceSessionActive||generation!==voiceSessionGeneration||recognition)return;
+      voiceRestartTimer=null;startVoiceRecognition(generation);
+    },220);
+  };
+  $('voiceStatus').textContent='正在啟動麥克風…';show($('voiceFallbackBtn'));
+  voiceStartTimer=setTimeout(()=>{if(!current())return;voiceStartTimer=null;useVoiceFallback();},7000);
+  try{rec.start();}catch{if(current())useVoiceFallback();}
+}
+function stopVoiceSession(){
+  voiceSessionActive=false;voiceSessionGeneration++;clearVoiceTimers();
+  const rec=recognition;recognition=null;detachVoiceRecognition(rec);
+  // Cancelling the engine releases the microphone; late callbacks are invalidated.
+  try{rec?.abort?.();}catch{}
+  $('voiceOrb').classList.remove('listening');
+}
 function closeVoiceSheet(clear=true){ stopVoiceSession(); hide($('voiceSheet')); if(clear){voiceAccumulated='';voiceInterim='';} }
 function finishVoice(){
-  stopVoiceSession(); const typed=$('voiceFallbackInput').value.trim(); const text=(typed||`${voiceAccumulated} ${voiceInterim}`).trim(); if(!text){toast('還沒有收到內容');return;} const items=parseVoiceItems(text); if(!items.length){toast('我沒抓到金額，請再說一次或改用手動輸入',2800);return;} if(items.length===1)applyParsedVoice(items[0],text); else openVoiceDrafts(items);
+  stopVoiceSession(); const typed=$('voiceFallbackInput').value.trim(); const text=(typed||`${voiceAccumulated} ${voiceInterim}`).trim(); if(!text){useVoiceFallback('還沒有收到內容，請用鍵盤麥克風或輸入文字，再按完成。');toast('還沒有收到內容');return;} const items=parseVoiceItems(text); if(!items.length){useVoiceFallback('已保留辨識內容，請補上金額，再按完成。');toast('我沒抓到金額，請補上金額',2800);return;} if(items.length===1)applyParsedVoice(items[0],text); else openVoiceDrafts(items);
 }
 
 function recurringList(){ return recurring; }
@@ -3038,7 +3096,7 @@ async function importBackupFile(file){
 function bindEvents(){
   $('prevMonthBtn').onclick=()=>{viewMonth=addMonths(viewMonth,-1);selectedDate=dateKey(viewMonth);renderAll();}; $('nextMonthBtn').onclick=()=>{viewMonth=addMonths(viewMonth,1);selectedDate=dateKey(viewMonth);renderAll();};
   $('addFromDayBtn').onclick=()=>openEditor(null,selectedDate); $('manualAddNav').onclick=()=>openEditor(null,selectedDate); document.querySelectorAll('.manual-add-clone').forEach(b=>b.onclick=()=>openEditor(null,selectedDate));
-  $('voiceFab').onclick=handleVoiceFabClick; $('closeVoiceBtn').onclick=()=>closeVoiceSheet(true); $('finishVoiceBtn').onclick=finishVoice; $('voiceFallbackBtn').onclick=()=>{show($('voiceFallbackInput'));$('voiceFallbackInput').focus();};
+  $('voiceFab').onclick=handleVoiceFabClick; $('closeVoiceBtn').onclick=()=>closeVoiceSheet(true); $('finishVoiceBtn').onclick=finishVoice; $('voiceFallbackBtn').onclick=()=>useVoiceFallback();
   $('amountInput').onclick=openCalculator; $('amountCalcBtn').onclick=openCalculator; $('closeCalculatorBtn').onclick=closeCalculator; $('applyCalculatorBtn').onclick=applyCalculator; $('calculatorPad').onclick=e=>{const b=e.target.closest('button[data-calc]');if(b)calculatorKey(b.dataset.calc);};
   $('cancelVoiceDraftBtn').onclick=closeVoiceDrafts; $('saveVoiceDraftBtn').onclick=saveVoiceDrafts; $('voiceDraftList').onclick=e=>{const edit=e.target.closest('[data-voice-edit]'),remove=e.target.closest('[data-voice-remove]');if(edit){openVoiceDraftItemEditor(Number(edit.dataset.voiceEdit));return;}if(remove){voiceDraftItems.splice(Number(remove.dataset.voiceRemove),1);renderVoiceDrafts();}}; $('cancelVoiceDraftEditBtn').onclick=()=>hide($('voiceDraftEditScreen')); $('saveVoiceDraftEditBtn').onclick=saveVoiceDraftItemEdit; $('voiceDraftEditCategory').onchange=()=>renderVoiceDraftEditSubcategories();
   $('cancelEditBtn').onclick=closeEditor; $('saveTxnBtn').onclick=saveTxn; $('expenseTypeBtn').onclick=()=>setEditType('expense'); $('incomeTypeBtn').onclick=()=>setEditType('income'); $('investmentTypeBtn').onclick=()=>setEditType('investment'); document.querySelectorAll('[data-payment]').forEach(b=>b.onclick=()=>setPayment(b.dataset.payment));
