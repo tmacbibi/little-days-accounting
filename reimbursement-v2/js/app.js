@@ -7,7 +7,7 @@ import { getSyncUrl, setSyncUrl, getSyncKey, setSyncKey, hasSyncConfig, testSync
 
 const app = document.querySelector('#app');
 const initialPage = new URLSearchParams(location.search).has('settings') ? 'settings' : 'home';
-const state = { page: initialPage, events: [], batches: [], editing: null, selected: new Set() };
+const state = { page: initialPage, events: [], batches: [], editing: null, selected: new Set(), syncStatus: '' };
 
 async function refresh() {
   state.events = (await db.all('events')).sort((a,b) => String(b.createdAt).localeCompare(String(a.createdAt)));
@@ -146,15 +146,15 @@ function settingsPage() {
   return shell(html`<section class="section settings-list">
     <div class="settings-card"><h2>資料安全</h2><p>資料目前儲存在本機 IndexedDB；更新 App 不會主動清空資料。</p><button class="primary" data-export>立即備份</button><label class="file-btn">恢復備份<input id="importFile" type="file" accept="application/json"></label></div>
     <div class="settings-card"><h2>跨裝置資料同步</h2>
-      <p>手機與電腦共用一份「報帳資料庫」Google Sheet。同步程式只使用 <b>目前這一份試算表</b> 的權限，不讀你的其他 Google Drive 檔案。</p>
+      <p>手機與電腦共用一份「報帳資料庫」Google Sheet。Google 授權範圍包含所有試算表的查看、編輯、建立及刪除；本次同步程式已限制只操作指定的「報帳資料庫」。</p>
       <div class="file-actions">
         <a class="ghost link-button" target="_blank" rel="noopener" href="https://github.com/tmacbibi/little-days-accounting/blob/main/reimbursement-v2/sync-script/SETUP.md">① 查看一次性設定步驟</a>
         <a class="ghost link-button" target="_blank" rel="noopener" href="https://github.com/tmacbibi/little-days-accounting/blob/main/reimbursement-v2/sync-script/Code.gs">② 查看同步程式 Code.gs</a>
       </div>
       <label>資料同步 Web App URL<input id="syncUrl" value="${esc(getSyncUrl())}" placeholder="https://script.google.com/macros/s/.../exec"></label><small class="muted">已預設為這次部署的同步網址；之後若重新部署才需要更換。</small>
-      <label>Sync Key<input id="syncKey" value="${esc(getSyncKey())}" placeholder="與同步 Apps Script CONFIG.SECRET 相同"></label>
+      <label>Sync Key<input id="syncKey" type="password" autocomplete="off" value="${esc(getSyncKey())}" placeholder="與同步 Apps Script CONFIG.SECRET 相同"></label>
       <div class="sync-actions"><button class="primary" id="saveSyncConfig">儲存並立即同步</button><button class="ghost sync-now-btn" id="syncNow">重新同步</button></div>
-      <div id="syncStatus" class="sync-status">${hasSyncConfig() ? '已設定；開啟 App 與每次儲存後會自動同步。' : '尚未設定跨裝置同步。'}</div>
+      <div id="syncStatus" class="sync-status">${esc(state.syncStatus || (hasSyncConfig() ? '已設定；開啟 App 與每次儲存後會自動同步。' : '尚未設定跨裝置同步。'))}</div>
       <small class="muted">衝突處理：同一筆資料以「最後修改時間較新」的版本為準；離線時仍可先記錄，恢復網路後再同步。</small>
     </div>
     <div class="settings-card"><h2>Google Drive 自動歸檔</h2>
@@ -164,7 +164,7 @@ function settingsPage() {
         <a class="ghost link-button" target="_blank" rel="noopener" href="https://github.com/tmacbibi/little-days-accounting/blob/main/reimbursement-v2/apps-script/Code.gs">② 查看要貼上的 Code.gs</a>
       </div>
       <label>Apps Script Web App URL<input id="bridgeUrl" value="${esc(getBridgeUrl())}" placeholder="https://script.google.com/macros/s/.../exec"></label>
-      <label>Bridge Key<input id="bridgeKey" value="${esc(getBridgeKey())}" placeholder="與 Apps Script CONFIG.SECRET 相同"></label>
+      <label>Bridge Key<input id="bridgeKey" type="password" autocomplete="off" value="${esc(getBridgeKey())}" placeholder="與 Apps Script CONFIG.SECRET 相同"></label>
       <button class="primary" id="saveDriveConfig">儲存並測試連線</button>
       <small class="muted">Web App 執行身分選「我」，存取權選「任何人」。Bridge Key 可避免陌生人亂塞檔案。</small>
     </div>
@@ -240,7 +240,7 @@ function bind() {
     el.onchange=()=>{ el.checked?state.selected.add(el.dataset.select):state.selected.delete(el.dataset.select); render(); };
   });
   document.querySelector('[data-select-all]')?.addEventListener('click',()=>{ const list=state.events.filter(e=>e.status==='待請款'); if(state.selected.size)state.selected.clear(); else list.forEach(e=>state.selected.add(e.id)); render(); });
-  document.querySelector('[data-create-batch]')?.addEventListener('click',async()=>{ const ids=[...state.selected]; if(!ids.length)return; const now=new Date(); const batch={id:uid('batch'),name:`${now.getFullYear()}/${String(now.getMonth()+1).padStart(2,'0')}/${String(now.getDate()).padStart(2,'0')} 本次請款`,createdAt:now.toISOString(),status:'準備中',eventIds:ids}; await db.put('batches',batch); for(const id of ids){const e=await db.get('events',id);e.batchId=batch.id;e.updatedAt=new Date().toISOString();await db.put('events',e);} syncQuietly(); state.selected.clear(); await refresh(); location.href='./batch.html'; });
+  document.querySelector('[data-create-batch]')?.addEventListener('click',async()=>{ const ids=[...state.selected]; if(!ids.length)return; const now=new Date(); const batch={id:uid('batch'),name:`${now.getFullYear()}/${String(now.getMonth()+1).padStart(2,'0')}/${String(now.getDate()).padStart(2,'0')} 本次請款`,createdAt:now.toISOString(),status:'準備中',eventIds:ids}; await db.put('batches',batch); for(const id of ids){const e=await db.get('events',id);e.batchId=batch.id;e.updatedAt=new Date().toISOString();await db.put('events',e);} await syncQuietly(); state.selected.clear(); await refresh(); location.href='./batch.html'; });
   document.querySelector('#saveSyncConfig')?.addEventListener('click', async()=>{
     const url=document.querySelector('#syncUrl')?.value?.trim()||'';
     const key=document.querySelector('#syncKey')?.value?.trim()||'';
@@ -248,22 +248,22 @@ function bind() {
     if(!url||!key){alert('請填資料同步 Web App URL 與 Sync Key');return;}
     setSyncUrl(url);setSyncKey(key);
     try{
-      status.textContent='正在測試專用報帳資料庫…';
+      state.syncStatus=status.textContent='正在測試專用報帳資料庫…';
       const ping=await testSyncBridge();
-      status.textContent='連線成功，正在同步手機／電腦資料…';
-      const result=await syncNow(msg=>{status.textContent=msg;});
-      status.textContent=`同步完成：${result.events||0} 筆事件、${result.batches||0} 個批次。資料庫：${ping.spreadsheetName||'報帳資料庫'}`;
+      state.syncStatus=status.textContent='連線成功，正在同步手機／電腦資料…';
+      const result=await syncNow(msg=>{state.syncStatus=status.textContent=msg;});
+      state.syncStatus=status.textContent=`同步完成：${result.events||0} 筆事件、${result.batches||0} 個批次。資料庫：${ping.spreadsheetName||'報帳資料庫'}`;
       await refresh();
-    }catch(err){status.textContent='同步失敗：'+(err?.message||err);}
+    }catch(err){state.syncStatus=status.textContent='同步失敗：'+(err?.message||err);}
   });
   document.querySelector('#syncNow')?.addEventListener('click', async()=>{
     const status=document.querySelector('#syncStatus');
     if(!hasSyncConfig()){alert('請先設定資料同步 Web App URL 與 Sync Key');return;}
     try{
-      const result=await syncNow(msg=>{status.textContent=msg;});
-      status.textContent=`同步完成：${result.events||0} 筆事件、${result.batches||0} 個批次。`;
+      const result=await syncNow(msg=>{state.syncStatus=status.textContent=msg;});
+      state.syncStatus=status.textContent=`同步完成：${result.events||0} 筆事件、${result.batches||0} 個批次。`;
       await refresh();
-    }catch(err){status.textContent='同步失敗：'+(err?.message||err);}
+    }catch(err){state.syncStatus=status.textContent='同步失敗：'+(err?.message||err);}
   });
   document.querySelector('[data-export]')?.addEventListener('click',exportBackup);
   document.querySelector('#saveDriveConfig')?.addEventListener('click', async()=>{
