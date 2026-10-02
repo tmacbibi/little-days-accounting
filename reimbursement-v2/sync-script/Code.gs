@@ -1,6 +1,6 @@
 const CONFIG = {
   SECRET: 'PASTE_YOUR_SYNC_KEY_HERE',
-  VERSION: '1.0.1'
+  VERSION: '1.0.2'
 };
 
 const SHEETS = {
@@ -74,7 +74,8 @@ function setup() {
   PropertiesService.getScriptProperties().setProperty('DB_SPREADSHEET_ID', ss.getId());
   ensureSchema_(ss);
   writeMeta_(ss,'createdAt',new Date().toISOString());
-  SpreadsheetApp.getUi().alert('報帳資料庫已初始化完成，且已記住資料庫 ID。');
+  ss.toast('報帳資料庫已初始化完成，且已記住資料庫 ID。', '報帳助手', 5);
+  console.log('報帳資料庫已初始化完成：' + ss.getId());
 }
 
 function getDb_() {
