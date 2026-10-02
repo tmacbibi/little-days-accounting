@@ -278,8 +278,7 @@ function bind() {
 }
 
 async function seed() {
-  const existing = await db.all('events'); if(existing.length) return;
-  const row={id:uid('evt'),date:new Date().toISOString().slice(0,10),name:'示範：工作會議',projectCode:'CD77',eventType:'雙北內開會或洽公',startLocation:'蘆洲',endLocation:'台北',route:'蘆洲－台北',transport:'自行開車',km:80,parking:120,expenses:[{type:'會議飲料',amount:180,note:''}],status:'待請款',createdAt:new Date().toISOString()}; row.computed=calculateEvent(row); await db.put('events',row);
+  // 正式版不再自動建立示範事件，避免手機與電腦首次同步時產生重複假資料。
 }
 
 if ('serviceWorker' in navigator) {
