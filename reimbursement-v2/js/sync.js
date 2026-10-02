@@ -95,8 +95,12 @@ function mergeRows(localRows, cloudRows){
 export async function syncNow(onStatus=()=>{}){
   if(!hasSyncConfig()) return {configured:false};
   onStatus('正在讀取雲端資料…');
-  const [localEvents,localBatches,cloud]=await Promise.all([db.all('events'),db.all('batches'),pullCloudData()]);
-  const events=mergeRows(localEvents,cloud.events||[]);
+  const [localEventsRaw,localBatches,cloud]=await Promise.all([db.all('events'),db.all('batches'),pullCloudData()]);
+  const isDemo=e=>e?.name==='示範：工作會議';
+  const localEvents=localEventsRaw.filter(e=>!isDemo(e));
+  const cloudEvents=(cloud.events||[]).filter(e=>!isDemo(e));
+  for(const demo of localEventsRaw.filter(isDemo)) await db.delete('events',demo.id);
+  const events=mergeRows(localEvents,cloudEvents);
   const batches=mergeRows(localBatches,cloud.batches||[]);
 
   onStatus('正在合併手機／電腦資料…');
