@@ -1,6 +1,15 @@
-export const APP_VERSION = '2.0.0-alpha.11';
+export const APP_VERSION = '2.0.0-alpha.12';
 export const MILEAGE_RATE = 8;
 export const MEAL_RATES = { breakfast: 120, lunch: 180, dinner: 180 };
+export const DEFAULT_START_LOCATION = '蘆洲';
+export const PRESET_MILEAGE_ROUTES = [
+  { endLocation: '板橋', km: 40 },
+  { endLocation: '宜蘭', km: 140 },
+  { endLocation: '國土署', km: 10 },
+  { endLocation: '新莊', km: 30 },
+  { endLocation: '宜蘭羅東', km: 150 },
+  { endLocation: '杭州北路', km: 20 }
+];
 
 export const EVENT_TYPES = ['雙北內開會或洽公','國內出差','會議餐飲','通話費補助','一般請款'];
 export const TRANSPORTS = ['自行開車','高鐵','計程車','無交通費'];
