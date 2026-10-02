@@ -93,7 +93,7 @@ function newPage() {
   const endLocation = e.endLocation ?? legacyRoute.endLocation;
   const mileageOptions = mileageSuggestions(state.events, startLocation);
   const c = calculateEvent(e);
-  const expenseRows = (e.expenses||[]).map((x,i)=>html`<div class="expense-row"><select data-expense-type="${i}">${EXPENSE_TYPES.map(v=>`<option ${x.type===v?'selected':''}>${v}</option>`).join('')}</select><input data-expense-amount="${i}" inputmode="numeric" type="number" value="${esc(x.amount||'')}" placeholder="金額"><input data-expense-note="${i}" value="${esc(x.note||'')}" placeholder="備註"><button data-remove-expense="${i}">×</button></div>`).join('');
+  const expenseRows = (e.expenses||[]).map((x,i)=>html`<div class="expense-row"><select data-expense-type="${i}">${(!EXPENSE_TYPES.includes(x.type) ? `<option value="${esc(x.type)}" selected>${esc(x.type)}（舊資料）</option>` : '') + EXPENSE_TYPES.map(v=>`<option ${x.type===v?'selected':''}>${v}</option>`).join('')}</select><input data-expense-amount="${i}" inputmode="numeric" type="number" value="${esc(x.amount||'')}" placeholder="金額"><input data-expense-note="${i}" value="${esc(x.note||'')}" placeholder="備註"><button data-remove-expense="${i}">×</button></div>`).join('');
   return shell(html`
     <form id="eventForm" class="form-page">
       <div class="form-section"><h2>基本資料</h2>

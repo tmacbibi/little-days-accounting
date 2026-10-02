@@ -1,4 +1,4 @@
-export const APP_VERSION = '2.0.0-alpha.17';
+export const APP_VERSION = '2.0.0-alpha.18';
 export const MILEAGE_RATE = 8;
 export const MEAL_RATES = { breakfast: 120, lunch: 180, dinner: 180 };
 export const DEFAULT_START_LOCATION = '蘆洲';
@@ -13,7 +13,7 @@ export const PRESET_MILEAGE_ROUTES = [
 
 export const EVENT_TYPES = ['雙北內開會或洽公','國內出差','會議餐飲','通話費補助','一般請款'];
 export const TRANSPORTS = ['自行開車','高鐵','計程車','無交通費'];
-export const EXPENSE_TYPES = ['高鐵','計程車','實際餐費','會議餐食','會議飲料','宿費','其他','通話費補助'];
+export const EXPENSE_TYPES = ['停車費','計程車','實際餐費','會議餐食','會議飲料','宿費','其他','通話費補助'];
 
 export function money(n) {
   return new Intl.NumberFormat('zh-TW', { style: 'currency', currency: 'TWD', maximumFractionDigits: 0 }).format(Number(n || 0));
@@ -30,7 +30,8 @@ export function calculateEvent(input) {
   const isTravel = input.eventType === '國內出差';
   const selfDrive = input.transport === '自行開車';
   const mileage = selfDrive ? Math.max(0, Number(input.km || 0)) * MILEAGE_RATE : 0;
-  const parking = selfDrive ? Math.max(0, Number(input.parking || 0)) : 0;
+  const parkingExtras = expenses.filter(e => e.type === '停車費').reduce((s,e) => s + e.amount, 0);
+  const parking = (selfDrive ? Math.max(0, Number(input.parking || 0)) : 0) + parkingExtras;
   const highSpeedRailFare = input.transport === '高鐵' ? Math.max(0, Number(input.highSpeedRailFare || 0)) : 0;
   const taxiFare = input.transport === '計程車' ? Math.max(0, Number(input.taxiFare || 0)) : 0;
   const highSpeedRailExtras = expenses.filter(e => e.type === '高鐵').reduce((s,e) => s + e.amount, 0);
@@ -60,6 +61,7 @@ export function calculateEvent(input) {
         ...expenses.filter(e => generalAllowedTravel.has(e.type) && e.type !== '實際餐費')
       ]
     : expenses.filter(e =>
+        e.type !== '停車費' &&
         !(input.transport === '高鐵' && e.type === '高鐵') &&
         !(input.transport === '計程車' && e.type === '計程車')
       );
