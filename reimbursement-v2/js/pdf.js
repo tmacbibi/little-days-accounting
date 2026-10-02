@@ -136,6 +136,8 @@ async function toPdf(canvases){
   return d.output('blob');
 }
 export async function generateBatchPdfs(events,batchName='本週請款'){
+  const { calculateEvent } = await import('./rules.js');
+  events = events.map(e => ({...e, computed:calculateEvent(e)}));
   const general=events.filter(e=>(e.computed?.generalAmount||0)>0);
   const travel=events.filter(e=>e.eventType==='國內出差');
   const noReceipt=events.filter(e=>(e.computed?.mileage||0)>0);

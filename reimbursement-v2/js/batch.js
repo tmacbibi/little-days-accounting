@@ -1,5 +1,5 @@
 import { db } from './db.js';
-import { APP_VERSION, money } from './rules.js';
+import { APP_VERSION, money, calculateEvent } from './rules.js';
 import { esc, eventCard, emptyState } from './ui.js';
 import { generateBatchPdfs, openPdf, downloadBlob } from './pdf.js';
 import { getBridgeUrl, getBridgeKey, uploadBatchPdfs } from './drive.js';
@@ -29,7 +29,8 @@ async function load() {
     return;
   }
 
-  const rows = (batch.eventIds || []).map(id => events.find(e => e.id === id)).filter(Boolean);
+  const rows = (batch.eventIds || []).map(id => events.find(e => e.id === id)).filter(Boolean)
+    .map(e => ({...e, computed:calculateEvent(e)}));
   const total = rows.reduce((s,e) => s + (e.computed?.claimTotal || 0), 0);
   const general = rows.filter(e => (e.computed?.generalAmount || 0) > 0);
   const travel = rows.filter(e => e.eventType === '國內出差');

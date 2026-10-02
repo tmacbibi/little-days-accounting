@@ -1,5 +1,5 @@
 import { db, uid } from './db.js';
-import { APP_VERSION, EVENT_TYPES, TRANSPORTS, EXPENSE_TYPES, DEFAULT_START_LOCATION, PRESET_MILEAGE_ROUTES, calculateEvent, money } from './rules.js';
+import { APP_VERSION, MILEAGE_RATE, EVENT_TYPES, TRANSPORTS, EXPENSE_TYPES, DEFAULT_START_LOCATION, PRESET_MILEAGE_ROUTES, normalizeExpense, calculateEvent, money } from './rules.js';
 import { html, esc, eventCard, emptyState } from './ui.js';
 import { exportBackup, importBackup } from './backup.js';
 import { getBridgeUrl, setBridgeUrl, getBridgeKey, setBridgeKey, testBridge } from './drive.js';
@@ -10,7 +10,7 @@ const initialPage = new URLSearchParams(location.search).has('settings') ? 'sett
 const state = { page: initialPage, events: [], batches: [], editing: null, selected: new Set(), syncStatus: '' };
 
 async function refresh() {
-  state.events = (await db.all('events')).sort((a,b) => String(b.createdAt).localeCompare(String(a.createdAt)));
+  state.events = (await db.all('events')).map(e=>({...e,computed:calculateEvent(e)})).sort((a,b) => String(b.createdAt).localeCompare(String(a.createdAt)));
   state.batches = (await db.all('batches')).sort((a,b) => String(b.createdAt).localeCompare(String(a.createdAt)));
   render();
 }
@@ -93,7 +93,9 @@ function newPage() {
   const endLocation = e.endLocation ?? legacyRoute.endLocation;
   const mileageOptions = mileageSuggestions(state.events, startLocation);
   const c = calculateEvent(e);
-  const expenseRows = (e.expenses||[]).map((x,i)=>html`<div class="expense-row"><select data-expense-type="${i}">${(!EXPENSE_TYPES.includes(x.type) ? `<option value="${esc(x.type)}" selected>${esc(x.type)}（舊資料）</option>` : '') + EXPENSE_TYPES.map(v=>`<option ${x.type===v?'selected':''}>${v}</option>`).join('')}</select><input data-expense-amount="${i}" inputmode="numeric" type="number" value="${esc(x.amount||'')}" placeholder="金額"><input data-expense-note="${i}" value="${esc(x.note||'')}" placeholder="備註"><button data-remove-expense="${i}">×</button></div>`).join('');
+  const expenseRows = (e.expenses||[]).map((x,i)=>html`<div class="expense-row expense-entry"><select data-expense-type="${i}" aria-label="費用類型 ${i+1}">${(!EXPENSE_TYPES.includes(x.type) ? `<option value="${esc(x.type)}" selected>${esc(x.type)}（舊資料）</option>` : '') + EXPENSE_TYPES.map(v=>`<option ${x.type===v?'selected':''}>${v}</option>`).join('')}</select>
+    ${x.type==='里程補助' ? `<label class="expense-km">總公里數<input data-expense-km="${i}" type="number" inputmode="decimal" min="0" step="any" value="${esc(x.km||'')}" placeholder="含去回程" aria-label="里程公里數 ${i+1}"></label><div class="expense-detail"><input data-expense-route="${i}" value="${esc(x.route||'')}" placeholder="例：蘆洲－板橋高鐵站（來回）" aria-label="里程路線 ${i+1}"><small>每公里 ${MILEAGE_RATE} 元・補助 ${money(normalizeExpense(x).amount)}・無外來憑證</small></div>` : `<input data-expense-amount="${i}" inputmode="numeric" type="number" min="0" value="${esc(x.amount||'')}" placeholder="金額" aria-label="費用金額 ${i+1}"><div class="expense-detail">${x.type==='其他' ? `<input data-expense-item="${i}" value="${esc(x.itemName??x.note??'')}" placeholder="實際品項（必填），例：場地租借費" aria-label="實際品項 ${i+1}" required>` : ''}<input data-expense-note="${i}" value="${esc(x.note||'')}" placeholder="備註" aria-label="費用備註 ${i+1}"></div>`}
+    <button type="button" data-remove-expense="${i}" aria-label="移除費用 ${i+1}">×</button></div>`).join('');
   return shell(html`
     <form id="eventForm" class="form-page">
       <div class="form-section"><h2>基本資料</h2>
@@ -189,7 +191,15 @@ function collectForm() {
     route: [fd.get('startLocation')?.trim(), fd.get('endLocation')?.trim()].filter(Boolean).join('－'), transport: fd.get('transport'),
     km: Number(fd.get('km')||0), parking: Number(fd.get('parking')||0), highSpeedRailFare: Number(fd.get('highSpeedRailFare')||0), taxiFare: Number(fd.get('taxiFare')||0), mealMode: fd.get('mealMode')||'無餐費', actualMealAmount: Number(fd.get('actualMealAmount')||0),
     breakfast: fd.get('breakfast')==='on', lunch: fd.get('lunch')==='on', dinner: fd.get('dinner')==='on',
-    expenses: state.editing?.expenses || [], status: state.editing?.status || '待請款'
+    expenses: [...f.querySelectorAll('[data-expense-type]')].map(el => {
+      const i = Number(el.dataset.expenseType), previous = state.editing?.expenses?.[i] || {};
+      const value = (field, fallback='') => f.querySelector(`[data-expense-${field}="${i}"]`)?.value ?? fallback;
+      return normalizeExpense({ ...previous, type: el.value,
+        amount: Number(value('amount', previous.amount || 0)),
+        km: Number(value('km', previous.km || 0)), route: value('route', previous.route || '').trim(),
+        itemName: value('item', previous.itemName || '').trim(), note: value('note', previous.note || '').trim()
+      });
+    }), status: state.editing?.status || '待請款'
   };
 }
 
@@ -207,7 +217,7 @@ function bind() {
   });
   const form = document.querySelector('#eventForm');
   form?.addEventListener('submit', async ev=>{
-    ev.preventDefault(); const row=collectForm(); if(!row.name){alert('請輸入事件名稱');return;} row.id=row.id||uid('evt'); row.createdAt=row.createdAt||new Date().toISOString(); row.updatedAt=new Date().toISOString(); row.computed=calculateEvent(row); if(row.computed.overGeneralRows){alert('一般請款超過4列，請先拆分事件。');return;} await db.put('events',row); syncQuietly(); state.editing=null; state.page='home'; await refresh();
+    ev.preventDefault(); const row=collectForm(); if(!row.name){alert('請輸入事件名稱');return;} if(row.expenses.some(x=>x.type==='其他'&&!x.itemName?.trim())){alert('請填寫其他費用的實際品項');return;} row.id=row.id||uid('evt'); row.createdAt=row.createdAt||new Date().toISOString(); row.updatedAt=new Date().toISOString(); row.computed=calculateEvent(row); if(row.computed.overGeneralRows){alert('一般請款超過4列，請先拆分事件。');return;} await db.put('events',row); syncQuietly(); state.editing=null; state.page='home'; await refresh();
   });
   form?.querySelectorAll('input,select').forEach(el=>{ if(el.closest('.expense-row'))return; el.onchange=()=>{ const draft=collectForm(); state.editing=draft; render(); }; });
   document.querySelectorAll('[data-mileage-km]').forEach(btn=>btn.addEventListener('click',()=>{
@@ -221,9 +231,7 @@ function bind() {
   }));
   document.querySelector('[data-add-expense]')?.addEventListener('click',()=>{ const draft=collectForm(); draft.expenses=[...(draft.expenses||[]),{type:'會議飲料',amount:'',note:''}]; state.editing=draft; render(); });
   document.querySelectorAll('[data-remove-expense]').forEach(btn=>btn.onclick=()=>{ const draft=collectForm(); draft.expenses.splice(Number(btn.dataset.removeExpense),1); state.editing=draft; render(); });
-  document.querySelectorAll('[data-expense-type]').forEach(el=>el.onchange=()=>{ const i=Number(el.dataset.expenseType); const d=collectForm(); d.expenses[i]={...(d.expenses[i]||{}),type:el.value}; state.editing=d; render(); });
-  document.querySelectorAll('[data-expense-amount]').forEach(el=>el.onchange=()=>{ const i=Number(el.dataset.expenseAmount); const d=collectForm(); d.expenses[i]={...(d.expenses[i]||{}),amount:Number(el.value||0)}; state.editing=d; render(); });
-  document.querySelectorAll('[data-expense-note]').forEach(el=>el.onchange=()=>{ const i=Number(el.dataset.expenseNote); const d=collectForm(); d.expenses[i]={...(d.expenses[i]||{}),note:el.value}; state.editing=d; render(); });
+  document.querySelectorAll('.expense-row input,.expense-row select').forEach(el=>el.onchange=()=>{ state.editing=collectForm(); render(); });
   document.querySelectorAll('.event-card[data-id]').forEach(card=>{
     card.onclick=ev=>{
       if(ev.target.closest('input,button,a,select,label')) return;
