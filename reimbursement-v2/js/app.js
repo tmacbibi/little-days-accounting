@@ -1,3 +1,4 @@
+import './updates.js';
 import { db, uid } from './db.js';
 import { isDeleted, mergeRows, eventViews } from './records.js';
 import { APP_VERSION, MILEAGE_RATE, EVENT_TYPES, TRANSPORTS, EXPENSE_TYPES, DEFAULT_START_LOCATION, PRESET_MILEAGE_ROUTES, normalizeExpense, calculateEvent, money } from './rules.js';
@@ -28,7 +29,7 @@ function nav() {
 }
 
 function shell(content, title='報帳助手') {
-  return html`<div class="app-shell"><header class="topbar"><div><h1>${title}</h1><small>V${APP_VERSION}</small></div><button class="icon-btn" data-nav="settings" aria-label="設定">⚙︎</button></header><main>${content}</main>${nav()}</div>`;
+  return html`<div class="app-shell"><header class="topbar"><div><h1>${title}</h1><small>V${APP_VERSION}</small> <button type="button" class="ghost" data-check-update style="font-size:12px;padding:6px 8px">檢查更新</button></div><button class="icon-btn" data-nav="settings" aria-label="設定">⚙︎</button></header><main>${content}</main>${nav()}</div>`;
 }
 
 function homePage() {
@@ -171,7 +172,7 @@ function paidPage() {
   const list = eventViews(state.events).paid;
   return shell(html`<section class="section"><div class="section-head"><div><h2>已請款</h2><p class="muted">已產製表單／已完成請款的事件</p></div><span class="muted">${list.length} 筆</span></div><button class="ghost" data-nav="deleted">垃圾桶（${state.deletedEvents.length}）</button>
     ${state.pendingNotice ? `<p class="sync-status" role="status">${esc(state.pendingNotice)}</p>` : ''}
-    ${list.length?list.map(e=>`<div>${eventCard(e)}<button type="button" class="ghost" style="color:var(--danger)" data-delete-event="${esc(e.id)}" aria-label="刪除 ${esc(e.name)}">刪除</button></div>`).join(''):emptyState('目前沒有已請款','完成產表與上傳後會出現在這裡。')}</section>`,'已請款');
+    ${list.length?list.map(e=>`<div>${eventCard(e)}<button type="button" class="ghost" data-return-pending="${esc(e.id)}">退回待請款</button><button type="button" class="ghost" style="color:var(--danger)" data-delete-event="${esc(e.id)}" aria-label="刪除 ${esc(e.name)}">刪除</button></div>`).join(''):emptyState('目前沒有已請款','完成產表與上傳後會出現在這裡。')}</section>`,'已請款');
 }
 
 function historyPage() {
@@ -243,7 +244,24 @@ function liveRecompute() {
   state.editing = draft; render();
 }
 
+async function returnToPending(id) {
+  const row = state.events.find(e=>e.id===id);
+  if (!row || !confirm('將「'+row.name+'」退回待請款？可重新選取並產製 PDF，原本已歸檔的 PDF 會保留。')) return;
+  try {
+    const result = await db.returnToPending([id]);
+    state.pendingNotice = result.changed ? '已退回待請款，可勾選後建立本次請款、重新產製 PDF。' : '資料狀態已改變，請重新確認。';
+    state.page = 'pending';
+    await refresh();
+    if (hasSyncConfig()) {
+      try { await syncNow(); state.pendingNotice += '雲端同步完成。'; }
+      catch (err) { state.pendingNotice += '本機已完成，雲端待同步：'+err.message; }
+      await refresh();
+    }
+  } catch (err) { alert('退回失敗：'+err.message); }
+}
+
 function bind() {
+  document.querySelectorAll('[data-return-pending]').forEach(b=>b.onclick=()=>returnToPending(b.dataset.returnPending));
   document.querySelectorAll('[data-delete-event]').forEach(b=>b.onclick=ev=>{ev.stopPropagation(); changeDeletion([b.dataset.deleteEvent]);});
   document.querySelector('[data-delete-selected]')?.addEventListener('click',()=>changeDeletion([...state.selected]));
   document.querySelectorAll('[data-restore-event]').forEach(b=>b.onclick=()=>changeDeletion([b.dataset.restoreEvent],true));

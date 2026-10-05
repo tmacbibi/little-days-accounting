@@ -1,4 +1,4 @@
-import { deleteRecord, restoreRecord } from './records.js';
+import { deleteRecord, restoreRecord, returnToPendingRecord } from './records.js';
 
 const DB_NAME = 'reimbursement-pwa-v2';
 const DB_VERSION = 1;
@@ -38,7 +38,8 @@ async function tx(storeName, mode, fn) {
 }
 
 export const db = {
-  async changeDeletion(ids, restore = false) {
+  async returnToPending(ids) { return this.changeDeletion(ids, false, true); },
+  async changeDeletion(ids, restore = false, returnPending = false) {
     const database = await openDB();
     return new Promise((resolve, reject) => {
       const transaction = database.transaction('events', 'readwrite');
@@ -48,7 +49,7 @@ export const db = {
       for (const id of new Set(ids)) {
         const req = store.get(id);
         req.onsuccess = () => {
-          const row = (restore ? restoreRecord : deleteRecord)(req.result, now);
+          const row = (returnPending ? returnToPendingRecord : restore ? restoreRecord : deleteRecord)(req.result, now);
           if (row) { store.put(row); result.changed++; } else result.skipped++;
         };
       }

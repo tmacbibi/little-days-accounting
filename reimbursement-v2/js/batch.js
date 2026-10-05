@@ -1,3 +1,4 @@
+import './updates.js';
 import { db } from './db.js';
 import { isDeleted, mergeRows } from './records.js';
 import { APP_VERSION, money, calculateEvent } from './rules.js';
@@ -26,7 +27,7 @@ async function load() {
   const batch = batches[0];
 
   if (!batch) {
-    root.innerHTML = `<div class="app-shell"><header class="topbar"><div><h1>請款批次預覽</h1><small>V${APP_VERSION}</small></div></header><main class="section">${emptyState('尚無請款批次','請先回到待請款頁面勾選事件。')}<a class="primary full link-button" href="./">回報帳助手</a></main></div>`;
+    root.innerHTML = `<div class="app-shell"><header class="topbar"><div><h1>請款批次預覽</h1><small>V${APP_VERSION}</small> <button type="button" class="ghost" data-check-update style="font-size:12px;padding:6px 8px">檢查更新</button></div></header><main class="section">${emptyState('尚無請款批次','請先回到待請款頁面勾選事件。')}<a class="primary full link-button" href="./">回報帳助手</a></main></div>`;
     return;
   }
 
@@ -42,7 +43,7 @@ async function load() {
   root.innerHTML = `
     <div class="app-shell">
       <header class="topbar">
-        <div><h1>請款批次預覽</h1><small>V${APP_VERSION}</small></div>
+        <div><h1>請款批次預覽</h1><small>V${APP_VERSION}</small> <button type="button" class="ghost" data-check-update style="font-size:12px;padding:6px 8px">檢查更新</button></div>
         <a class="icon-btn icon-link" href="./" aria-label="回首頁">×</a>
       </header>
 

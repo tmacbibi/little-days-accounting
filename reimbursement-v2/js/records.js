@@ -60,3 +60,9 @@ export function eventViews(rows) {
     deleted: rows.filter(isDeleted).sort((a,b)=>String(b.deletedAt).localeCompare(String(a.deletedAt)))
   };
 }
+
+export function returnToPendingRecord(row, now = Date.now()) {
+  if (!row || isDeleted(row) || !['已請款','已產生表單'].includes(row.status)) return null;
+  const updatedAt = nextTime(row, now);
+  return {...row, status:'待請款', batchId:null, previousBatchId:row.batchId || row.previousBatchId || null, returnedAt:updatedAt, updatedAt};
+}

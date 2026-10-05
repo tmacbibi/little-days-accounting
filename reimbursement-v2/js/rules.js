@@ -1,4 +1,4 @@
-export const APP_VERSION = '2.0.0-alpha.24';
+export const APP_VERSION = '2.0.0-alpha.25';
 export const MILEAGE_RATE = 8;
 export const MEAL_RATES = { breakfast: 120, lunch: 180, dinner: 180 };
 export const DEFAULT_START_LOCATION = '蘆洲';
