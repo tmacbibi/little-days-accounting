@@ -138,7 +138,13 @@ async function toPdf(canvases){
   canvases.forEach((c,i)=>{if(i)d.addPage('a4','portrait');d.addImage(c.toDataURL('image/jpeg',.94),'JPEG',0,0,595.28,841.89,undefined,'FAST');});
   return d.output('blob');
 }
+export function productionStamp(date=new Date()) {
+  const parts=new Intl.DateTimeFormat('en-GB',{timeZone:'Asia/Taipei',year:'numeric',month:'2-digit',day:'2-digit',hour:'2-digit',minute:'2-digit',second:'2-digit',hourCycle:'h23'}).formatToParts(date);
+  const p=Object.fromEntries(parts.map(part=>[part.type,part.value]));
+  return `${p.year}-${p.month}-${p.day}_${p.hour}${p.minute}${p.second}`;
+}
 export async function generateBatchPdfs(events,batchName='本週請款'){
+  const producedAt=productionStamp();
   const { calculateEvent } = await import('./rules.js');
   events = events.map(e => ({...e, computed:calculateEvent(e)}));
   const general=events.filter(e=>(e.computed?.generalAmount||0)>0);
@@ -155,11 +161,11 @@ export async function generateBatchPdfs(events,batchName='本週請款'){
   for(const [label,items,filler] of groups){
     if(!items.length)continue;
     const pages=makePages(items,filler);allPages.push(...pages);
-    files.push({name:`${stamp}_${label}.pdf`,blob:await toPdf(pages),kind:label});
+    files.push({name:`${stamp}_${label}_產製_${producedAt}.pdf`,blob:await toPdf(pages),kind:label});
   }
   if(allPages.length){
     const safe=String(batchName||'整批報帳').replace(/[\\/:*?"<>|]/g,'_');
-    files.unshift({name:`${stamp}_${safe}_整批報帳.pdf`,blob:await toPdf(allPages),kind:'整批'});
+    files.unshift({name:`${stamp}_${safe}_整批報帳_產製_${producedAt}.pdf`,blob:await toPdf(allPages),kind:'整批'});
   }
   return files;
 }
