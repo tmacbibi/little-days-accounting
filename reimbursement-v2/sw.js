@@ -1,4 +1,4 @@
-const CACHE = 'reimburse-v2-0-0-alpha-20';
+const CACHE = 'reimburse-v2-0-0-alpha-20-r1';
 const ASSETS = [
   './', './index.html', './styles.css', './manifest.webmanifest',
   './js/app.js', './js/db.js', './js/records.js', './js/rules.js', './js/ui.js', './js/backup.js', './js/pdf.js', './js/drive.js', './js/sync.js',
@@ -6,7 +6,9 @@ const ASSETS = [
 ];
 
 self.addEventListener('install', event => {
-  event.waitUntil(caches.open(CACHE).then(cache => cache.addAll(ASSETS)));
+  event.waitUntil(caches.open(CACHE).then(cache => cache.addAll(
+    ASSETS.map(url => new Request(url, { cache: 'reload' }))
+  )));
   self.skipWaiting();
 });
 
