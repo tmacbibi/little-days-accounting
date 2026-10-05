@@ -1,4 +1,4 @@
-const CACHE = 'reimburse-v2-0-0-alpha-20-r1';
+const CACHE = 'reimburse-v2-0-0-alpha-20-r2';
 const ASSETS = [
   './', './index.html', './styles.css', './manifest.webmanifest',
   './js/app.js', './js/db.js', './js/records.js', './js/rules.js', './js/ui.js', './js/backup.js', './js/pdf.js', './js/drive.js', './js/sync.js',
@@ -14,18 +14,35 @@ self.addEventListener('install', event => {
 
 self.addEventListener('activate', event => {
   event.waitUntil(
-    caches.keys().then(keys => Promise.all(keys.filter(k => k !== CACHE).map(k => caches.delete(k))))
+    caches.keys().then(keys => Promise.all(keys.filter(k => k.startsWith('reimburse-v2-') && k !== CACHE).map(k => caches.delete(k))))
+      .then(() => self.clients.claim())
   );
-  self.clients.claim();
 });
 
 self.addEventListener('fetch', event => {
   if (event.request.method !== 'GET') return;
+  const url = new URL(event.request.url);
+  const scope = new URL('./', self.location.href);
+  // Google sync/PDF requests must bypass offline asset caching entirely.
+  if (url.origin !== scope.origin) return;
+  if (!ASSETS.some(asset => new URL(asset, scope).pathname === url.pathname)) return;
   event.respondWith(
-    caches.match(event.request).then(cached => cached || fetch(event.request).then(response => {
-      const copy = response.clone();
-      caches.open(CACHE).then(cache => cache.put(event.request, copy));
+    caches.open(CACHE).then(async cache => {
+      const cached = await cache.match(event.request);
+      if (cached) return cached;
+      try {
+      const response = await fetch(event.request);
+      if (response.ok && response.type === 'basic') {
+        await cache.put(event.request, response.clone());
+      }
       return response;
-    }).catch(() => caches.match('./index.html')))
+      } catch (error) {
+        if (event.request.mode === 'navigate') {
+          const fallback = await cache.match('./index.html');
+          if (fallback) return fallback;
+        }
+        throw error;
+      }
+    })
   );
 });
