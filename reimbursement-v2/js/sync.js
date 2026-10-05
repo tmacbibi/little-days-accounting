@@ -96,6 +96,7 @@ async function performSync(onStatus){
   const events=await db.merge('events',cloudEvents,mergeRows);
   const batches=await db.merge('batches',cloud.batches||[],mergeRows);
 
+  window.dispatchEvent(new Event('reimbursement-data-changed'));
   onStatus('正在寫回專用 Google Sheet…');
   await pushCloudData({schemaVersion:1,events,batches,clientTime:new Date().toISOString()});
   onStatus('同步完成');

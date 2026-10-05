@@ -1,5 +1,5 @@
 import { db, uid } from './db.js';
-import { isDeleted, mergeRows } from './records.js';
+import { isDeleted, mergeRows, eventViews } from './records.js';
 import { APP_VERSION, MILEAGE_RATE, EVENT_TYPES, TRANSPORTS, EXPENSE_TYPES, DEFAULT_START_LOCATION, PRESET_MILEAGE_ROUTES, normalizeExpense, calculateEvent, money } from './rules.js';
 import { html, esc, eventCard, emptyState } from './ui.js';
 import { exportBackup, importBackup } from './backup.js';
@@ -10,13 +10,14 @@ const app = document.querySelector('#app');
 const initialPage = new URLSearchParams(location.search).has('settings') ? 'settings' : 'home';
 const state = { page: initialPage, events: [], deletedEvents: [], batches: [], editing: null, selected: new Set(), syncStatus: '', pendingNotice: '' };
 
-async function refresh() {
+async function refresh(background = false) {
   const events = (await db.all('events')).map(e=>({...e,computed:calculateEvent(e)}));
-  state.events = events.filter(e=>!isDeleted(e)).sort((a,b) => String(b.createdAt).localeCompare(String(a.createdAt)));
-  state.deletedEvents = events.filter(isDeleted).sort((a,b)=>String(b.deletedAt).localeCompare(String(a.deletedAt)));
+  const views = eventViews(events);
+  state.events = views.active;
+  state.deletedEvents = views.deleted;
   state.selected = new Set([...state.selected].filter(id=>state.events.some(e=>e.id===id&&e.status==='待請款')));
   state.batches = (await db.all('batches')).sort((a,b) => String(b.createdAt).localeCompare(String(a.createdAt)));
-  render();
+  if (!background || !['new','settings'].includes(state.page)) render();
 }
 
 function nav() {
@@ -31,10 +32,10 @@ function shell(content, title='報帳助手') {
 }
 
 function homePage() {
-  const pending = state.events.filter(e => e.status === '待請款');
+  const pending = eventViews(state.events).pending;
   const pendingTotal = pending.reduce((s,e)=>s+(e.computed?.claimTotal||0),0);
-  const claimed = state.events.filter(e => e.status === '已請款' || e.status === '已產生表單').length;
-  const recent = state.events.slice(0,4);
+  const claimed = eventViews(state.events).paid.length;
+  const recent = eventViews(state.events).recent;
   return shell(html`
     <section class="hero-card"><div><span class="eyebrow">本次待請款</span><strong class="hero-money">${money(pendingTotal)}</strong><small>${pending.length} 筆事件・${claimed} 筆已請款</small></div><button class="primary" data-nav="new">＋ 新增報帳</button></section>
     <section class="quick-grid">
@@ -43,7 +44,7 @@ function homePage() {
       <button class="quick" data-action="phone"><b>☎</b><span>電話補助</span><small>快速建立 600 元</small></button>
       <button class="quick" data-nav="settings"><b>↥</b><span>備份</span><small>匯出 / 匯入資料</small></button>
     </section>
-    <section class="section"><div class="section-head"><h2>最近事件</h2><button data-nav="history">全部</button></div>${recent.length ? recent.map(eventCard).join('') : emptyState('尚無報帳事件','先新增第一筆，系統會自動計算需要的表單。')}</section>
+    <section class="section"><div class="section-head"><h2>最近事件</h2><div><button data-nav="deleted">垃圾桶（${state.deletedEvents.length}）</button><button data-nav="history">全部</button></div></div>${recent.length ? recent.map(eventCard).join('') : emptyState('尚無報帳事件','先新增第一筆，系統會自動計算需要的表單。')}</section>
   `,'報帳助手');
 }
 
@@ -128,32 +129,32 @@ function newPage() {
 }
 
 function pendingPage() {
-  const list = state.events.filter(e=>e.status==='待請款');
+  const list = eventViews(state.events).pending;
   const selectedRows = list.filter(e=>state.selected.has(e.id));
   const total = selectedRows.reduce((s,e)=>s+(e.computed?.claimTotal||0),0);
   return shell(html`
     <section class="section"><div class="section-head"><div><h2>待請款</h2><p class="muted">勾選多筆建立請款，或刪除測試項目</p></div><button class="ghost" data-select-all>${state.selected.size?'取消選取':'全選'}</button></div>
-    <button class="ghost" data-nav="deleted">已刪除項目（${state.deletedEvents.length}）</button>
+    <button class="ghost" data-nav="deleted">垃圾桶（${state.deletedEvents.length}）</button>
     ${state.pendingNotice ? `<p class="sync-status" role="status">${esc(state.pendingNotice)}</p>` : ''}
-    ${list.length ? list.map(e=>`<div class="select-card"><input type="checkbox" data-select="${esc(e.id)}" aria-label="選取 ${esc(e.name)}" ${state.selected.has(e.id)?'checked':''}><div>${eventCard(e)}<button type="button" class="ghost" style="color:var(--danger)" data-delete-pending="${esc(e.id)}" aria-label="刪除 ${esc(e.name)}">刪除</button></div></div>`).join('') : emptyState('目前沒有待請款','新增事件後會出現在這裡。')}</section>
+    ${list.length ? list.map(e=>`<div class="select-card"><input type="checkbox" data-select="${esc(e.id)}" aria-label="選取 ${esc(e.name)}" ${state.selected.has(e.id)?'checked':''}><div>${eventCard(e)}<button type="button" class="ghost" style="color:var(--danger)" data-delete-event="${esc(e.id)}" aria-label="刪除 ${esc(e.name)}">刪除</button></div></div>`).join('') : emptyState('目前沒有待請款','新增事件後會出現在這裡。')}</section>
     ${state.selected.size?`<div class="batch-bar"><div><small>已選 ${state.selected.size} 筆</small><strong>${money(total)}</strong></div><div><button class="ghost" style="color:var(--danger)" data-delete-selected>刪除所選</button><button class="primary" data-create-batch>建立本次請款</button></div></div>`:''}
   `,'本次請款');
 }
 
 function deletedPage() {
-  return shell(html`<section class="section"><div class="section-head"><h2>已刪除項目</h2><button class="ghost" data-nav="pending">回待請款</button></div><p class="muted">刪除項目不列入請款金額，也不會產生表單；誤刪時可還原。</p>
+  return shell(html`<section class="section"><div class="section-head"><h2>垃圾桶</h2><button class="ghost" data-nav="home">回首頁</button></div><p class="muted">刪除的事件不會出現在首頁、待請款或已請款；還原後回到原本的狀態。已歸檔的 Google Drive PDF 仍保留。</p>
     ${state.pendingNotice ? `<p class="sync-status" role="status">${esc(state.pendingNotice)}</p>` : ''}
-    ${state.deletedEvents.length ? state.deletedEvents.map(e=>`<div class="event-card"><strong>${esc(e.name||'未命名項目')}</strong><p class="muted">${esc(e.date)}・${money(e.computed?.claimTotal||0)}</p><button class="ghost" data-restore-pending="${esc(e.id)}" aria-label="還原 ${esc(e.name)}">還原到待請款</button></div>`).join('') : emptyState('沒有已刪除項目','刪除的測試項目會放在這裡。')}</section>`, '已刪除項目');
+    ${state.deletedEvents.length ? state.deletedEvents.map(e=>`<div class="event-card"><strong>${esc(e.name||'未命名項目')}</strong><p class="muted">${esc(e.date)}・${money(e.computed?.claimTotal||0)}</p><button class="ghost" data-restore-event="${esc(e.id)}" aria-label="還原 ${esc(e.name)}">還原到${e.previousStatus==='待請款'?'待請款':'已請款'}</button></div>`).join('') : emptyState('垃圾桶是空的','刪除的報帳事件會保留在這裡，可隨時還原。')}</section>`, '垃圾桶');
 }
 
-async function changePendingDeletion(ids, restore = false) {
-  const candidates = (restore ? state.deletedEvents : state.events.filter(e=>e.status==='待請款')).filter(e=>ids.includes(e.id));
+async function changeDeletion(ids, restore = false) {
+  const candidates = (restore ? state.deletedEvents : state.events).filter(e=>ids.includes(e.id));
   if (!candidates.length) return;
   const verb = restore ? '還原' : '刪除';
   const summary = candidates.length===1 ? `「${candidates[0].name}」` : `所選 ${candidates.length} 筆項目`;
-  if (!confirm(`${verb}${summary}？${restore ? '還原後會回到待請款。' : '項目會移至已刪除項目，之後可以還原。'}`)) return;
+  if (!confirm(`${verb}${summary}？${restore ? '還原後會回到刪除前的請款狀態。' : '項目會從首頁與請款清單移至垃圾桶，之後可以還原。'}`)) return;
   try {
-    const result = await db.changePendingDeletion(candidates.map(e=>e.id), restore);
+    const result = await db.changeDeletion(candidates.map(e=>e.id), restore);
     state.selected.clear();
     const message = `已${verb} ${result.changed} 筆${result.skipped ? `；${result.skipped} 筆狀態已改變，未處理` : ''}。`;
     state.pendingNotice = message + (hasSyncConfig() ? '正在同步其他裝置…' : '尚未設定雲端同步，資料已保留在本機。');
@@ -167,8 +168,10 @@ async function changePendingDeletion(ids, restore = false) {
 }
 
 function paidPage() {
-  const list = state.events.filter(e=>e.status==='已請款' || e.status==='已產生表單');
-  return shell(html`<section class="section"><div class="section-head"><div><h2>已請款</h2><p class="muted">已產製表單／已完成請款的事件</p></div><span class="muted">${list.length} 筆</span></div>${list.length?list.map(eventCard).join(''):emptyState('目前沒有已請款','完成產表與上傳後會出現在這裡。')}</section>`,'已請款');
+  const list = eventViews(state.events).paid;
+  return shell(html`<section class="section"><div class="section-head"><div><h2>已請款</h2><p class="muted">已產製表單／已完成請款的事件</p></div><span class="muted">${list.length} 筆</span></div><button class="ghost" data-nav="deleted">垃圾桶（${state.deletedEvents.length}）</button>
+    ${state.pendingNotice ? `<p class="sync-status" role="status">${esc(state.pendingNotice)}</p>` : ''}
+    ${list.length?list.map(e=>`<div>${eventCard(e)}<button type="button" class="ghost" style="color:var(--danger)" data-delete-event="${esc(e.id)}" aria-label="刪除 ${esc(e.name)}">刪除</button></div>`).join(''):emptyState('目前沒有已請款','完成產表與上傳後會出現在這裡。')}</section>`,'已請款');
 }
 
 function historyPage() {
@@ -241,10 +244,10 @@ function liveRecompute() {
 }
 
 function bind() {
-  document.querySelectorAll('[data-delete-pending]').forEach(b=>b.onclick=ev=>{ev.stopPropagation(); changePendingDeletion([b.dataset.deletePending]);});
-  document.querySelector('[data-delete-selected]')?.addEventListener('click',()=>changePendingDeletion([...state.selected]));
-  document.querySelectorAll('[data-restore-pending]').forEach(b=>b.onclick=()=>changePendingDeletion([b.dataset.restorePending],true));
-  document.querySelectorAll('[data-nav]').forEach(b=>b.onclick=()=>{ state.page=b.dataset.nav; if(state.page!=='new') state.editing=null; render(); });
+  document.querySelectorAll('[data-delete-event]').forEach(b=>b.onclick=ev=>{ev.stopPropagation(); changeDeletion([b.dataset.deleteEvent]);});
+  document.querySelector('[data-delete-selected]')?.addEventListener('click',()=>changeDeletion([...state.selected]));
+  document.querySelectorAll('[data-restore-event]').forEach(b=>b.onclick=()=>changeDeletion([b.dataset.restoreEvent],true));
+  document.querySelectorAll('[data-nav]').forEach(b=>b.onclick=async()=>{ state.page=b.dataset.nav; if(state.page!=='new') state.editing=null; await refresh(); });
   document.querySelector('[data-action="phone"]')?.addEventListener('click', async()=>{
     const now = new Date(); const month = now.getMonth()+1;
     const row = { id:uid('evt'), date:now.toISOString().slice(0,10), name:`${month}月電話費補助`, projectCode:'', eventType:'通話費補助', route:'', transport:'無交通費', expenses:[{type:'通話費補助',amount:600,note:''}], status:'待請款', createdAt:new Date().toISOString() };
@@ -252,7 +255,7 @@ function bind() {
   });
   const form = document.querySelector('#eventForm');
   form?.addEventListener('submit', async ev=>{
-    ev.preventDefault(); const row=collectForm(); if(!row.name){alert('請輸入事件名稱');return;} if(row.expenses.some(x=>x.type==='其他'&&!x.itemName?.trim())){alert('請填寫其他費用的實際品項');return;} row.id=row.id||uid('evt'); row.createdAt=row.createdAt||new Date().toISOString(); row.updatedAt=new Date().toISOString(); row.computed=calculateEvent(row); if(row.computed.overGeneralRows){alert('一般請款超過4列，請先拆分事件。');return;} const merged=await db.merge('events',[row],mergeRows); if(isDeleted(merged.find(e=>e.id===row.id))){alert('此項目已刪除，請先到已刪除項目還原。');state.editing=null;state.page='pending';await refresh();return;} syncQuietly(); state.editing=null; state.page='home'; await refresh();
+    ev.preventDefault(); const row=collectForm(); if(!row.name){alert('請輸入事件名稱');return;} if(row.expenses.some(x=>x.type==='其他'&&!x.itemName?.trim())){alert('請填寫其他費用的實際品項');return;} row.id=row.id||uid('evt'); row.createdAt=row.createdAt||new Date().toISOString(); row.updatedAt=new Date().toISOString(); row.computed=calculateEvent(row); if(row.computed.overGeneralRows){alert('一般請款超過4列，請先拆分事件。');return;} const merged=await db.merge('events',[row],mergeRows); if(isDeleted(merged.find(e=>e.id===row.id))){alert('此項目已刪除，請先到垃圾桶還原。');state.editing=null;state.page='pending';await refresh();return;} syncQuietly(); state.editing=null; state.page='home'; await refresh();
   });
   form?.querySelectorAll('input,select').forEach(el=>{ if(el.closest('.expense-row'))return; el.onchange=()=>{ const draft=collectForm(); state.editing=draft; render(); }; });
   document.querySelectorAll('[data-mileage-km]').forEach(btn=>btn.addEventListener('click',()=>{
@@ -334,3 +337,18 @@ if ('serviceWorker' in navigator) {
 await seed();
 if(hasSyncConfig()) await syncQuietly();
 await refresh();
+
+// Re-read IndexedDB after sync and when returning from a batch/another tab.
+// Keep unsaved event and settings inputs intact during background updates.
+window.addEventListener('reimbursement-data-changed',()=>refresh(true));
+let resuming = false;
+async function resumeData() {
+  if (document.visibilityState === 'hidden' || resuming) return;
+  resuming = true;
+  try { await refresh(true); await syncQuietly(); await refresh(true); }
+  finally { resuming = false; }
+}
+window.addEventListener('pageshow',event=>{ if(event.persisted) resumeData(); });
+window.addEventListener('focus',resumeData);
+window.addEventListener('online',resumeData);
+document.addEventListener('visibilitychange',()=>{ if(document.visibilityState==='visible') resumeData(); });

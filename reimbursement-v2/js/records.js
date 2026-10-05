@@ -15,16 +15,16 @@ function nextTime(row, now) {
   return new Date(Math.max(now, recordTime(row) + 1, timestamp(row.deletedAt) + 1, timestamp(row.restoredAt) + 1)).toISOString();
 }
 
-export function deletePendingRecord(row, now = Date.now()) {
-  if (!row || isDeleted(row) || row.status !== '待請款') return null;
+export function deleteRecord(row, now = Date.now()) {
+  if (!row || isDeleted(row) || !['待請款','已請款','已產生表單'].includes(row.status)) return null;
   const deletedAt = nextTime(row, now);
-  return {...row, previousStatus:'待請款', status:'已刪除', deletedAt, updatedAt:deletedAt};
+  return {...row, previousStatus:row.status, status:'已刪除', deletedAt, updatedAt:deletedAt};
 }
 
-export function restorePendingRecord(row, now = Date.now()) {
-  if (!row || !isDeleted(row) || row.previousStatus !== '待請款') return null;
+export function restoreRecord(row, now = Date.now()) {
+  if (!row || !isDeleted(row) || !['待請款','已請款','已產生表單'].includes(row.previousStatus)) return null;
   const restoredAt = nextTime(row, now);
-  return {...row, status:'待請款', deletedAt:null, restoredAt, updatedAt:restoredAt};
+  return {...row, status:row.previousStatus, deletedAt:null, restoredAt, updatedAt:restoredAt};
 }
 
 export function mergeRows(localRows, cloudRows) {
@@ -47,4 +47,16 @@ export function mergeRows(localRows, cloudRows) {
     }
   }
   return [...records.values()];
+}
+
+// All screens use the same active records; trash never contributes to totals.
+export function eventViews(rows) {
+  const active = rows.filter(row=>!isDeleted(row)).sort((a,b)=>String(b.createdAt).localeCompare(String(a.createdAt)));
+  return {
+    active,
+    recent: active.slice(0,4),
+    pending: active.filter(row=>row.status==='待請款'),
+    paid: active.filter(row=>['已請款','已產生表單'].includes(row.status)),
+    deleted: rows.filter(isDeleted).sort((a,b)=>String(b.deletedAt).localeCompare(String(a.deletedAt)))
+  };
 }
