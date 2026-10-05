@@ -34,13 +34,13 @@ function company(x,y,title){
   txt(x,'鼎漢國際工程顧問股份有限公司',PW/2,y,12,'center');
   txt(x,title,PW/2,y+18,13,'center');
 }
-function cut(x,y){txt(x,'✂',36,y,11,'center');line(x,60,y,530,y,.55,[3,2]);}
+function cut(x,y){line(x,60,y,530,y,.55,[3,2]);}
 function profile(x,y,{department=68,employee=250,applicant=426,size=9}={}){
   // 公司三種表單的底部欄位起點並不相同；依公司正式範例分別定位。
   // 冒號後保留一個空格，避免姓名／編號與標籤黏在一起。
   txt(x,`部門代號： ${PROFILE.department}`,department,y,size);
   txt(x,`員工編號： ${PROFILE.employeeNo}`,employee,y,size);
-  txt(x,`申請人： ${PROFILE.applicant}`,applicant,y,size);
+  txt(x,`申請人： ${PROFILE.applicant}`,applicant + size * 3,y,size);
 }
 function signatures(x,tableTop,kind='normal',slot=0){
   txt(x,'總經理',520,tableTop+20,10);
@@ -75,7 +75,7 @@ function fillGeneral(x,e,slot){
   rows.forEach((r,i)=>{
     const cy=(ys[i+1]+ys[i+2])/2;
     txt(x,yy,(GENERAL_X[0]+GENERAL_X[1])/2,cy,8.5,'center');txt(x,mm,(GENERAL_X[1]+GENERAL_X[2])/2,cy,8.5,'center');txt(x,dd,(GENERAL_X[2]+GENERAL_X[3])/2,cy,8.5,'center');
-    const ls=wrap(x,r.summary,GENERAL_X[4]-GENERAL_X[3]-8,8.3,2);
+    const ls=wrap(x,r.summary === '實際餐費' ? '會議餐費' : r.summary,GENERAL_X[4]-GENERAL_X[3]-8,8.3,2);
     ls.forEach((s,j)=>txt(x,s,GENERAL_X[3]+3,cy+(j-(ls.length-1)/2)*9,8.3));
     fitTxt(x,e.projectCode||'',(GENERAL_X[4]+GENERAL_X[5])/2,cy,GENERAL_X[5]-GENERAL_X[4]-5,8.5);
     txt(x,fmt(r.amount),(GENERAL_X[7]+GENERAL_X[8])/2,cy,8.5,'center');
