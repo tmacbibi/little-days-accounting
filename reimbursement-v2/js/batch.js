@@ -1,4 +1,5 @@
 import { db } from './db.js';
+import { isDeleted, mergeRows } from './records.js';
 import { APP_VERSION, money, calculateEvent } from './rules.js';
 import { esc, eventCard, emptyState } from './ui.js';
 import { generateBatchPdfs, openPdf, downloadBlob } from './pdf.js';
@@ -21,7 +22,7 @@ function slipPreview(e, i) {
 
 async function load() {
   const batches = (await db.all('batches')).sort((a,b) => String(b.createdAt).localeCompare(String(a.createdAt)));
-  const events = await db.all('events');
+  const events = (await db.all('events')).filter(e=>!isDeleted(e));
   const batch = batches[0];
 
   if (!batch) {
@@ -29,7 +30,7 @@ async function load() {
     return;
   }
 
-  const rows = (batch.eventIds || []).map(id => events.find(e => e.id === id)).filter(Boolean)
+  let rows = (batch.eventIds || []).map(id => events.find(e => e.id === id)).filter(Boolean)
     .map(e => ({...e, computed:calculateEvent(e)}));
   const total = rows.reduce((s,e) => s + (e.computed?.claimTotal || 0), 0);
   const general = rows.filter(e => (e.computed?.generalAmount || 0) > 0);
@@ -77,7 +78,7 @@ async function load() {
         </section>
 
         <section class="section batch-actions">
-          <button class="primary full" id="generateBatch">產生正式 PDF 並上傳 Google Drive</button>
+          ${rows.length ? '<button class="primary full" id="generateBatch">產生正式 PDF 並上傳 Google Drive</button>' : '<p class="muted">本批項目已刪除，請回待請款重新選取。</p>'}
           <p class="muted center">會依公司正式格式產製，一張 A4 可放上／中／下 3 筆；超過 3 筆自動換頁。</p>
           <div id="generateStatus" class="generate-status"></div>
           <div id="generatedActions" class="generated-actions hidden"></div>
@@ -113,6 +114,9 @@ async function load() {
     try {
       btn.textContent = '正在產製公司表單…';
       status.textContent = '正在把本批資料排入正式表單（每頁 3 筆）';
+      rows = (await db.all('events')).filter(e=>(batch.eventIds||[]).includes(e.id)&&!isDeleted(e))
+        .map(e=>({...e,computed:calculateEvent(e)}));
+      if (!rows.length) throw new Error('本批項目已刪除，請回待請款重新選取');
       generatedFiles = await generateBatchPdfs(rows, batch.name);
       if (!generatedFiles.length) throw new Error('本批沒有可產生的表單');
       batch.status = '已產生PDF';
@@ -140,11 +144,7 @@ async function load() {
       batch.uploadedAt = new Date().toISOString();
       batch.updatedAt = new Date().toISOString();
       await db.put('batches', batch);
-      for (const e of rows) {
-        e.status = '已請款';
-        e.updatedAt = new Date().toISOString();
-        await db.put('events', e);
-      }
+      await db.merge('events',rows.map(e=>({...e,status:'已請款',updatedAt:new Date().toISOString()})),mergeRows);
       syncQuietly();
       document.querySelector('.batch-hero p').textContent = `${rows.length} 筆事件・已請款`;
       status.textContent = '完成：正式 PDF 已存入 Google Drive「報帳申請管理系統／Output／年／月／請款PDF」與「整批匯出」。';

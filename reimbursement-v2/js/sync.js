@@ -1,4 +1,5 @@
 import { db } from './db.js';
+import { isDeleted, mergeRows } from './records.js';
 
 const URL_KEY = 'reimbursement_sync_script_url';
 const DEFAULT_SYNC_URL = 'https://script.google.com/macros/s/AKfycbyUoh-_rQ1mgzBBJyH9SlmQ75f8GrShyLcFh9296ptX08DSHwO3Tg_ZmxxmI623akNu/exec';
@@ -76,41 +77,29 @@ export async function pushCloudData(payload){
   return pollStatus(requestId);
 }
 
-function recordTime(row){
-  const raw=row?.updatedAt || row?.createdAt || '';
-  const t=Date.parse(raw);
-  return Number.isFinite(t)?t:0;
+let syncQueue = Promise.resolve();
+
+export function syncNow(onStatus=()=>{}){
+  const run = syncQueue.catch(()=>{}).then(()=>performSync(onStatus));
+  syncQueue = run;
+  return run;
 }
 
-function mergeRows(localRows, cloudRows){
-  const m=new Map();
-  for(const row of [...cloudRows,...localRows]){
-    if(!row?.id) continue;
-    const prev=m.get(row.id);
-    if(!prev || recordTime(row)>=recordTime(prev)) m.set(row.id,row);
-  }
-  return [...m.values()];
-}
-
-export async function syncNow(onStatus=()=>{}){
+async function performSync(onStatus){
   if(!hasSyncConfig()) return {configured:false};
   onStatus('正在讀取雲端資料…');
-  const [localEventsRaw,localBatches,cloud]=await Promise.all([db.all('events'),db.all('batches'),pullCloudData()]);
+  const cloud=await pullCloudData();
   const isDemo=e=>e?.name==='示範：工作會議';
-  const localEvents=localEventsRaw.filter(e=>!isDemo(e));
   const cloudEvents=(cloud.events||[]).filter(e=>!isDemo(e));
-  for(const demo of localEventsRaw.filter(isDemo)) await db.delete('events',demo.id);
-  const events=mergeRows(localEvents,cloudEvents);
-  const batches=mergeRows(localBatches,cloud.batches||[]);
-
   onStatus('正在合併手機／電腦資料…');
-  for(const row of events) await db.put('events',row);
-  for(const row of batches) await db.put('batches',row);
+  // 在同一個 IndexedDB transaction 讀取最新本機資料並合併，保留讀雲端期間的刪除／還原。
+  const events=await db.merge('events',cloudEvents,mergeRows);
+  const batches=await db.merge('batches',cloud.batches||[],mergeRows);
 
   onStatus('正在寫回專用 Google Sheet…');
   await pushCloudData({schemaVersion:1,events,batches,clientTime:new Date().toISOString()});
   onStatus('同步完成');
-  return {configured:true,events:events.length,batches:batches.length};
+  return {configured:true,events:events.filter(e=>!isDeleted(e)).length,batches:batches.length};
 }
 
 export async function syncQuietly(){

@@ -1,4 +1,5 @@
 import { db, uid } from './db.js';
+import { isDeleted, mergeRows } from './records.js';
 import { APP_VERSION, MILEAGE_RATE, EVENT_TYPES, TRANSPORTS, EXPENSE_TYPES, DEFAULT_START_LOCATION, PRESET_MILEAGE_ROUTES, normalizeExpense, calculateEvent, money } from './rules.js';
 import { html, esc, eventCard, emptyState } from './ui.js';
 import { exportBackup, importBackup } from './backup.js';
@@ -7,10 +8,13 @@ import { getSyncUrl, setSyncUrl, getSyncKey, setSyncKey, hasSyncConfig, testSync
 
 const app = document.querySelector('#app');
 const initialPage = new URLSearchParams(location.search).has('settings') ? 'settings' : 'home';
-const state = { page: initialPage, events: [], batches: [], editing: null, selected: new Set(), syncStatus: '' };
+const state = { page: initialPage, events: [], deletedEvents: [], batches: [], editing: null, selected: new Set(), syncStatus: '', pendingNotice: '' };
 
 async function refresh() {
-  state.events = (await db.all('events')).map(e=>({...e,computed:calculateEvent(e)})).sort((a,b) => String(b.createdAt).localeCompare(String(a.createdAt)));
+  const events = (await db.all('events')).map(e=>({...e,computed:calculateEvent(e)}));
+  state.events = events.filter(e=>!isDeleted(e)).sort((a,b) => String(b.createdAt).localeCompare(String(a.createdAt)));
+  state.deletedEvents = events.filter(isDeleted).sort((a,b)=>String(b.deletedAt).localeCompare(String(a.deletedAt)));
+  state.selected = new Set([...state.selected].filter(id=>state.events.some(e=>e.id===id&&e.status==='待請款')));
   state.batches = (await db.all('batches')).sort((a,b) => String(b.createdAt).localeCompare(String(a.createdAt)));
   render();
 }
@@ -128,10 +132,38 @@ function pendingPage() {
   const selectedRows = list.filter(e=>state.selected.has(e.id));
   const total = selectedRows.reduce((s,e)=>s+(e.computed?.claimTotal||0),0);
   return shell(html`
-    <section class="section"><div class="section-head"><div><h2>待請款</h2><p class="muted">長按概念改為直接勾選，多筆可建批次</p></div><button class="ghost" data-select-all>${state.selected.size?'取消選取':'全選'}</button></div>
-    ${list.length ? list.map(e=>`<div class="select-card"><input type="checkbox" data-select="${e.id}" ${state.selected.has(e.id)?'checked':''}><div>${eventCard(e)}</div></div>`).join('') : emptyState('目前沒有待請款','新增事件後會出現在這裡。')}</section>
-    ${state.selected.size?`<div class="batch-bar"><div><small>已選 ${state.selected.size} 筆</small><strong>${money(total)}</strong></div><button class="primary" data-create-batch>建立本次請款</button></div>`:''}
+    <section class="section"><div class="section-head"><div><h2>待請款</h2><p class="muted">勾選多筆建立請款，或刪除測試項目</p></div><button class="ghost" data-select-all>${state.selected.size?'取消選取':'全選'}</button></div>
+    <button class="ghost" data-nav="deleted">已刪除項目（${state.deletedEvents.length}）</button>
+    ${state.pendingNotice ? `<p class="sync-status" role="status">${esc(state.pendingNotice)}</p>` : ''}
+    ${list.length ? list.map(e=>`<div class="select-card"><input type="checkbox" data-select="${esc(e.id)}" aria-label="選取 ${esc(e.name)}" ${state.selected.has(e.id)?'checked':''}><div>${eventCard(e)}<button type="button" class="ghost" style="color:var(--danger)" data-delete-pending="${esc(e.id)}" aria-label="刪除 ${esc(e.name)}">刪除</button></div></div>`).join('') : emptyState('目前沒有待請款','新增事件後會出現在這裡。')}</section>
+    ${state.selected.size?`<div class="batch-bar"><div><small>已選 ${state.selected.size} 筆</small><strong>${money(total)}</strong></div><div><button class="ghost" style="color:var(--danger)" data-delete-selected>刪除所選</button><button class="primary" data-create-batch>建立本次請款</button></div></div>`:''}
   `,'本次請款');
+}
+
+function deletedPage() {
+  return shell(html`<section class="section"><div class="section-head"><h2>已刪除項目</h2><button class="ghost" data-nav="pending">回待請款</button></div><p class="muted">刪除項目不列入請款金額，也不會產生表單；誤刪時可還原。</p>
+    ${state.pendingNotice ? `<p class="sync-status" role="status">${esc(state.pendingNotice)}</p>` : ''}
+    ${state.deletedEvents.length ? state.deletedEvents.map(e=>`<div class="event-card"><strong>${esc(e.name||'未命名項目')}</strong><p class="muted">${esc(e.date)}・${money(e.computed?.claimTotal||0)}</p><button class="ghost" data-restore-pending="${esc(e.id)}" aria-label="還原 ${esc(e.name)}">還原到待請款</button></div>`).join('') : emptyState('沒有已刪除項目','刪除的測試項目會放在這裡。')}</section>`, '已刪除項目');
+}
+
+async function changePendingDeletion(ids, restore = false) {
+  const candidates = (restore ? state.deletedEvents : state.events.filter(e=>e.status==='待請款')).filter(e=>ids.includes(e.id));
+  if (!candidates.length) return;
+  const verb = restore ? '還原' : '刪除';
+  const summary = candidates.length===1 ? `「${candidates[0].name}」` : `所選 ${candidates.length} 筆項目`;
+  if (!confirm(`${verb}${summary}？${restore ? '還原後會回到待請款。' : '項目會移至已刪除項目，之後可以還原。'}`)) return;
+  try {
+    const result = await db.changePendingDeletion(candidates.map(e=>e.id), restore);
+    state.selected.clear();
+    const message = `已${verb} ${result.changed} 筆${result.skipped ? `；${result.skipped} 筆狀態已改變，未處理` : ''}。`;
+    state.pendingNotice = message + (hasSyncConfig() ? '正在同步其他裝置…' : '尚未設定雲端同步，資料已保留在本機。');
+    await refresh();
+    if (hasSyncConfig()) {
+      try { await syncNow(); state.pendingNotice = message + '雲端同步完成。'; }
+      catch (err) { state.pendingNotice = message + `本機已完成，雲端待同步：${err.message}。可到設定按「重新同步」。`; }
+      await refresh();
+    }
+  } catch (err) { alert(`${verb}失敗：${err.message}`); }
 }
 
 function paidPage() {
@@ -176,7 +208,7 @@ function settingsPage() {
 }
 
 function render() {
-  app.innerHTML = state.page==='home'?homePage():state.page==='new'?newPage():state.page==='pending'?pendingPage():state.page==='paid'?paidPage():state.page==='history'?historyPage():settingsPage();
+  app.innerHTML = state.page==='home'?homePage():state.page==='new'?newPage():state.page==='pending'?pendingPage():state.page==='deleted'?deletedPage():state.page==='paid'?paidPage():state.page==='history'?historyPage():settingsPage();
   bind();
 }
 
@@ -209,6 +241,9 @@ function liveRecompute() {
 }
 
 function bind() {
+  document.querySelectorAll('[data-delete-pending]').forEach(b=>b.onclick=ev=>{ev.stopPropagation(); changePendingDeletion([b.dataset.deletePending]);});
+  document.querySelector('[data-delete-selected]')?.addEventListener('click',()=>changePendingDeletion([...state.selected]));
+  document.querySelectorAll('[data-restore-pending]').forEach(b=>b.onclick=()=>changePendingDeletion([b.dataset.restorePending],true));
   document.querySelectorAll('[data-nav]').forEach(b=>b.onclick=()=>{ state.page=b.dataset.nav; if(state.page!=='new') state.editing=null; render(); });
   document.querySelector('[data-action="phone"]')?.addEventListener('click', async()=>{
     const now = new Date(); const month = now.getMonth()+1;
@@ -217,7 +252,7 @@ function bind() {
   });
   const form = document.querySelector('#eventForm');
   form?.addEventListener('submit', async ev=>{
-    ev.preventDefault(); const row=collectForm(); if(!row.name){alert('請輸入事件名稱');return;} if(row.expenses.some(x=>x.type==='其他'&&!x.itemName?.trim())){alert('請填寫其他費用的實際品項');return;} row.id=row.id||uid('evt'); row.createdAt=row.createdAt||new Date().toISOString(); row.updatedAt=new Date().toISOString(); row.computed=calculateEvent(row); if(row.computed.overGeneralRows){alert('一般請款超過4列，請先拆分事件。');return;} await db.put('events',row); syncQuietly(); state.editing=null; state.page='home'; await refresh();
+    ev.preventDefault(); const row=collectForm(); if(!row.name){alert('請輸入事件名稱');return;} if(row.expenses.some(x=>x.type==='其他'&&!x.itemName?.trim())){alert('請填寫其他費用的實際品項');return;} row.id=row.id||uid('evt'); row.createdAt=row.createdAt||new Date().toISOString(); row.updatedAt=new Date().toISOString(); row.computed=calculateEvent(row); if(row.computed.overGeneralRows){alert('一般請款超過4列，請先拆分事件。');return;} const merged=await db.merge('events',[row],mergeRows); if(isDeleted(merged.find(e=>e.id===row.id))){alert('此項目已刪除，請先到已刪除項目還原。');state.editing=null;state.page='pending';await refresh();return;} syncQuietly(); state.editing=null; state.page='home'; await refresh();
   });
   form?.querySelectorAll('input,select').forEach(el=>{ if(el.closest('.expense-row'))return; el.onchange=()=>{ const draft=collectForm(); state.editing=draft; render(); }; });
   document.querySelectorAll('[data-mileage-km]').forEach(btn=>btn.addEventListener('click',()=>{
@@ -248,7 +283,7 @@ function bind() {
     el.onchange=()=>{ el.checked?state.selected.add(el.dataset.select):state.selected.delete(el.dataset.select); render(); };
   });
   document.querySelector('[data-select-all]')?.addEventListener('click',()=>{ const list=state.events.filter(e=>e.status==='待請款'); if(state.selected.size)state.selected.clear(); else list.forEach(e=>state.selected.add(e.id)); render(); });
-  document.querySelector('[data-create-batch]')?.addEventListener('click',async()=>{ const ids=[...state.selected]; if(!ids.length)return; const now=new Date(); const batch={id:uid('batch'),name:`${now.getFullYear()}/${String(now.getMonth()+1).padStart(2,'0')}/${String(now.getDate()).padStart(2,'0')} 本次請款`,createdAt:now.toISOString(),status:'準備中',eventIds:ids}; await db.put('batches',batch); for(const id of ids){const e=await db.get('events',id);e.batchId=batch.id;e.updatedAt=new Date().toISOString();await db.put('events',e);} await syncQuietly(); state.selected.clear(); await refresh(); location.href='./batch.html'; });
+  document.querySelector('[data-create-batch]')?.addEventListener('click',async()=>{ const selected=(await db.all('events')).filter(e=>state.selected.has(e.id)&&e.status==='待請款'&&!isDeleted(e)); if(!selected.length){await refresh();return;} const now=new Date(); const batch={id:uid('batch'),name:`${now.getFullYear()}/${String(now.getMonth()+1).padStart(2,'0')}/${String(now.getDate()).padStart(2,'0')} 本次請款`,createdAt:now.toISOString(),status:'準備中',eventIds:selected.map(e=>e.id)}; await db.put('batches',batch); await db.merge('events',selected.map(e=>({...e,batchId:batch.id,updatedAt:now.toISOString()})),mergeRows); await syncQuietly(); state.selected.clear(); await refresh(); location.href='./batch.html'; });
   document.querySelector('#saveSyncConfig')?.addEventListener('click', async()=>{
     const url=document.querySelector('#syncUrl')?.value?.trim()||'';
     const key=document.querySelector('#syncKey')?.value?.trim()||'';

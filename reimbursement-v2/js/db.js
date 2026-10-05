@@ -1,3 +1,5 @@
+import { deletePendingRecord, restorePendingRecord } from './records.js';
+
 const DB_NAME = 'reimbursement-pwa-v2';
 const DB_VERSION = 1;
 const STORES = ['events','batches','meta'];
@@ -36,6 +38,41 @@ async function tx(storeName, mode, fn) {
 }
 
 export const db = {
+  async changePendingDeletion(ids, restore = false) {
+    const database = await openDB();
+    return new Promise((resolve, reject) => {
+      const transaction = database.transaction('events', 'readwrite');
+      const store = transaction.objectStore('events');
+      const result = {changed:0, skipped:0};
+      const now = Date.now();
+      for (const id of new Set(ids)) {
+        const req = store.get(id);
+        req.onsuccess = () => {
+          const row = (restore ? restorePendingRecord : deletePendingRecord)(req.result, now);
+          if (row) { store.put(row); result.changed++; } else result.skipped++;
+        };
+      }
+      transaction.oncomplete = () => resolve(result);
+      transaction.onerror = () => reject(transaction.error);
+      transaction.onabort = () => reject(transaction.error || new Error('刪除／還原未完成'));
+    });
+  },
+  async merge(storeName, incoming, mergeRows) {
+    const database = await openDB();
+    return new Promise((resolve, reject) => {
+      const transaction = database.transaction(storeName, 'readwrite');
+      const store = transaction.objectStore(storeName);
+      let rows = [];
+      const req = store.getAll();
+      req.onsuccess = () => {
+        rows = mergeRows(req.result || [], incoming);
+        rows.forEach(row => store.put(row));
+      };
+      transaction.oncomplete = () => resolve(rows);
+      transaction.onerror = () => reject(transaction.error);
+      transaction.onabort = () => reject(transaction.error || new Error('同步合併未完成'));
+    });
+  },
   async put(storeName, value) { return tx(storeName, 'readwrite', store => store.put(value)); },
   async get(storeName, key) { return tx(storeName, 'readonly', store => store.get(key)); },
   async delete(storeName, key) { return tx(storeName, 'readwrite', store => store.delete(key)); },
