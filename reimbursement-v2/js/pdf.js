@@ -27,7 +27,7 @@ function fitTxt(x,s,cx,cy,maxW,size=10,align='center',bold=false){
 }
 function wrap(x,s,maxW,size=9,maxLines=2){
   x.save();x.font=`400 ${size}px ${FONT}`;const out=[];let cur='';
-  for(const ch of String(s||'')){const n=cur+ch;if(x.measureText(n).width>maxW&&cur){out.push(cur);cur=ch;if(out.length===maxLines-1)break;}else cur=n;}
+  for(const ch of String(s||'')){const n=cur+ch;if(x.measureText(n).width>maxW&&cur&&out.length<maxLines-1){out.push(cur);cur=ch;}else cur=n;}
   if(cur&&out.length<maxLines)out.push(cur);x.restore();return out;
 }
 function company(x,y,title){
@@ -60,8 +60,8 @@ function generalFrame(x,slot){
   line(x,GENERAL_X[0],ys.at(-1),GENERAL_X.at(-1),ys.at(-1),1);
   GENERAL_X.forEach(xx=>line(x,xx,ys[0],xx,ys.at(-1),.7));
   ys.slice(1,-1).forEach(yy=>line(x,GENERAL_X[0],yy,GENERAL_X.at(-1),yy,.7));
-  ['年','月','日','摘    要','專案代號','數量','單價','金 額'].forEach((s,i)=>txt(x,s,(GENERAL_X[i]+GENERAL_X[i+1])/2,t+10.5,9.5,'center'));
-  txt(x,'總        計',196.5,t+114.7,10,'center');
+  ['年','月','日','摘    要','專案代號','數量','單價','金 額'].forEach((s,i)=>txt(x,s,(GENERAL_X[i]+GENERAL_X[i+1])/2,t+10.5,11.5,'center'));
+  txt(x,'總        計',196.5,t+114.7,12,'center');
   signatures(x,t,'general',slot);
   profile(x,t+137,{department:68,employee:250,applicant:386.4,size:9});
   txt(x,'實領金額：',68,t+152,8.8);
@@ -74,13 +74,13 @@ function fillGeneral(x,e,slot){
   const [yy,mm,dd]=roc(e.date), rows=(e.computed?.generalRows||[]).slice(0,4);
   rows.forEach((r,i)=>{
     const cy=(ys[i+1]+ys[i+2])/2;
-    txt(x,yy,(GENERAL_X[0]+GENERAL_X[1])/2,cy,8.5,'center');txt(x,mm,(GENERAL_X[1]+GENERAL_X[2])/2,cy,8.5,'center');txt(x,dd,(GENERAL_X[2]+GENERAL_X[3])/2,cy,8.5,'center');
-    const ls=wrap(x,r.summary === '實際餐費' ? '會議餐費' : r.summary,GENERAL_X[4]-GENERAL_X[3]-8,8.3,2);
-    ls.forEach((s,j)=>txt(x,s,GENERAL_X[3]+3,cy+(j-(ls.length-1)/2)*9,8.3));
-    fitTxt(x,e.projectCode||'',(GENERAL_X[4]+GENERAL_X[5])/2,cy,GENERAL_X[5]-GENERAL_X[4]-5,8.5);
-    txt(x,fmt(r.amount),(GENERAL_X[7]+GENERAL_X[8])/2,cy,8.5,'center');
+    txt(x,yy,(GENERAL_X[0]+GENERAL_X[1])/2,cy,10.5,'center');txt(x,mm,(GENERAL_X[1]+GENERAL_X[2])/2,cy,10.5,'center');txt(x,dd,(GENERAL_X[2]+GENERAL_X[3])/2,cy,10.5,'center');
+    const ls=wrap(x,r.summary === '實際餐費' ? '會議餐費' : r.summary,GENERAL_X[4]-GENERAL_X[3]-8,10.3,2);
+    ls.forEach((s,j)=>fitTxt(x,s,GENERAL_X[3]+3,cy+(j-(ls.length-1)/2)*10.5,GENERAL_X[4]-GENERAL_X[3]-8,10.3,'left'));
+    fitTxt(x,e.projectCode||'',(GENERAL_X[4]+GENERAL_X[5])/2,cy,GENERAL_X[5]-GENERAL_X[4]-5,10.5);
+    txt(x,fmt(r.amount),(GENERAL_X[7]+GENERAL_X[8])/2,cy,10.5,'center');
   });
-  txt(x,fmt(e.computed?.generalAmount||0),(GENERAL_X[7]+GENERAL_X[8])/2,(ys[5]+ys[6])/2,8.8,'center');
+  txt(x,fmt(e.computed?.generalAmount||0),(GENERAL_X[7]+GENERAL_X[8])/2,(ys[5]+ys[6])/2,10.8,'center');
 }
 
 const TRAVEL_X=[44.8,66.7,89.4,112.1,197.1,259.5,310.5,361.6,412.6,463.7,514.0];
@@ -90,8 +90,8 @@ function travelFrame(x,slot){
   const ys=[t,t+23.1,t+45.9,t+68.6,t+91.4,t+114.1,t+137.3];
   line(x,TRAVEL_X[0],ys[0],TRAVEL_X.at(-1),ys[0],1);line(x,TRAVEL_X[0],ys.at(-1),TRAVEL_X.at(-1),ys.at(-1),1);
   TRAVEL_X.forEach(xx=>line(x,xx,ys[0],xx,ys.at(-1),.7));ys.slice(1,-1).forEach(yy=>line(x,TRAVEL_X[0],yy,TRAVEL_X.at(-1),yy,.7));
-  ['年','月','日','起訖地點','專案代號','交通費','膳 費','宿 費','其 他','小 計'].forEach((s,i)=>txt(x,s,(TRAVEL_X[i]+TRAVEL_X[i+1])/2,t+11.5,9.3,'center'));
-  txt(x,'總        計',155,t+125.7,10,'center');signatures(x,t,'travel',slot);profile(x,t+149,{department:42.2,employee:195.6,applicant:372.3,size:9});
+  ['年','月','日','起訖地點','專案代號','交通費','膳 費','宿 費','其 他','小 計'].forEach((s,i)=>txt(x,s,(TRAVEL_X[i]+TRAVEL_X[i+1])/2,t+11.5,11.3,'center'));
+  txt(x,'總        計',155,t+125.7,12,'center');signatures(x,t,'travel',slot);profile(x,t+149,{department:42.2,employee:195.6,applicant:372.3,size:9});
   txt(x,'實領金額：',42.2,t+166,8.8);txt(x,'暫付款沖銷金額(機票等)：',195.6,t+166,8.8);
   if(slot<2)cut(x,slot===0?266.5:522.5);
 }
@@ -100,8 +100,8 @@ function fillTravel(x,e,slot){
   const t=TRAVEL_TOP[slot],ys=[t,t+23.1,t+45.9,t+68.6,t+91.4,t+114.1,t+137.3],cy=(ys[1]+ys[2])/2,c=e.computed||{};
   const [yy,mm,dd]=roc(e.date);
   const vals=[yy,mm,dd,e.route||'',e.projectCode||'',fmt(c.travelTraffic),fmt(c.fixedMeal),fmt(c.travelLodging),fmt(c.travelOther),fmt(c.travelTotal)];
-  vals.forEach((v,i)=>fitTxt(x,v,(TRAVEL_X[i]+TRAVEL_X[i+1])/2,cy,TRAVEL_X[i+1]-TRAVEL_X[i]-4,8.4));
-  txt(x,fmt(c.travelTotal),(TRAVEL_X[9]+TRAVEL_X[10])/2,(ys[5]+ys[6])/2,8.8,'center');
+  vals.forEach((v,i)=>fitTxt(x,v,(TRAVEL_X[i]+TRAVEL_X[i+1])/2,cy,TRAVEL_X[i+1]-TRAVEL_X[i]-4,10.4));
+  txt(x,fmt(c.travelTotal),(TRAVEL_X[9]+TRAVEL_X[10])/2,(ys[5]+ys[6])/2,10.8,'center');
 }
 
 const NO_X=[70.2,97.9,126.2,154.6,319.0,381.4,499.8];
@@ -111,19 +111,19 @@ function noFrame(x,slot){
   const ys=[t,t+23.1,t+45.8,t+68.6,t+91.3,t+114.1,t+137.2];
   line(x,NO_X[0],ys[0],NO_X.at(-1),ys[0],1);line(x,NO_X[0],ys.at(-1),NO_X.at(-1),ys.at(-1),1);
   NO_X.forEach(xx=>line(x,xx,ys[0],xx,ys.at(-1),.7));ys.slice(1,-1).forEach(yy=>line(x,NO_X[0],yy,NO_X.at(-1),yy,.7));
-  ['年','月','日','摘    要','專案代號','金   額'].forEach((s,i)=>txt(x,s,(NO_X[i]+NO_X[i+1])/2,t+11.5,9.3,'center'));
-  txt(x,'總        計',205,t+125.5,10,'center');signatures(x,t,'no',slot);profile(x,t+149,{department:NO_X[0],employee:211.9,applicant:368.7,size:9});
+  ['年','月','日','摘    要','專案代號','金   額'].forEach((s,i)=>txt(x,s,(NO_X[i]+NO_X[i+1])/2,t+11.5,11.3,'center'));
+  txt(x,'總        計',205,t+125.5,12,'center');signatures(x,t,'no',slot);profile(x,t+149,{department:NO_X[0],employee:211.9,applicant:368.7,size:9});
   if(slot<2)cut(x,slot===0?255:512);
 }
 function fillNo(x,e,slot){
   noFrame(x,slot);if(!e)return;
   const t=NO_TOP[slot],ys=[t,t+23.1,t+45.8,t+68.6,t+91.3,t+114.1,t+137.2],cy=(ys[1]+ys[2])/2,c=e.computed||{};
   const [yy,mm,dd]=roc(e.date);
-  [yy,mm,dd].forEach((v,i)=>txt(x,v,(NO_X[i]+NO_X[i+1])/2,cy,8.5,'center'));
-  fitTxt(x,c.noReceiptSummary||'里程補助',(NO_X[3]+NO_X[4])/2,cy,NO_X[4]-NO_X[3]-5,8.3);
-  fitTxt(x,e.projectCode||'',(NO_X[4]+NO_X[5])/2,cy,NO_X[5]-NO_X[4]-5,8.5);
-  fitTxt(x,c.mileageFormula||fmt(c.mileage),(NO_X[5]+NO_X[6])/2,cy,NO_X[6]-NO_X[5]-5,8.5);
-  txt(x,fmt(c.mileage),(NO_X[5]+NO_X[6])/2,(ys[5]+ys[6])/2,8.8,'center');
+  [yy,mm,dd].forEach((v,i)=>txt(x,v,(NO_X[i]+NO_X[i+1])/2,cy,10.5,'center'));
+  fitTxt(x,c.noReceiptSummary||'里程補助',(NO_X[3]+NO_X[4])/2,cy,NO_X[4]-NO_X[3]-5,10.3);
+  fitTxt(x,e.projectCode||'',(NO_X[4]+NO_X[5])/2,cy,NO_X[5]-NO_X[4]-5,10.5);
+  fitTxt(x,c.mileageFormula||fmt(c.mileage),(NO_X[5]+NO_X[6])/2,cy,NO_X[6]-NO_X[5]-5,10.5);
+  txt(x,fmt(c.mileage),(NO_X[5]+NO_X[6])/2,(ys[5]+ys[6])/2,10.8,'center');
 }
 
 function makePages(items,filler){
