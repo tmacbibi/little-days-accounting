@@ -1,4 +1,4 @@
-const CACHE = 'reimburse-v2-0-0-alpha-23';
+const CACHE = 'reimburse-v2-0-0-alpha-24';
 const ASSETS = [
   './', './index.html', './styles.css', './manifest.webmanifest',
   './js/app.js', './js/db.js', './js/records.js', './js/rules.js', './js/ui.js', './js/backup.js', './js/pdf.js', './js/drive.js', './js/sync.js',

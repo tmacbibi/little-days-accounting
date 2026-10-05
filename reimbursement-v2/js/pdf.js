@@ -2,6 +2,9 @@ const PW=595.3, PH=841.9, SCALE=2.78, CW=Math.round(PW*SCALE), CH=Math.round(PH*
 const FONT='"PingFang TC","Noto Sans TC","Microsoft JhengHei",sans-serif';
 const PROFILE={department:'C',employeeNo:'530',applicant:'江孝頤'};
 
+// A4 is split into three equal 99 mm slips, with each form centered in its slip.
+const SLOT_HEIGHT=PH/3;
+const slotTops=(above,below)=>[0,1,2].map(slot=>slot*SLOT_HEIGHT+(SLOT_HEIGHT-above-below)/2+above);
 const px=v=>v*SCALE;
 function roc(date){
   const d=new Date((date||new Date().toISOString().slice(0,10))+'T00:00:00');
@@ -49,7 +52,7 @@ function signatures(x,tableTop,kind='normal',slot=0){
 }
 
 const GENERAL_X=[67.7,91.6,118.9,146.2,261.9,325.7,371.2,425.8,508.5];
-const GENERAL_TOP=[87.6,350.2,608.7];
+const GENERAL_TOP=slotTops(63,157);
 function generalFrame(x,slot){
   const t=GENERAL_TOP[slot], yTitle=t-57;
   company(x,yTitle,'請  款  單');
@@ -66,7 +69,7 @@ function generalFrame(x,slot){
   profile(x,t+137,{department:68,employee:250,applicant:386.4,size:9});
   txt(x,'實領金額：',68,t+152,8.8);
   txt(x,'暫付款沖銷金額：',250,t+152,8.8);
-  if(slot<2)cut(x,slot===0?269:529.4);
+  if(slot<2)cut(x,(slot+1)*SLOT_HEIGHT);
 }
 function fillGeneral(x,e,slot){
   generalFrame(x,slot); if(!e)return;
@@ -84,7 +87,7 @@ function fillGeneral(x,e,slot){
 }
 
 const TRAVEL_X=[44.8,66.7,89.4,112.1,197.1,259.5,310.5,361.6,412.6,463.7,514.0];
-const TRAVEL_TOP=[54.8,308.6,568.3];
+const TRAVEL_TOP=slotTops(37,171);
 function travelFrame(x,slot){
   const t=TRAVEL_TOP[slot];company(x,t-31,'國內出差費申請單');
   const ys=[t,t+23.1,t+45.9,t+68.6,t+91.4,t+114.1,t+137.3];
@@ -93,7 +96,7 @@ function travelFrame(x,slot){
   ['年','月','日','起訖地點','專案代號','交通費','膳 費','宿 費','其 他','小 計'].forEach((s,i)=>txt(x,s,(TRAVEL_X[i]+TRAVEL_X[i+1])/2,t+11.5,11.3,'center'));
   txt(x,'總        計',155,t+125.7,12,'center');signatures(x,t,'travel',slot);profile(x,t+149,{department:42.2,employee:195.6,applicant:372.3,size:9});
   txt(x,'實領金額：',42.2,t+166,8.8);txt(x,'暫付款沖銷金額(機票等)：',195.6,t+166,8.8);
-  if(slot<2)cut(x,slot===0?266.5:522.5);
+  if(slot<2)cut(x,(slot+1)*SLOT_HEIGHT);
 }
 function fillTravel(x,e,slot){
   travelFrame(x,slot);if(!e)return;
@@ -105,7 +108,7 @@ function fillTravel(x,e,slot){
 }
 
 const NO_X=[70.2,97.9,126.2,154.6,319.0,381.4,499.8];
-const NO_TOP=[72.8,327.7,586.2];
+const NO_TOP=slotTops(37,154);
 function noFrame(x,slot){
   const t=NO_TOP[slot];company(x,t-31,'無外來憑證支出證明單');
   const ys=[t,t+23.1,t+45.8,t+68.6,t+91.3,t+114.1,t+137.2];
@@ -113,7 +116,7 @@ function noFrame(x,slot){
   NO_X.forEach(xx=>line(x,xx,ys[0],xx,ys.at(-1),.7));ys.slice(1,-1).forEach(yy=>line(x,NO_X[0],yy,NO_X.at(-1),yy,.7));
   ['年','月','日','摘    要','專案代號','金   額'].forEach((s,i)=>txt(x,s,(NO_X[i]+NO_X[i+1])/2,t+11.5,11.3,'center'));
   txt(x,'總        計',205,t+125.5,12,'center');signatures(x,t,'no',slot);profile(x,t+149,{department:NO_X[0],employee:211.9,applicant:368.7,size:9});
-  if(slot<2)cut(x,slot===0?255:512);
+  if(slot<2)cut(x,(slot+1)*SLOT_HEIGHT);
 }
 function fillNo(x,e,slot){
   noFrame(x,slot);if(!e)return;
