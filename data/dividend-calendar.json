@@ -1,6 +1,6 @@
 {
   "schemaVersion": 2,
-  "generatedAt": "2026-10-04T14:45:46.954Z",
+  "generatedAt": "2026-10-05T18:21:49.231Z",
   "sourcePolicy": "official-only",
   "coverage": {
     "etf": "ex-date + record-date + expected payment date + per-unit distribution",
@@ -4590,7 +4590,7 @@
       "exDate": "2026-10-07",
       "recordDate": "2026-10-13",
       "expectedPayDate": "2026-11-02",
-      "perShare": null,
+      "perShare": 0.055,
       "source": "TWSE_ETFORTUNE",
       "sourceUrl": "https://www.twse.com.tw/zh/ETFortune/dividendList"
     },
@@ -4602,7 +4602,7 @@
       "exDate": "2026-10-07",
       "recordDate": "2026-10-13",
       "expectedPayDate": "2026-10-30",
-      "perShare": null,
+      "perShare": 0.058,
       "source": "TWSE_ETFORTUNE",
       "sourceUrl": "https://www.twse.com.tw/zh/ETFortune/dividendList"
     },
@@ -4614,7 +4614,7 @@
       "exDate": "2026-10-07",
       "recordDate": "2026-10-13",
       "expectedPayDate": "2026-10-30",
-      "perShare": null,
+      "perShare": 0.067,
       "source": "TWSE_ETFORTUNE",
       "sourceUrl": "https://www.twse.com.tw/zh/ETFortune/dividendList"
     },
@@ -4626,7 +4626,7 @@
       "exDate": "2026-10-07",
       "recordDate": "2026-10-13",
       "expectedPayDate": "2026-10-30",
-      "perShare": null,
+      "perShare": 0.053,
       "source": "TWSE_ETFORTUNE",
       "sourceUrl": "https://www.twse.com.tw/zh/ETFortune/dividendList"
     },
@@ -4662,7 +4662,7 @@
       "exDate": "2026-10-08",
       "recordDate": "2026-10-17",
       "expectedPayDate": "2026-11-05",
-      "perShare": null,
+      "perShare": 0.12,
       "source": "TWSE_ETFORTUNE",
       "sourceUrl": "https://www.twse.com.tw/zh/ETFortune/dividendList"
     },
