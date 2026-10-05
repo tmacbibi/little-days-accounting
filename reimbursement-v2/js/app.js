@@ -9,7 +9,7 @@ import { getSyncUrl, setSyncUrl, getSyncKey, setSyncKey, hasSyncConfig, testSync
 
 const app = document.querySelector('#app');
 const initialPage = new URLSearchParams(location.search).has('settings') ? 'settings' : 'home';
-const state = { page: initialPage, events: [], deletedEvents: [], batches: [], editing: null, selected: new Set(), syncStatus: '', pendingNotice: '' };
+const state = { page: initialPage, events: [], deletedEvents: [], batches: [], editing: null, selected: new Set(), syncStatus: '', pendingNotice: '', creatingBatch: false, batchProgress: '' };
 
 async function refresh(background = false) {
   const events = (await db.all('events')).map(e=>({...e,computed:calculateEvent(e)}));
@@ -138,7 +138,7 @@ function pendingPage() {
     <button class="ghost" data-nav="deleted">垃圾桶（${state.deletedEvents.length}）</button>
     ${state.pendingNotice ? `<p class="sync-status" role="status">${esc(state.pendingNotice)}</p>` : ''}
     ${list.length ? list.map(e=>`<div class="select-card"><input type="checkbox" data-select="${esc(e.id)}" aria-label="選取 ${esc(e.name)}" ${state.selected.has(e.id)?'checked':''}><div>${eventCard(e)}<button type="button" class="ghost" style="color:var(--danger)" data-delete-event="${esc(e.id)}" aria-label="刪除 ${esc(e.name)}">刪除</button></div></div>`).join('') : emptyState('目前沒有待請款','新增事件後會出現在這裡。')}</section>
-    ${state.selected.size?`<div class="batch-bar"><div><small>已選 ${state.selected.size} 筆</small><strong>${money(total)}</strong></div><div><button class="ghost" style="color:var(--danger)" data-delete-selected>刪除所選</button><button class="primary" data-create-batch>建立本次請款</button></div></div>`:''}
+    ${state.selected.size?`<div class="batch-bar"><div><small role="status" aria-live="polite">${state.creatingBatch?esc(state.batchProgress):`已選 ${state.selected.size} 筆`}</small><strong>${money(total)}</strong></div><div><button class="ghost" style="color:var(--danger)" data-delete-selected>刪除所選</button><button class="primary" data-create-batch ${state.creatingBatch?'disabled aria-busy="true"':''}>${state.creatingBatch?'建立中…':'建立本次請款'}</button></div></div>`:''}
   `,'本次請款');
 }
 
@@ -260,7 +260,54 @@ async function returnToPending(id) {
   } catch (err) { alert('退回失敗：'+err.message); }
 }
 
+async function createSelectedBatch() {
+  if (state.creatingBatch) return;
+  const ids = new Set(state.selected);
+  state.creatingBatch = true;
+  state.batchProgress = '正在建立請款批次…';
+  state.pendingNotice = '';
+  render();
+  let saved = false;
+  try {
+    const selected = (await db.all('events')).filter(e=>ids.has(e.id)&&e.status==='待請款'&&!isDeleted(e));
+    if (!selected.length) {
+      state.pendingNotice = '所選項目已不在待請款，請重新選取。';
+      return;
+    }
+    const now = new Date();
+    const batch = {id:uid('batch'),name:`${now.getFullYear()}/${String(now.getMonth()+1).padStart(2,'0')}/${String(now.getDate()).padStart(2,'0')} 本次請款`,createdAt:now.toISOString(),status:'準備中',eventIds:selected.map(e=>e.id)};
+    await db.put('batches',batch);
+    await db.merge('events',selected.map(e=>({...e,batchId:batch.id,updatedAt:now.toISOString()})),mergeRows);
+    saved = true;
+    if (hasSyncConfig()) {
+      state.batchProgress = '批次已建立，正在同步…';
+      render();
+      try {
+        await syncNow(message=>{state.batchProgress='批次已建立・'+message;render();});
+      } catch (error) {
+        alert('批次已在本機建立，可繼續產製 PDF。雲端同步尚未完成：'+error.message+'。稍後可到設定重新同步。');
+      }
+    }
+    state.batchProgress = '建立成功，正在開啟預覽…';
+    render();
+    location.href = './batch.html';
+  } catch (error) {
+    state.pendingNotice = (saved?'批次已建立，開啟預覽失敗：':'建立請款未完成：')+error.message+'。請稍後再試。';
+  } finally {
+    // Keep the success button locked until navigation completes.
+    if (!saved || state.pendingNotice) {
+      state.creatingBatch = false;
+      state.batchProgress = '';
+      await refresh();
+    }
+  }
+}
+
 function bind() {
+  if (state.creatingBatch) {
+    app.querySelectorAll('button,input,select').forEach(control=>control.disabled=true);
+    return;
+  }
   document.querySelectorAll('[data-return-pending]').forEach(b=>b.onclick=()=>returnToPending(b.dataset.returnPending));
   document.querySelectorAll('[data-delete-event]').forEach(b=>b.onclick=ev=>{ev.stopPropagation(); changeDeletion([b.dataset.deleteEvent]);});
   document.querySelector('[data-delete-selected]')?.addEventListener('click',()=>changeDeletion([...state.selected]));
@@ -304,7 +351,7 @@ function bind() {
     el.onchange=()=>{ el.checked?state.selected.add(el.dataset.select):state.selected.delete(el.dataset.select); render(); };
   });
   document.querySelector('[data-select-all]')?.addEventListener('click',()=>{ const list=state.events.filter(e=>e.status==='待請款'); if(state.selected.size)state.selected.clear(); else list.forEach(e=>state.selected.add(e.id)); render(); });
-  document.querySelector('[data-create-batch]')?.addEventListener('click',async()=>{ const selected=(await db.all('events')).filter(e=>state.selected.has(e.id)&&e.status==='待請款'&&!isDeleted(e)); if(!selected.length){await refresh();return;} const now=new Date(); const batch={id:uid('batch'),name:`${now.getFullYear()}/${String(now.getMonth()+1).padStart(2,'0')}/${String(now.getDate()).padStart(2,'0')} 本次請款`,createdAt:now.toISOString(),status:'準備中',eventIds:selected.map(e=>e.id)}; await db.put('batches',batch); await db.merge('events',selected.map(e=>({...e,batchId:batch.id,updatedAt:now.toISOString()})),mergeRows); await syncQuietly(); state.selected.clear(); await refresh(); location.href='./batch.html'; });
+  document.querySelector('[data-create-batch]')?.addEventListener('click',createSelectedBatch);
   document.querySelector('#saveSyncConfig')?.addEventListener('click', async()=>{
     const url=document.querySelector('#syncUrl')?.value?.trim()||'';
     const key=document.querySelector('#syncKey')?.value?.trim()||'';
