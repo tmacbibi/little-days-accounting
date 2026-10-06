@@ -1,17 +1,17 @@
 {
   "schemaVersion": 1,
-  "generatedAt": "2026-10-05T18:50:49.677Z",
+  "generatedAt": "2026-10-06T14:28:44.600Z",
   "sourceStatus": {
-    "TWSE": "stale: twse.com.tw MI_INDEX 2026-10-05 < expected 2026-10-06",
-    "TPEx": "stale: tpex.org.tw mainboard_quotes 2026-10-05 < expected 2026-10-06"
+    "TWSE": "ok: twse.com.tw MI_INDEX",
+    "TPEx": "ok: tpex.org.tw mainboard_quotes"
   },
   "marketTradeDates": {
-    "TWSE": "2026-10-05",
-    "TPEx": "2026-10-05"
+    "TWSE": "2026-10-06",
+    "TPEx": "2026-10-06"
   },
   "marketFreshness": {
-    "TWSE": "stale",
-    "TPEx": "stale"
+    "TWSE": "fresh",
+    "TPEx": "fresh"
   },
   "items": [
     {
@@ -11501,6 +11501,12 @@
     {
       "symbol": "6603",
       "name": "富強鑫",
+      "market": "TPEx",
+      "securityType": "stock"
+    },
+    {
+      "symbol": "6604",
+      "name": "儒億",
       "market": "TPEx",
       "securityType": "stock"
     },
