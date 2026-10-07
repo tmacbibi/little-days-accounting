@@ -11,6 +11,7 @@ on:
       - 'scripts/test-dividend-data.mjs'
       - 'scripts/test-dividend-app.mjs'
       - 'app.js'
+      - 'data/dividend-estimates.json'
       - '.github/workflows/update-dividend-data.yml'
 
 permissions:

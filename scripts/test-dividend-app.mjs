@@ -143,3 +143,19 @@ vm.runInContext(`openIncomeDetailByCategory('股息','2026 年')`,sandbox);
 assert.equal(vm.runInContext(`insightDetailState.groupBy`,sandbox),'dividend-symbol');
 assert.equal(vm.runInContext(`sum(insightDetailState.items)`,sandbox),390);
 console.log('per-security dividend totals, linked-record deduplication, aggregate residuals and paid/pending separation passed');
+
+vm.runInContext(`
+ dividendEvents=[{id:'estimate-test',symbol:'0056',exDate:'2026-10-22',expectedPayDate:'2026-11-11',perShare:0,actualAmount:20000,actualPayDate:'2026-11-11'}];
+ loadStaticDividendCalendar=async()=>({generatedAt:'2026-10-07',items:[{symbol:'0056',exDate:'2026-10-22',expectedPayDate:'2026-11-11',perShare:null,estimatedPerShare:1.72,finalAnnouncementDate:'2026-10-20'}]});
+`,sandbox);
+await vm.runInContext(`syncOfficialDividendCalendar({force:true})`,sandbox);
+assert.equal(vm.runInContext(`dividendEvents[0].perShare`,sandbox),1.72);
+assert.match(vm.runInContext(`dividendPerShareLabel(dividendEvents[0])`,sandbox),/預估每股 1.72 元/);
+vm.runInContext(`loadStaticDividendCalendar=async()=>({generatedAt:'2026-10-20',items:[{symbol:'0056',exDate:'2026-10-22',perShare:1.8}]});`,sandbox);
+await vm.runInContext(`syncOfficialDividendCalendar({force:true})`,sandbox);
+assert.equal(vm.runInContext(`dividendEvents[0].perShareStatus`,sandbox),'confirmed');
+assert.equal(vm.runInContext(`dividendEvents[0].perShare`,sandbox),1.8);
+assert.equal(vm.runInContext(`dividendEvents[0].actualAmount`,sandbox),20000);
+assert.equal(vm.runInContext(`dividendEvents[0].actualPayDate`,sandbox),'2026-11-11');
+assert.equal(vm.runInContext(`dividendEvents[0].finalAnnouncementDate`,sandbox),'');
+console.log('estimated-to-confirmed sync preserves actual receipts');

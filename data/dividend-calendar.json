@@ -5156,7 +5156,11 @@
       "expectedPayDate": "2026-11-11",
       "perShare": null,
       "source": "TWSE_ETFORTUNE",
-      "sourceUrl": "https://www.twse.com.tw/zh/ETFortune/dividendList"
+      "sourceUrl": "https://www.twse.com.tw/zh/ETFortune/dividendList",
+      "estimatedPerShare": 1.72,
+      "estimateAnnouncedAt": "2026-10-01",
+      "finalAnnouncementDate": "2026-10-20",
+      "estimateSourceUrl": "https://www.yuantaetfs.com/news/announcement/53fb107e-30a9-44a8-9f2a-35ca3634f24b"
     },
     {
       "symbol": "6931",

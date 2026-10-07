@@ -6,6 +6,7 @@ export const TWSE_ETF_DIVIDEND_URL = 'https://www.twse.com.tw/zh/ETFortune/divid
 export const TWSE_STOCK_EXDIV_URL = 'https://openapi.twse.com.tw/v1/exchangeReport/TWT48U_ALL';
 const HERE = path.dirname(fileURLToPath(import.meta.url));
 const ROOT = path.resolve(HERE, '..');
+const ESTIMATES = path.join(ROOT, 'data', 'dividend-estimates.json');
 const OUTPUT = path.join(ROOT, 'data', 'dividend-calendar.json');
 
 export function normalizeDate(value) {
@@ -55,6 +56,18 @@ export function mergeDividendRows(rows){
   return [...map.values()].sort((a,b)=>(a.exDate||'').localeCompare(b.exDate||'')||(a.symbol||'').localeCompare(b.symbol||''));
 }
 
+// Estimates supplement only a matching official event with no final amount.
+// Keep them separate from perShare so a later official amount always wins.
+export function applyDividendEstimates(rows, estimates){
+  const byKey=new Map(estimates.map(e=>[`${e.symbol}|${e.exDate}`,e]));
+  return rows.map(row=>{
+    const {estimatedPerShare,estimateAnnouncedAt,finalAnnouncementDate,estimateSourceUrl,...base}=row;
+    const estimate=byKey.get(`${row.symbol}|${row.exDate}`);
+    if(row.perShare!=null || !estimate || !(estimate.estimatedPerShare>0))return base;
+    return {...base,estimatedPerShare:estimate.estimatedPerShare,estimateAnnouncedAt:estimate.announcedAt,finalAnnouncementDate:estimate.finalAnnouncementDate,estimateSourceUrl:estimate.sourceUrl};
+  });
+}
+
 async function fetchText(url,fetchImpl=fetch){const ac=new AbortController(),timer=setTimeout(()=>ac.abort(),20000);try{const r=await fetchImpl(url,{signal:ac.signal,headers:{accept:'text/html,application/xhtml+xml','user-agent':'little-days-dividend-bot/1.5.5'}});if(!r.ok)throw new Error(`HTTP ${r.status}`);return await r.text();}finally{clearTimeout(timer);}}
 async function fetchJson(url,fetchImpl=fetch){const ac=new AbortController(),timer=setTimeout(()=>ac.abort(),20000);try{const r=await fetchImpl(url,{signal:ac.signal,headers:{accept:'application/json','user-agent':'little-days-dividend-bot/1.5.5'}});if(!r.ok)throw new Error(`HTTP ${r.status}`);return await r.json();}finally{clearTimeout(timer);}}
 async function loadPrevious(output){try{return JSON.parse(await fs.readFile(output,'utf8'));}catch{return {items:[]};}}
@@ -69,7 +82,8 @@ export async function updateDividendData({now=new Date(),fetchImpl=fetch,output=
   else{etfRows=prevItems.filter(x=>x.source==='TWSE_ETFORTUNE');warnings.push({source:'TWSE_ETFORTUNE',error:String(etfResult.status==='rejected'?etfResult.reason?.message||etfResult.reason:'no rows parsed')});sources.push({id:'TWSE_ETFORTUNE',url:TWSE_ETF_DIVIDEND_URL,status:'fallback',rows:etfRows.length});}
   if(stockResult.status==='fulfilled'&&stockResult.value.length){stockRows=stockResult.value;sources.push({id:'TWSE_OPENAPI_TWT48U_ALL',url:TWSE_STOCK_EXDIV_URL,status:'ok',rows:stockRows.length});}
   else{stockRows=prevItems.filter(x=>x.source==='TWSE_OPENAPI_TWT48U_ALL');warnings.push({source:'TWSE_OPENAPI_TWT48U_ALL',error:String(stockResult.status==='rejected'?stockResult.reason?.message||stockResult.reason:'no rows parsed')});sources.push({id:'TWSE_OPENAPI_TWT48U_ALL',url:TWSE_STOCK_EXDIV_URL,status:'fallback',rows:stockRows.length});}
-  const items=mergeDividendRows([...stockRows,...etfRows]);
+  const estimates=JSON.parse(await fs.readFile(ESTIMATES,'utf8'));
+  const items=applyDividendEstimates(mergeDividendRows([...stockRows,...etfRows]),estimates.items||[]);
   if(!items.length)throw new Error(`No dividend rows available: ${JSON.stringify(warnings)}`);
   const payload={schemaVersion:2,generatedAt:now.toISOString(),sourcePolicy:'official-only',coverage:{etf:'ex-date + record-date + expected payment date + per-unit distribution',listedStock:'ex-date + cash dividend; payment date remains blank when official dataset does not provide it'},sources,warnings,items};
   await fs.mkdir(path.dirname(output),{recursive:true});await fs.writeFile(output,`${JSON.stringify(payload,null,2)}\n`,'utf8');return payload;

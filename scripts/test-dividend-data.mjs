@@ -27,3 +27,17 @@ assert.equal(merged.length,1);
 assert.equal(merged[0].expectedPayDate,'2026-10-15');
 assert.equal(merged[0].perShare,1.1);
 console.log('dividend-data parser tests passed');
+
+const {applyDividendEstimates}=await import('./update-dividend-data.mjs');
+const announcement={symbol:'0056',exDate:'2026-10-22',estimatedPerShare:1.72,announcedAt:'2026-10-01',finalAnnouncementDate:'2026-10-20',sourceUrl:'issuer'};
+const pending={symbol:'0056',exDate:'2026-10-22',perShare:null};
+const estimated=applyDividendEstimates([pending],[announcement])[0];
+assert.equal(estimated.perShare,null);
+assert.equal(estimated.estimatedPerShare,1.72);
+assert.equal(applyDividendEstimates([estimated],[announcement])[0].estimatedPerShare,1.72);
+const final=applyDividendEstimates([{...estimated,perShare:1.8}],[announcement])[0];
+assert.equal(final.perShare,1.8);
+assert.equal(final.estimatedPerShare,undefined);
+assert.equal(applyDividendEstimates([{...pending,exDate:'2027-01-22'}],[announcement])[0].estimatedPerShare,undefined);
+assert.equal(applyDividendEstimates([{...pending,perShare:0}],[announcement])[0].estimatedPerShare,undefined);
+console.log('estimate supplement, final precedence and event matching tests passed');

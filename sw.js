@@ -1,5 +1,5 @@
-const CACHE='little-days-bookkeeping-v1-5-12';
-const ASSETS=['./','./index.html','./styles.css?v=1.5.12','./app.js?v=1.5.12','./manifest.json?v=1.5.12','./icon-192.png','./icon-512.png','./apple-touch-icon.png','./data/dividend-calendar.json'];
+const CACHE='little-days-bookkeeping-v1-5-13';
+const ASSETS=['./','./index.html','./styles.css?v=1.5.13','./app.js?v=1.5.13','./manifest.json?v=1.5.13','./icon-192.png','./icon-512.png','./apple-touch-icon.png','./data/dividend-calendar.json'];
 self.addEventListener('install',e=>e.waitUntil(caches.open(CACHE).then(c=>c.addAll(ASSETS)).then(()=>self.skipWaiting())));
 self.addEventListener('activate',e=>e.waitUntil(caches.keys().then(keys=>Promise.all(keys.filter(k=>k!==CACHE).map(k=>caches.delete(k)))).then(()=>self.clients.claim())));
 self.addEventListener('fetch',e=>{

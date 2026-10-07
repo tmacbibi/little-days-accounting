@@ -1,0 +1,14 @@
+{
+  "description": "Manually verified issuer estimates, keyed by symbol and ex-date. Official final amounts take precedence.",
+  "items": [
+    {
+      "symbol": "0056",
+      "exDate": "2026-10-22",
+      "estimatedPerShare": 1.72,
+      "announcedAt": "2026-10-01",
+      "finalAnnouncementDate": "2026-10-20",
+      "sourceUrl": "https://www.yuantaetfs.com/news/announcement/53fb107e-30a9-44a8-9f2a-35ca3634f24b",
+      "verificationUrl": "https://www.managertoday.com.tw/articles/view/62178"
+    }
+  ]
+}

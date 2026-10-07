@@ -1,7 +1,7 @@
 'use strict';
 
 const $ = id => document.getElementById(id);
-const APP_VERSION = '1.5.12';
+const APP_VERSION = '1.5.13';
 const DIVIDEND_WATCH_SYMBOLS = ['00919','00878','0056','0050','00406A','00981A'];
 const DATA_VERSION = 13;
 const VAULT_KEY = 'little_days_bookkeeping_vault_v2';
@@ -531,7 +531,7 @@ function collectHomeReminders(){
   }
   events.sort((a,b)=>a.date.localeCompare(b.date)).forEach(({date,type,e})=>{
     const d=parseDateKey(date),n=new Date(),sameMonth=d.getFullYear()===n.getFullYear()&&d.getMonth()===n.getMonth(),prefix=sameMonth?'本月':'接下來',md=`${d.getMonth()+1}/${d.getDate()}`;
-    dividendReminders.push({icon:type==='ex'?'🗓️':'🧧',title:`${prefix} ${e.symbol} ${e.shortName||e.name||''} ${md} ${type==='ex'?'除息':'預計入帳'}`,meta:type==='ex'?(e.perShare>0?`每股配息 ${e.perShare}`:'配息金額待公告'):`${e.estimatedAmount==null?'金額待確認':`預估 ${money(e.estimatedAmount)}`} · 入帳後確認加入收入`,tone:type==='ex'?'info':'income',action:()=>openDividendEventEditor(e.id)});
+    dividendReminders.push({icon:type==='ex'?'🗓️':'🧧',title:`${prefix} ${e.symbol} ${e.shortName||e.name||''} ${md} ${type==='ex'?'除息':'預計入帳'}`,meta:type==='ex'?dividendPerShareLabel(e):`${e.estimatedAmount==null?'金額待確認':`預估 ${money(e.estimatedAmount)}`} · 入帳後確認加入收入`,tone:type==='ex'?'info':'income',action:()=>openDividendEventEditor(e.id)});
   });
   const covered=new Set([...events.map(x=>x.e.symbol),...derived.filter(e=>['due','overdue'].includes(e.status)).map(e=>e.symbol)]);
   const waiting=DIVIDEND_WATCH_SYMBOLS.filter(symbol=>!covered.has(symbol));
@@ -1782,6 +1782,9 @@ async function loadStaticDividendCalendar(){
   const data=await fetchStaticJson(STATIC_DIVIDEND_CALENDAR_URL,8000);
   return {generatedAt:data?.generatedAt||'',items:Array.isArray(data?.items)?data.items:[],sources:Array.isArray(data?.sources)?data.sources:[],warnings:Array.isArray(data?.warnings)?data.warnings:[]};
 }
+function dividendPerShareLabel(e){
+  return e.perShare>0?`${e.perShareStatus==='estimated'?'預估每股':'每股配息'} ${e.perShare} 元${e.perShareStatus==='estimated'&&e.finalAnnouncementDate?` · ${e.finalAnnouncementDate} 公布正式金額`:''}`:'配息金額待公告';
+}
 function officialDividendEventKey(x){return `${investmentAssetKey(x?.symbol)}|${String(x?.exDate||'')}`;}
 async function syncOfficialDividendCalendar({force=false,silent=true}={}){
   if(dividendCalendarSyncInFlight)return dividendCalendarSyncInFlight;
@@ -1804,9 +1807,10 @@ async function syncOfficialDividendCalendar({force=false,silent=true}={}){
         const currentShares=investmentSharesAsOf(symbol,today);
         if(!prior&&((today>=exDate&&!(entitledShares>0))||(today<exDate&&!(currentShares>0))))continue;
         const rowPerShare=row?.perShare==null||row?.perShare===''?null:Number(row.perShare),priorPerShare=Number(prior?.perShare||0);
+        const estimate=Number(row?.estimatedPerShare),hasFinal=Number.isFinite(rowPerShare),hasEstimate=!hasFinal&&Number.isFinite(estimate)&&estimate>0;
         const meta=cachedSecurityMeta(symbol),next={
           ...(prior||{}),id:prior?.id||`auto-dividend-${symbol}-${exDate}`,symbol,name:String(row?.name||prior?.name||meta?.name||symbol),shortName:prior?.shortName||meta?.shortName||shortenSecurityName(row?.name||symbol,symbol),securityType:String(row?.securityType||prior?.securityType||meta?.securityType||guessSecurityType(symbol,row?.name||'')),
-          exDate,recordDate:recordDate||prior?.recordDate||'',expectedPayDate:officialPay||prior?.expectedPayDate||'',actualPayDate:prior?.actualPayDate||'',perShare:Number.isFinite(rowPerShare)?Math.max(0,rowPerShare):priorPerShare,actualAmount:prior?.actualAmount??null,entitledShares,entitlementFrozenAt,
+          exDate,recordDate:recordDate||prior?.recordDate||'',expectedPayDate:officialPay||prior?.expectedPayDate||'',actualPayDate:prior?.actualPayDate||'',perShare:hasFinal?Math.max(0,rowPerShare):hasEstimate?estimate:priorPerShare,perShareStatus:hasFinal?'confirmed':hasEstimate?'estimated':prior?.perShareStatus||'',finalAnnouncementDate:hasEstimate?String(row.finalAnnouncementDate||''):hasFinal?'':prior?.finalAnnouncementDate||'',estimateSourceUrl:hasEstimate?String(row.estimateSourceUrl||''):hasFinal?'':prior?.estimateSourceUrl||'',actualAmount:prior?.actualAmount??null,entitledShares,entitlementFrozenAt,
           source:prior?.source&&prior.source!=='official-auto'?prior.source:'official-auto',sourceProvider:String(row?.source||prior?.sourceProvider||''),sourceUrl:String(row?.sourceUrl||prior?.sourceUrl||''),sourceUpdatedAt:calendar.generatedAt||new Date().toISOString(),statusOverride:prior?.statusOverride||'',note:prior?.note||'官方股息行事曆自動同步；實際入帳需人工確認',createdAt:prior?.createdAt||new Date().toISOString(),bookkeepingTxnId:prior?.bookkeepingTxnId||null,ledgerTxnId:prior?.ledgerTxnId||null
         };
         const before=prior?JSON.stringify(prior):'';
@@ -2873,7 +2877,8 @@ function renderDividendEditorPreview(){
   const symbol=investmentAssetKey($('dividendSymbolInput')?.value),exDate=$('dividendExDateInput')?.value,perShare=Number($('dividendPerShareInput')?.value||0);if(!$('dividendDerivedPreview'))return;
   if(!symbol||!exDate){$('dividendDerivedPreview').innerHTML='<span>填入代號與除息日後，會依除息前一交易日的持股現算應領股數。</span>';return;}
   const shares=investmentSharesAsOf(symbol,investmentPreviousDayKey(exDate)),estimated=perShare>0?ntd(shares*perShare):null;
-  $('dividendDerivedPreview').innerHTML=`<span>除息前持股</span><strong>${shares.toLocaleString('zh-TW',{maximumFractionDigits:4})} 股</strong><span>預估股息</span><strong>${estimated==null?'--':money(estimated)}</strong>`;
+  const event=dividendEvents.find(e=>e.id===dividendEventEditingId);
+  $('dividendDerivedPreview').innerHTML=`${event?.perShareStatus==='estimated'?`<span>${escapeHtml(dividendPerShareLabel(event))}</span>`:''}<span>除息前持股</span><strong>${shares.toLocaleString('zh-TW',{maximumFractionDigits:4})} 股</strong><span>預估股息</span><strong>${estimated==null?'--':money(estimated)}</strong>`;
 }
 function syncDividendEventLedger(e){
   const paid=!!e.actualPayDate&&e.actualAmount!=null&&Number(e.actualAmount)>=0;
@@ -2887,7 +2892,7 @@ async function saveDividendEvent(){
   const symbol=investmentAssetKey($('dividendSymbolInput').value),exDate=$('dividendExDateInput').value,expectedPayDate=$('dividendExpectedPayDateInput').value,actualPayDate=$('dividendActualPayDateInput').value,perShare=Number($('dividendPerShareInput').value||0),actualRaw=$('dividendActualAmountInput').value,note=$('dividendNoteInput').value.trim();
   if(!symbol){toast('請輸入股票代號');return;} if(!exDate&&!actualPayDate){toast('請輸入除息日；若是歷史已入帳股息，至少要有實際入帳日');return;} if(exDate&&expectedPayDate&&expectedPayDate<exDate){toast('預計入帳日不能早於除息日');return;} if(actualPayDate&&actualRaw===''){toast('已填實際入帳日，請一併輸入實收金額');return;}
   const old=dividendEventEditingId?dividendEvents.find(x=>x.id===dividendEventEditingId):null,meta=await resolveSecurityMeta(symbol).catch(()=>cachedSecurityMeta(symbol));
-  const e={id:old?.id||uid(),symbol,name:meta?.name||$('dividendNameInput').value.trim(),shortName:meta?.shortName||shortenSecurityName($('dividendNameInput').value.trim(),symbol),securityType:meta?.securityType||guessSecurityType(symbol,$('dividendNameInput').value,meta?.market),exDate,expectedPayDate,actualPayDate,perShare:Math.max(0,perShare),actualAmount:actualRaw===''?null:ntd(actualRaw),statusOverride:old?.statusOverride||'',note,createdAt:old?.createdAt||new Date().toISOString(),ledgerTxnId:old?.ledgerTxnId||null,bookkeepingTxnId:old?.bookkeepingTxnId||null};
+  const e={...old,id:old?.id||uid(),symbol,name:meta?.name||$('dividendNameInput').value.trim(),shortName:meta?.shortName||shortenSecurityName($('dividendNameInput').value.trim(),symbol),securityType:meta?.securityType||guessSecurityType(symbol,$('dividendNameInput').value,meta?.market),exDate,expectedPayDate,actualPayDate,perShare:Math.max(0,perShare),actualAmount:actualRaw===''?null:ntd(actualRaw),statusOverride:old?.statusOverride||'',note,createdAt:old?.createdAt||new Date().toISOString(),ledgerTxnId:old?.ledgerTxnId||null,bookkeepingTxnId:old?.bookkeepingTxnId||null};
   if(old?.actualPayDate&&!actualPayDate&&old.ledgerTxnId&&!confirm('這筆股息原本已入帳。清除實際入帳日會同步刪除記帳本中的股息收入，確定繼續？'))return;
   syncDividendEventLedger(e); if(old)dividendEvents=dividendEvents.map(x=>x.id===old.id?e:x);else dividendEvents.push(e); await persistState();hide($('dividendEventEditorScreen'));renderAll();toast(e.actualPayDate?'股息已入帳並同步收入':'股息提醒已儲存');
 }
@@ -2922,7 +2927,7 @@ function renderDividendCalendar({preserveScroll=false}={}){
   if($('investmentDividendMonthPaid'))$('investmentDividendMonthPaid').textContent=investmentPrivateMoney(monthPaid);
   if($('investmentDividendMonthPending'))$('investmentDividendMonthPending').textContent=investmentPrivateMoney(monthPending);
   empty.classList.toggle('hidden',rows.length>0);
-  rows.forEach(e=>{const row=document.createElement('button');row.type='button';row.className='investment-dividend-row';const amount=e.status==='paid'?e.actualAmount:e.estimatedAmount,payText=e.actualPayDate?`入帳 ${escapeHtml(e.actualPayDate)}`:e.expectedPayDate?`預計 ${escapeHtml(e.expectedPayDate)}`:'入帳日待補';const sourceTag=e.source==='official-auto'?' · 自動':'';row.innerHTML=`<span class="investment-dividend-icon">${dividendStatusIcon(e.status)}</span><span class="investment-dividend-main"><strong>${escapeHtml(investmentDisplayLabel(e.symbol,e.name,e.shortName))}</strong><small>除息 ${escapeHtml(e.exDate||'--')} · ${payText}</small><em>${escapeHtml(dividendStatusLabel(e.status))}${e.entitledShares?` · ${e.entitledShares.toLocaleString('zh-TW',{maximumFractionDigits:4})} 股`:''}${sourceTag}</em></span><b>${amount==null?'--':investmentPrivateMoney(amount)}</b>`;row.onclick=()=>openDividendEventEditor(e.id);box.appendChild(row);});
+  rows.forEach(e=>{const row=document.createElement('button');row.type='button';row.className='investment-dividend-row';const amount=e.status==='paid'?e.actualAmount:e.estimatedAmount,payText=e.actualPayDate?`入帳 ${escapeHtml(e.actualPayDate)}`:e.expectedPayDate?`預計 ${escapeHtml(e.expectedPayDate)}`:'入帳日待補';const sourceTag=e.source==='official-auto'?' · 自動':'';row.innerHTML=`<span class="investment-dividend-icon">${dividendStatusIcon(e.status)}</span><span class="investment-dividend-main"><strong>${escapeHtml(investmentDisplayLabel(e.symbol,e.name,e.shortName))}</strong><small>除息 ${escapeHtml(e.exDate||'--')} · ${payText}</small><em>${escapeHtml(dividendStatusLabel(e.status))}${e.entitledShares?` · ${e.entitledShares.toLocaleString('zh-TW',{maximumFractionDigits:4})} 股`:''}${sourceTag} · ${escapeHtml(dividendPerShareLabel(e))}</em></span><b>${amount==null?'--':investmentPrivateMoney(amount)}</b>`;row.onclick=()=>openDividendEventEditor(e.id);box.appendChild(row);});
 }
 
 function renderAnnualSummaries(){
