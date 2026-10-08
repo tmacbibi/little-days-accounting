@@ -1,6 +1,6 @@
 {
   "schemaVersion": 2,
-  "generatedAt": "2026-10-07T16:23:46.948Z",
+  "generatedAt": "2026-10-08T16:25:35.662Z",
   "sourcePolicy": "official-only",
   "coverage": {
     "etf": "ex-date + record-date + expected payment date + per-unit distribution",
@@ -17,7 +17,7 @@
       "id": "TWSE_OPENAPI_TWT48U_ALL",
       "url": "https://openapi.twse.com.tw/v1/exchangeReport/TWT48U_ALL",
       "status": "ok",
-      "rows": 16
+      "rows": 13
     }
   ],
   "warnings": [],
@@ -5111,18 +5111,6 @@
       "sourceUrl": "https://www.twse.com.tw/zh/ETFortune/dividendList"
     },
     {
-      "symbol": "4155",
-      "name": "訊映",
-      "market": "TWSE",
-      "securityType": "stock",
-      "exDate": "2026-10-20",
-      "recordDate": "",
-      "expectedPayDate": "",
-      "perShare": 0.3,
-      "source": "TWSE_OPENAPI_TWT48U_ALL",
-      "sourceUrl": "https://openapi.twse.com.tw/v1/exchangeReport/TWT48U_ALL"
-    },
-    {
       "symbol": "00408A",
       "name": "主動第一金優股息",
       "market": "TWSE",
@@ -5161,6 +5149,18 @@
       "estimateAnnouncedAt": "2026-10-01",
       "finalAnnouncementDate": "2026-10-20",
       "estimateSourceUrl": "https://www.yuantaetfs.com/news/announcement/53fb107e-30a9-44a8-9f2a-35ca3634f24b"
+    },
+    {
+      "symbol": "2028",
+      "name": "威致",
+      "market": "TWSE",
+      "securityType": "stock",
+      "exDate": "2026-10-23",
+      "recordDate": "",
+      "expectedPayDate": "",
+      "perShare": 0.2,
+      "source": "TWSE_OPENAPI_TWT48U_ALL",
+      "sourceUrl": "https://openapi.twse.com.tw/v1/exchangeReport/TWT48U_ALL"
     },
     {
       "symbol": "6931",
