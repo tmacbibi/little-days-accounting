@@ -1,13 +1,13 @@
 {
   "schemaVersion": 1,
-  "generatedAt": "2026-10-07T15:47:41.053Z",
+  "generatedAt": "2026-10-08T14:57:12.471Z",
   "sourceStatus": {
     "TWSE": "ok: twse.com.tw MI_INDEX",
     "TPEx": "ok: tpex.org.tw mainboard_quotes"
   },
   "marketTradeDates": {
-    "TWSE": "2026-10-07",
-    "TPEx": "2026-10-07"
+    "TWSE": "2026-10-08",
+    "TPEx": "2026-10-08"
   },
   "marketFreshness": {
     "TWSE": "fresh",
@@ -2124,6 +2124,12 @@
       "symbol": "00992A",
       "name": "主動群益科技創新",
       "market": "TWSE",
+      "securityType": "etf"
+    },
+    {
+      "symbol": "00992B",
+      "name": "街口優息非投債",
+      "market": "TPEx",
       "securityType": "etf"
     },
     {
