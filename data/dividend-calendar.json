@@ -1,6 +1,6 @@
 {
   "schemaVersion": 2,
-  "generatedAt": "2026-10-08T16:25:35.662Z",
+  "generatedAt": "2026-10-09T16:08:42.468Z",
   "sourcePolicy": "official-only",
   "coverage": {
     "etf": "ex-date + record-date + expected payment date + per-unit distribution",
