@@ -1,5 +1,5 @@
-const CACHE='little-days-bookkeeping-v1-5-13';
-const ASSETS=['./','./index.html','./styles.css?v=1.5.13','./app.js?v=1.5.13','./manifest.json?v=1.5.13','./icon-192.png','./icon-512.png','./apple-touch-icon.png','./data/dividend-calendar.json'];
+const CACHE='little-days-bookkeeping-v1-5-14';
+const ASSETS=['./','./index.html','./styles.css?v=1.5.14','./app.js?v=1.5.14','./manifest.json?v=1.5.14','./icon-192.png','./icon-512.png','./apple-touch-icon.png','./data/dividend-calendar.json'];
 self.addEventListener('install',e=>e.waitUntil(caches.open(CACHE).then(c=>c.addAll(ASSETS)).then(()=>self.skipWaiting())));
 self.addEventListener('activate',e=>e.waitUntil(caches.keys().then(keys=>Promise.all(keys.filter(k=>k!==CACHE).map(k=>caches.delete(k)))).then(()=>self.clients.claim())));
 self.addEventListener('fetch',e=>{
@@ -7,3 +7,4 @@ self.addEventListener('fetch',e=>{
   const url=new URL(e.request.url);if(url.origin!==self.location.origin)return;
   e.respondWith(fetch(e.request).then(resp=>{const copy=resp.clone();caches.open(CACHE).then(c=>c.put(e.request,copy));return resp;}).catch(async()=>{const cached=await caches.match(e.request);if(cached)return cached;if(e.request.mode==='navigate')return caches.match('./index.html');throw new Error('offline');}));
 });
+

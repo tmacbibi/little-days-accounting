@@ -1,7 +1,7 @@
 'use strict';
 
 const $ = id => document.getElementById(id);
-const APP_VERSION = '1.5.13';
+const APP_VERSION = '1.5.14';
 const DIVIDEND_WATCH_SYMBOLS = ['00919','00878','0056','0050','00406A','00981A'];
 const DATA_VERSION = 13;
 const VAULT_KEY = 'little_days_bookkeeping_vault_v2';
@@ -472,7 +472,7 @@ function spendForBudgetKey(key,d=viewMonth){
   return 0;
 }
 
-function renderAll(){ if(!unlocked||!vaultLoaded)return; renderHome(); renderBudget(); renderAnalysis(); renderInvestment(); renderCategoryManager(); renderRecurringCount(); renderBackupStatus(); }
+function renderAll(){ if(!unlocked||!vaultLoaded)return; reconcileRealizedIncome(); renderHome(); renderBudget(); renderAnalysis(); renderInvestment(); renderCategoryManager(); renderRecurringCount(); renderBackupStatus(); }
 function daysInMonthOf(d){ return new Date(d.getFullYear(),d.getMonth()+1,0).getDate(); }
 function averageBaseDays(d=viewMonth){
   const now=new Date();
@@ -912,6 +912,7 @@ function monthlyInvestmentNet(d=viewMonth){
 }
 
 function renderAnalysis(){
+  renderRealizedIncomeSummary();
   $('analysisYearLabel').textContent=`${analysisYear} 年`; $('analysisYearModeBtn').classList.toggle('active',analysisMode==='year'); $('analysisMonthModeBtn').classList.toggle('active',analysisMode==='month'); $('analysisMonthSelect').classList.toggle('hidden',analysisMode!=='month'); $('analysisMonthSelect').value=String(analysisMonth);
   const list=analysisPeriodTxns(), ex=list.filter(t=>t.type==='expense'), inc=list.filter(t=>t.type==='income'), inv=list.filter(t=>t.type==='investment'); const expense=sum(ex),income=sum(inc),net=income-expense;
   const investmentBuys=sum(inv),range=analysisPeriodDateRange(),investmentSells=investmentSellCashForRange(range.start,range.end),investmentNet=investmentBuys-investmentSells;
@@ -1058,6 +1059,7 @@ function updateEditorRecurringHint(){
   $('editorRecurringHint').textContent=start?`從 ${start} 開始，${label}${days}建立；可設定結束日期。`:'上方日期就是週期開始日。';
 }
 function openEditor(txn=null,date=selectedDate,transcript=''){
+  if(txn?.source==='investment-realized'){openInvestmentTxnEditor(txn.realizedSellId);return;}
   const linked=txn?bookkeepingLinkTarget(txn):null;if(txn&&isCompletedInvestmentBuy(linked)){hide($('txnMenuScreen'));hide($('recurringEditScopeScreen'));actionTxnId=null;openInvestmentTxnEditor(linked.id);return;}
   editingId=txn?.id||null; $('editorTitle').textContent=editingId?'編輯':'記一筆'; show($('editorScreen')); $('voiceResultCard').classList.toggle('hidden',!transcript); $('voiceTranscript').textContent=transcript||'';
   setEditType(txn?.type||'expense'); $('amountInput').value=txn?.pendingAmount?'':(txn?.amount||''); currentCalcExpression=''; hide($('amountCalcHint')); $('amountCalcHint').textContent=''; $('dateInput').value=txn?.date||date||dateKey(new Date()); updateEditorDateContext(); $('titleInput').value=txn?.title||''; $('noteInput').value=txn?.note||'';
@@ -1084,7 +1086,7 @@ async function saveTxn(){
   let rec=base; if(editType==='expense')rec={...base,categoryId:selectedCategoryId,subcategory:$('subcategoryInput').value,payment:selectedPayment}; if(editType==='income')rec={...base,incomeCategory:$('incomeCategoryInput').value}; if(editType==='investment'){const symbol=investmentAssetKey($('bookkeepingInvestmentSymbolInput').value)||inferInvestmentSymbolFromText(`${title} ${base.note}`),meta=symbol?await resolveSecurityMeta(symbol).catch(()=>cachedSecurityMeta(symbol)):null;rec={...base,investmentCategory:$('investmentCategoryInput').value,investmentSymbol:symbol,investmentName:meta?.name||old?.investmentName||''};}
   rec.pendingAmount=false; rec.createdAt=old?.createdAt||new Date().toISOString(); if(editingId)txns=txns.map(t=>t.id===editingId?rec:t); else txns.push(rec); await persistState(); selectedDate=date; viewMonth=startOfMonth(parseDateKey(date)); closeEditor(); renderAll(); toast(wasEditing?'已更新':'已記錄');
 }
-function openTxnMenu(id){ actionTxnId=id; show($('txnMenuScreen')); }
+function openTxnMenu(id){ const t=txns.find(x=>x.id===id);if(t?.source==='investment-realized'){openInvestmentTxnEditor(t.realizedSellId);return;} actionTxnId=id; show($('txnMenuScreen')); }
 function closeTxnMenu(){ hide($('txnMenuScreen')); actionTxnId=null; }
 function openRecurringEditScope(){
   const t=txns.find(x=>x.id===actionTxnId); if(!t)return;
@@ -1556,6 +1558,7 @@ function reconcileInvestmentLinks(){
 
   for(const t of txns){
     if(!t?.id)continue;
+    if(t.source==='investment-realized')continue;
     let linked=bookkeepingLinkTarget(t);
     const formalBuy=isCompletedInvestmentBuy(linked)&&linked.ownedBy==='investment';
 
@@ -1612,6 +1615,7 @@ function reconcileInvestmentLinks(){
     if(e.exDate||e.expectedPayDate){e.actualPayDate='';e.actualAmount=null;e.ledgerTxnId=null;e.bookkeepingTxnId=null;return true;}
     return false;
   });
+  reconcileRealizedIncome();
   const eventLedgerIds=new Set(dividendEvents.map(e=>e.ledgerTxnId).filter(Boolean));
   for(const l of investmentLedger.filter(x=>x.kind==='dividend'&&!eventLedgerIds.has(x.id))){dividendEvents.push({id:uid(),symbol:l.symbol,name:l.name||'',shortName:l.shortName||'',securityType:l.securityType||'',exDate:'',expectedPayDate:l.date,actualPayDate:l.date,perShare:0,actualAmount:ntd(l.amount||0),statusOverride:'',note:l.note||'',createdAt:l.createdAt||new Date().toISOString(),bookkeepingTxnId:l.bookkeepingTxnId||null,ledgerTxnId:l.id});}
 }
@@ -2424,6 +2428,32 @@ function investmentFifoState(asOf=dateKey(new Date())){
   });
   return {positions,realizations,unresolvedContributions};
 }
+// Derived income is a projection, never a second investment-ledger transaction.
+// Rebuild after any cost/trade change and on unlock so historical sales are included.
+function renderRealizedIncomeSummary(){
+  const box=$('realizedIncomeSummary');if(!box)return;
+  const range=analysisPeriodDateRange(),rows=investmentRealizedTransactions().filter(r=>r.date>=range.start&&r.date<=range.end);
+  const gains=rows.reduce((s,r)=>s+Math.max(0,r.realized||0),0),losses=rows.reduce((s,r)=>s+Math.max(0,-(r.realized||0)),0);
+  const pending=rows.filter(r=>r.incomplete).length;
+  box.textContent=`股票已實現獲利 ${money(gains)}（列入收入） · 投資已實現損失 ${money(losses)}（不列生活支出） · 買賣淨損益 ${money(gains-losses)}${pending?` · ${pending} 筆成本待補，尚未認列`:''}。收支差額未扣投資損失；投資績效不重複加計連動收入。若曾手動記過同筆獲利，請核對避免重複。`;
+}
+function reconcileRealizedIncome(){
+  const previous=new Map(txns.filter(t=>t.source==='investment-realized').map(t=>[t.realizedSellId,t]));
+  const regular=txns.filter(t=>t.source!=='investment-realized');
+  const derived=[];
+  for(const r of investmentRealizedTransactions()){
+    if(r.incomplete||!Number.isFinite(r.realized)||r.realized<=0)continue;
+    // An explicitly linked manual income takes precedence; never guess a match by amount.
+    if(regular.some(t=>!t.voided&&t.type==='income'&&(t.realizedSellId===r.sellId||t.investmentLedgerId===r.sellId)))continue;
+    const old=previous.get(r.sellId),sell=investmentLedger.find(t=>t.id===r.sellId);
+    derived.push({id:old?.id||`realized-income-${r.sellId}`,type:'income',incomeCategory:'股票已實現獲利',
+      source:'investment-realized',realizedSellId:r.sellId,investmentSymbol:r.symbol,investmentName:r.name||'',
+      date:r.date,amount:r.realized,title:`${r.symbol} 賣出獲利`,pendingAmount:false,
+      note:`依賣出日認列；淨回收 ${money(r.proceeds)}－FIFO 成本 ${money(r.costBasis)}＝獲利 ${money(r.realized)}。已扣買賣手續費及交易稅；本金不列收入。${sell?.note?` 備註：${sell.note}`:''}`,
+      createdAt:old?.createdAt||sell?.createdAt||`${r.date}T00:00:00`});
+  }
+  txns=regular.concat(derived);
+}
 function investmentRealizedTransactions({year=null,symbol='',asOf=dateKey(new Date())}={}){
   const key=investmentAssetKey(symbol),state=investmentFifoState(asOf);
   return state.realizations.filter(r=>(year==null||Number(String(r.date).slice(0,4))===Number(year))&&(!key||r.symbol===key)).sort((a,b)=>String(b.date).localeCompare(String(a.date))||String(b.sellId).localeCompare(String(a.sellId)));
@@ -3141,3 +3171,4 @@ function registerServiceWorker(){ if('serviceWorker' in navigator)window.addEven
 
 async function init(){ bindEvents();installPrivacyLock();registerServiceWorker();await bootAuth(); }
 document.addEventListener('DOMContentLoaded',init);
+
