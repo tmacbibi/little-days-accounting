@@ -1,17 +1,17 @@
 {
   "schemaVersion": 1,
-  "generatedAt": "2026-10-09T16:37:26.371Z",
+  "generatedAt": "2026-10-12T17:01:10.764Z",
   "sourceStatus": {
-    "TWSE": "ok: twse.com.tw MI_INDEX",
-    "TPEx": "ok: tpex.org.tw mainboard_quotes"
+    "TWSE": "stale: twse.com.tw MI_INDEX 2026-10-12 < expected 2026-10-13",
+    "TPEx": "stale: tpex.org.tw mainboard_quotes 2026-10-12 < expected 2026-10-13"
   },
   "marketTradeDates": {
-    "TWSE": "2026-10-08",
-    "TPEx": "2026-10-08"
+    "TWSE": "2026-10-12",
+    "TPEx": "2026-10-12"
   },
   "marketFreshness": {
-    "TWSE": "fresh",
-    "TPEx": "fresh"
+    "TWSE": "stale",
+    "TPEx": "stale"
   },
   "items": [
     {
@@ -106,7 +106,7 @@
     },
     {
       "symbol": "0053",
-      "name": "元大電子",
+      "name": "元大科技市值",
       "market": "TWSE",
       "securityType": "etf"
     },
