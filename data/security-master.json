@@ -1,13 +1,13 @@
 {
   "schemaVersion": 1,
-  "generatedAt": "2026-10-14T14:40:37.206Z",
+  "generatedAt": "2026-10-15T12:51:56.074Z",
   "sourceStatus": {
     "TWSE": "ok: twse.com.tw MI_INDEX",
     "TPEx": "ok: tpex.org.tw mainboard_quotes"
   },
   "marketTradeDates": {
-    "TWSE": "2026-10-14",
-    "TPEx": "2026-10-14"
+    "TWSE": "2026-10-15",
+    "TPEx": "2026-10-15"
   },
   "marketFreshness": {
     "TWSE": "fresh",
@@ -76103,6 +76103,12 @@
     {
       "symbol": "7805",
       "name": "威聯通",
+      "market": "TPEx",
+      "securityType": "stock"
+    },
+    {
+      "symbol": "7806",
+      "name": "精華生醫",
       "market": "TPEx",
       "securityType": "stock"
     },
