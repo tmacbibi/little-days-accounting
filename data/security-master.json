@@ -1,13 +1,13 @@
 {
   "schemaVersion": 1,
-  "generatedAt": "2026-10-15T14:25:41.273Z",
+  "generatedAt": "2026-10-16T12:44:39.214Z",
   "sourceStatus": {
     "TWSE": "ok: twse.com.tw MI_INDEX",
     "TPEx": "ok: tpex.org.tw mainboard_quotes"
   },
   "marketTradeDates": {
-    "TWSE": "2026-10-15",
-    "TPEx": "2026-10-15"
+    "TWSE": "2026-10-16",
+    "TPEx": "2026-10-16"
   },
   "marketFreshness": {
     "TWSE": "fresh",
@@ -77111,7 +77111,7 @@
     {
       "symbol": "8908",
       "name": "欣雄",
-      "market": "TPEx",
+      "market": "TWSE",
       "securityType": "stock"
     },
     {
