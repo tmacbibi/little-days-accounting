@@ -1,13 +1,13 @@
 {
   "schemaVersion": 1,
-  "generatedAt": "2026-10-16T14:17:22.375Z",
+  "generatedAt": "2026-10-19T14:59:16.936Z",
   "sourceStatus": {
     "TWSE": "ok: twse.com.tw MI_INDEX",
     "TPEx": "ok: tpex.org.tw mainboard_quotes"
   },
   "marketTradeDates": {
-    "TWSE": "2026-10-16",
-    "TPEx": "2026-10-16"
+    "TWSE": "2026-10-19",
+    "TPEx": "2026-10-19"
   },
   "marketFreshness": {
     "TWSE": "fresh",
