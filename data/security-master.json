@@ -1,13 +1,13 @@
 {
   "schemaVersion": 1,
-  "generatedAt": "2026-10-21T14:41:14.532Z",
+  "generatedAt": "2026-10-22T13:12:43.486Z",
   "sourceStatus": {
     "TWSE": "ok: twse.com.tw MI_INDEX",
     "TPEx": "ok: tpex.org.tw mainboard_quotes"
   },
   "marketTradeDates": {
-    "TWSE": "2026-10-21",
-    "TPEx": "2026-10-21"
+    "TWSE": "2026-10-22",
+    "TPEx": "2026-10-22"
   },
   "marketFreshness": {
     "TWSE": "fresh",
@@ -4170,6 +4170,12 @@
       "symbol": "2248",
       "name": "華勝-KY",
       "market": "TWSE",
+      "securityType": "stock"
+    },
+    {
+      "symbol": "2249",
+      "name": "湧盛",
+      "market": "TPEx",
       "securityType": "stock"
     },
     {
