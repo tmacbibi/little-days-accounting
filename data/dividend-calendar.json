@@ -1,6 +1,6 @@
 {
   "schemaVersion": 2,
-  "generatedAt": "2026-10-22T14:29:07.273Z",
+  "generatedAt": "2026-10-23T14:11:59.178Z",
   "sourcePolicy": "official-only",
   "coverage": {
     "etf": "ex-date + record-date + expected payment date + per-unit distribution",
@@ -17,7 +17,7 @@
       "id": "TWSE_OPENAPI_TWT48U_ALL",
       "url": "https://openapi.twse.com.tw/v1/exchangeReport/TWT48U_ALL",
       "status": "ok",
-      "rows": 15
+      "rows": 12
     }
   ],
   "warnings": [],
@@ -5061,18 +5061,6 @@
       "perShare": 0.067,
       "source": "TWSE_ETFORTUNE",
       "sourceUrl": "https://www.twse.com.tw/zh/ETFortune/dividendList"
-    },
-    {
-      "symbol": "4155",
-      "name": "訊映",
-      "market": "TWSE",
-      "securityType": "stock",
-      "exDate": "2026-10-20",
-      "recordDate": "",
-      "expectedPayDate": "",
-      "perShare": 0.3,
-      "source": "TWSE_OPENAPI_TWT48U_ALL",
-      "sourceUrl": "https://openapi.twse.com.tw/v1/exchangeReport/TWT48U_ALL"
     },
     {
       "symbol": "00408A",
