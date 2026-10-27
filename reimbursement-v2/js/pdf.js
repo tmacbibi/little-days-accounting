@@ -91,9 +91,9 @@ function fillGeneral(x,e,slot){
 const TRAVEL_X=[44.8,66.7,89.4,112.1,197.1,259.5,310.5,361.6,412.6,463.7,514.0];
 const TRAVEL_TOP=slotTops(59,171);
 function travelFrame(x,slot){
-  const t=TRAVEL_TOP[slot];company(x,t-53,'國內出差費申請單',200);
-  txt(x,'出差事由：',350,t-44,9.3);
-  txt(x,'出差地點：',350,t-22,9.3);
+  const t=TRAVEL_TOP[slot];company(x,t-53,'國內出差費申請單');
+  txt(x,'出差事由：',390,t-44,9.3);
+  txt(x,'出差地點：',390,t-22,9.3);
   const ys=[t,t+23.1,t+45.9,t+68.6,t+91.4,t+114.1,t+137.3];
   line(x,TRAVEL_X[0],ys[0],TRAVEL_X.at(-1),ys[0],1);line(x,TRAVEL_X[0],ys.at(-1),TRAVEL_X.at(-1),ys.at(-1),1);
   TRAVEL_X.forEach(xx=>line(x,xx,ys[0],xx,ys.at(-1),.7));ys.slice(1,-1).forEach(yy=>line(x,TRAVEL_X[0],yy,TRAVEL_X.at(-1),yy,.7));
@@ -109,7 +109,16 @@ function fillTravel(x,e,slot){
   // Keep the labels visible on unused slips, and wrap long venue names in
   // the new top-right header without reducing the table's font size.
   [[travelPurpose(e),t-44],[e.travelLocation||'',t-22]].forEach(([value,y])=>{
-    wrap(x,value,169,9.3,2).forEach((s,j)=>fitTxt(x,s,406,y+j*10,169,9.3,'left'));
+    let size=9.3, lines;
+    // Rewrap at the final font size so both lines stay within the right margin.
+    while(true){
+      lines=wrap(x,value,129,size,2);
+      x.save();x.font=`400 ${size}px ${FONT}`;
+      const fits=lines.every(s=>x.measureText(s).width<=129);x.restore();
+      if(fits||size<=6)break;
+      size=Math.max(6,size-.5);
+    }
+    lines.forEach((s,j)=>fitTxt(x,s,446,y+j*10,129,size,'left'));
   });
   const vals=[yy,mm,dd,e.route||'',e.projectCode||'',fmt(c.travelTraffic),fmt(c.fixedMeal),fmt(c.travelLodging),fmt(c.travelOther),fmt(c.travelTotal)];
   vals.forEach((v,i)=>fitTxt(x,v,(TRAVEL_X[i]+TRAVEL_X[i+1])/2,cy,TRAVEL_X[i+1]-TRAVEL_X[i]-4,10.4));
