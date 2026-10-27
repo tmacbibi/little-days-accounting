@@ -1,4 +1,5 @@
 import './updates.js';
+import { TRAVEL_PURPOSES, missingTravelFields } from './travel-fields.js';
 import { db, uid } from './db.js';
 import { isDeleted, mergeRows, eventViews } from './records.js';
 import { APP_VERSION, MILEAGE_RATE, EVENT_TYPES, TRANSPORTS, EXPENSE_TYPES, DEFAULT_START_LOCATION, PRESET_MILEAGE_ROUTES, normalizeExpense, calculateEvent, money } from './rules.js';
@@ -98,6 +99,12 @@ function newPage() {
   const startLocation = e.startLocation ?? legacyRoute.startLocation;
   const endLocation = e.endLocation ?? legacyRoute.endLocation;
   const mileageOptions = mileageSuggestions(state.events, startLocation);
+  const isTravel = e.eventType === '國內出差';
+  const purposeOptions = TRAVEL_PURPOSES.includes(e.travelPurpose) || !e.travelPurpose
+    ? TRAVEL_PURPOSES : [e.travelPurpose, ...TRAVEL_PURPOSES];
+  const recentLocations = [...new Set([...state.events].sort((a,b) =>
+    String(b.updatedAt || b.createdAt || '').localeCompare(String(a.updatedAt || a.createdAt || '')))
+    .map(row => String(row.travelLocation || '').trim()).filter(Boolean))].slice(0,12);
   const c = calculateEvent(e);
   const expenseRows = (e.expenses||[]).map((x,i)=>html`<div class="expense-row expense-entry"><select data-expense-type="${i}" aria-label="費用類型 ${i+1}">${(!EXPENSE_TYPES.includes(x.type) ? `<option value="${esc(x.type)}" selected>${esc(x.type)}（舊資料）</option>` : '') + EXPENSE_TYPES.map(v=>`<option ${x.type===v?'selected':''}>${v}</option>`).join('')}</select>
     ${x.type==='里程補助' ? `<label class="expense-km">總公里數<input data-expense-km="${i}" type="number" inputmode="decimal" min="0" step="any" value="${esc(x.km||'')}" placeholder="含去回程" aria-label="里程公里數 ${i+1}"></label><div class="expense-detail"><input data-expense-route="${i}" value="${esc(x.route||'')}" placeholder="例：蘆洲－板橋高鐵站（來回）" aria-label="里程路線 ${i+1}"><small>每公里 ${MILEAGE_RATE} 元・補助 ${money(normalizeExpense(x).amount)}・無外來憑證</small></div>` : `<input data-expense-amount="${i}" inputmode="numeric" type="number" min="0" value="${esc(x.amount||'')}" placeholder="金額" aria-label="費用金額 ${i+1}"><div class="expense-detail">${x.type==='其他' ? `<input data-expense-item="${i}" value="${esc(x.itemName??x.note??'')}" placeholder="實際品項（必填），例：場地租借費" aria-label="實際品項 ${i+1}" required>` : ''}<input data-expense-note="${i}" value="${esc(x.note||'')}" placeholder="備註" aria-label="費用備註 ${i+1}"></div>`}
@@ -106,10 +113,22 @@ function newPage() {
     <form id="eventForm" class="form-page">
       <div class="form-section"><h2>基本資料</h2>
         <label>日期<input name="date" type="date" value="${esc(e.date)}"></label>
-        <label>事件名稱<input name="name" value="${esc(e.name||'')}" placeholder="例：宜蘭出差、工作會議"></label>
+        <label>事件名稱＊<input name="name" aria-label="事件名稱" required value="${esc(e.name||'')}" placeholder="例：安心回嘉期中審查、嘉義出差" aria-describedby="eventNameHelp"></label>
+        <small id="eventNameHelp" class="field-help">自由命名，方便在首頁辨識；請款單使用下方專門欄位。</small>
         <label>專案代號<input name="projectCode" value="${esc(e.projectCode||'')}" placeholder="例：CD77"></label>
         <label>事件類型<select name="eventType">${EVENT_TYPES.map(v=>`<option ${e.eventType===v?'selected':''}>${v}</option>`).join('')}</select></label>
-        <div class="two-col"><label>起點<input name="startLocation" value="${esc(startLocation)}" placeholder="例：蘆洲"></label><label>迄點<input name="endLocation" value="${esc(endLocation)}" placeholder="例：宜蘭"></label></div>
+        <div class="two-col"><div><label>起點${isTravel?'＊':''}<input name="startLocation" aria-label="起點" ${isTravel?'required':''} value="${esc(startLocation)}" placeholder="例：蘆洲、公司" aria-describedby="startHelp"></label><small id="startHelp" class="field-help">本次行程的出發地。</small></div><div><label>迄點${isTravel?'＊':''}<input name="endLocation" aria-label="迄點" ${isTravel?'required':''} value="${esc(endLocation)}" placeholder="例：嘉義、臺北" aria-describedby="endHelp"></label><small id="endHelp" class="field-help">本次行程的目的地，帶入表格的起訖地點。</small></div></div>
+      </div>
+      <div class="form-section ${isTravel?'':'hidden'}"><h2>出差資料</h2>
+        <p class="field-help">＊為必填，以下內容會帶入國內出差費申請單。</p>
+        <label>出差事由＊<select name="travelPurpose" aria-label="出差事由" aria-describedby="purposeHelp" ${isTravel?'required':''}><option value="">請選擇出差事由</option>${purposeOptions.map(v=>`<option value="${esc(v)}" ${e.travelPurpose===v?'selected':''}>${esc(v)}</option>`).join('')}</select></label>
+        <small id="purposeHelp" class="field-help">例：審查會議、工作會議；帶入請款單的「出差事由」。</small>
+        <div class="${e.travelPurpose==='其他'?'':'hidden'}"><label>其他事由＊<input name="travelPurposeOther" aria-label="其他事由" aria-describedby="otherPurposeHelp" ${isTravel&&e.travelPurpose==='其他'?'required':''} maxlength="40" value="${esc(e.travelPurposeOther||'')}" placeholder="例：參加教育訓練"></label><small id="otherPurposeHelp" class="field-help">請填寫實際出差目的。</small></div>
+        <label>出差地點＊<input name="travelLocation" aria-label="出差地點" aria-describedby="travelLocationHelp" ${isTravel?'required':''} maxlength="40" list="recentTravelLocations" value="${esc(e.travelLocation||'')}" placeholder="例：嘉義縣政府、臺北市政府"></label>
+        <small id="travelLocationHelp" class="field-help">填寫實際開會或洽公場所，帶入請款單的「出差地點」；可選最近使用的地點。</small>
+        <datalist id="recentTravelLocations">${recentLocations.map(v=>`<option value="${esc(v)}"></option>`).join('')}</datalist>
+        <button type="button" class="ghost" data-use-end-location>沿用迄點作為出差地點</button>
+        <small class="field-help">若迄點只有縣市名稱，請再補上實際場所。</small>
       </div>
       <div class="form-section"><h2>交通</h2>
         <label>交通方式<select name="transport">${TRANSPORTS.map(v=>`<option ${e.transport===v?'selected':''}>${v}</option>`).join('')}</select></label>
@@ -224,6 +243,7 @@ function collectForm() {
     ...(state.editing||{}),
     date: fd.get('date'), name: fd.get('name')?.trim(), projectCode: fd.get('projectCode')?.trim(),
     eventType: fd.get('eventType'), startLocation: fd.get('startLocation')?.trim(), endLocation: fd.get('endLocation')?.trim(),
+    travelPurpose: fd.get('travelPurpose')?.trim(), travelPurposeOther: fd.get('travelPurposeOther')?.trim(), travelLocation: fd.get('travelLocation')?.trim(),
     route: [fd.get('startLocation')?.trim(), fd.get('endLocation')?.trim()].filter(Boolean).join('－'), transport: fd.get('transport'),
     km: Number(fd.get('km')||0), parking: Number(fd.get('parking')||0), highSpeedRailFare: Number(fd.get('highSpeedRailFare')||0), taxiFare: Number(fd.get('taxiFare')||0), mealMode: fd.get('mealMode')||'無餐費', actualMealAmount: Number(fd.get('actualMealAmount')||0),
     breakfast: fd.get('breakfast')==='on', lunch: fd.get('lunch')==='on', dinner: fd.get('dinner')==='on',
@@ -320,9 +340,15 @@ function bind() {
   });
   const form = document.querySelector('#eventForm');
   form?.addEventListener('submit', async ev=>{
-    ev.preventDefault(); const row=collectForm(); if(!row.name){alert('請輸入事件名稱');return;} if(row.expenses.some(x=>x.type==='其他'&&!x.itemName?.trim())){alert('請填寫其他費用的實際品項');return;} row.id=row.id||uid('evt'); row.createdAt=row.createdAt||new Date().toISOString(); row.updatedAt=new Date().toISOString(); row.computed=calculateEvent(row); if(row.computed.overGeneralRows){alert('一般請款超過4列，請先拆分事件。');return;} const merged=await db.merge('events',[row],mergeRows); if(isDeleted(merged.find(e=>e.id===row.id))){alert('此項目已刪除，請先到垃圾桶還原。');state.editing=null;state.page='pending';await refresh();return;} syncQuietly(); state.editing=null; state.page='home'; await refresh();
+    ev.preventDefault(); const row=collectForm(); if(!row.name){alert('請輸入事件名稱');return;} const missing=missingTravelFields(row); if(missing.length){alert('請填寫'+missing.join('、'));return;} if(row.expenses.some(x=>x.type==='其他'&&!x.itemName?.trim())){alert('請填寫其他費用的實際品項');return;} row.id=row.id||uid('evt'); row.createdAt=row.createdAt||new Date().toISOString(); row.updatedAt=new Date().toISOString(); row.computed=calculateEvent(row); if(row.computed.overGeneralRows){alert('一般請款超過4列，請先拆分事件。');return;} const merged=await db.merge('events',[row],mergeRows); if(isDeleted(merged.find(e=>e.id===row.id))){alert('此項目已刪除，請先到垃圾桶還原。');state.editing=null;state.page='pending';await refresh();return;} syncQuietly(); state.editing=null; state.page='home'; await refresh();
   });
   form?.querySelectorAll('input,select').forEach(el=>{ if(el.closest('.expense-row'))return; el.onchange=()=>{ const draft=collectForm(); state.editing=draft; render(); }; });
+  document.querySelector('[data-use-end-location]')?.addEventListener('click',()=>{
+    const draft=collectForm();
+    if(!draft.endLocation){alert('請先填寫迄點');return;}
+    draft.travelLocation=draft.endLocation;
+    state.editing=draft; render();
+  });
   document.querySelectorAll('[data-mileage-km]').forEach(btn=>btn.addEventListener('click',()=>{
     const draft=collectForm();
     draft.startLocation = draft.startLocation || DEFAULT_START_LOCATION;

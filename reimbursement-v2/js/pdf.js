@@ -1,3 +1,5 @@
+import { assertTravelFields, travelPurpose } from './travel-fields.js';
+
 const PW=595.3, PH=841.9, SCALE=2.78, CW=Math.round(PW*SCALE), CH=Math.round(PH*SCALE);
 const FONT='"PingFang TC","Noto Sans TC","Microsoft JhengHei",sans-serif';
 const PROFILE={department:'C',employeeNo:'530',applicant:'江孝頤'};
@@ -33,9 +35,9 @@ function wrap(x,s,maxW,size=9,maxLines=2){
   for(const ch of String(s||'')){const n=cur+ch;if(x.measureText(n).width>maxW&&cur&&out.length<maxLines-1){out.push(cur);cur=ch;}else cur=n;}
   if(cur&&out.length<maxLines)out.push(cur);x.restore();return out;
 }
-function company(x,y,title){
-  txt(x,'鼎漢國際工程顧問股份有限公司',PW/2,y,12,'center');
-  txt(x,title,PW/2,y+18,13,'center');
+function company(x,y,title,cx=PW/2){
+  txt(x,'鼎漢國際工程顧問股份有限公司',cx,y,12,'center');
+  txt(x,title,cx,y+18,13,'center');
 }
 function cut(x,y){line(x,60,y,530,y,.55,[3,2]);}
 function profile(x,y,{department=68,employee=250,applicant=426,size=9}={}){
@@ -87,9 +89,11 @@ function fillGeneral(x,e,slot){
 }
 
 const TRAVEL_X=[44.8,66.7,89.4,112.1,197.1,259.5,310.5,361.6,412.6,463.7,514.0];
-const TRAVEL_TOP=slotTops(37,171);
+const TRAVEL_TOP=slotTops(59,171);
 function travelFrame(x,slot){
-  const t=TRAVEL_TOP[slot];company(x,t-31,'國內出差費申請單');
+  const t=TRAVEL_TOP[slot];company(x,t-53,'國內出差費申請單',200);
+  txt(x,'出差事由：',350,t-44,9.3);
+  txt(x,'出差地點：',350,t-22,9.3);
   const ys=[t,t+23.1,t+45.9,t+68.6,t+91.4,t+114.1,t+137.3];
   line(x,TRAVEL_X[0],ys[0],TRAVEL_X.at(-1),ys[0],1);line(x,TRAVEL_X[0],ys.at(-1),TRAVEL_X.at(-1),ys.at(-1),1);
   TRAVEL_X.forEach(xx=>line(x,xx,ys[0],xx,ys.at(-1),.7));ys.slice(1,-1).forEach(yy=>line(x,TRAVEL_X[0],yy,TRAVEL_X.at(-1),yy,.7));
@@ -102,6 +106,11 @@ function fillTravel(x,e,slot){
   travelFrame(x,slot);if(!e)return;
   const t=TRAVEL_TOP[slot],ys=[t,t+23.1,t+45.9,t+68.6,t+91.4,t+114.1,t+137.3],cy=(ys[1]+ys[2])/2,c=e.computed||{};
   const [yy,mm,dd]=roc(e.date);
+  // Keep the labels visible on unused slips, and wrap long venue names in
+  // the new top-right header without reducing the table's font size.
+  [[travelPurpose(e),t-44],[e.travelLocation||'',t-22]].forEach(([value,y])=>{
+    wrap(x,value,169,9.3,2).forEach((s,j)=>fitTxt(x,s,406,y+j*10,169,9.3,'left'));
+  });
   const vals=[yy,mm,dd,e.route||'',e.projectCode||'',fmt(c.travelTraffic),fmt(c.fixedMeal),fmt(c.travelLodging),fmt(c.travelOther),fmt(c.travelTotal)];
   vals.forEach((v,i)=>fitTxt(x,v,(TRAVEL_X[i]+TRAVEL_X[i+1])/2,cy,TRAVEL_X[i+1]-TRAVEL_X[i]-4,10.4));
   txt(x,fmt(c.travelTotal),(TRAVEL_X[9]+TRAVEL_X[10])/2,(ys[5]+ys[6])/2,10.8,'center');
@@ -144,6 +153,7 @@ export function productionStamp(date=new Date()) {
   return `${p.year}-${p.month}-${p.day}_${p.hour}${p.minute}${p.second}`;
 }
 export async function generateBatchPdfs(events,batchName='本週請款'){
+  assertTravelFields(events);
   const producedAt=productionStamp();
   const { calculateEvent } = await import('./rules.js');
   events = events.map(e => ({...e, computed:calculateEvent(e)}));
