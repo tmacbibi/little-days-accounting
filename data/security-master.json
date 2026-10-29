@@ -1,17 +1,17 @@
 {
   "schemaVersion": 1,
-  "generatedAt": "2026-10-28T16:17:05.015Z",
+  "generatedAt": "2026-10-29T14:39:43.322Z",
   "sourceStatus": {
-    "TWSE": "stale: twse.com.tw MI_INDEX 2026-10-28 < expected 2026-10-29",
-    "TPEx": "stale: tpex.org.tw mainboard_quotes 2026-10-28 < expected 2026-10-29"
+    "TWSE": "ok: twse.com.tw MI_INDEX",
+    "TPEx": "ok: tpex.org.tw mainboard_quotes"
   },
   "marketTradeDates": {
-    "TWSE": "2026-10-28",
-    "TPEx": "2026-10-28"
+    "TWSE": "2026-10-29",
+    "TPEx": "2026-10-29"
   },
   "marketFreshness": {
-    "TWSE": "stale",
-    "TPEx": "stale"
+    "TWSE": "fresh",
+    "TPEx": "fresh"
   },
   "items": [
     {
@@ -1991,6 +1991,18 @@
     {
       "symbol": "00982T",
       "name": "平衡兆豐台美動能",
+      "market": "TWSE",
+      "securityType": "etf"
+    },
+    {
+      "symbol": "009831",
+      "name": "FT核心AI電力算力",
+      "market": "TWSE",
+      "securityType": "etf"
+    },
+    {
+      "symbol": "009832",
+      "name": "兆豐美國黃金",
       "market": "TWSE",
       "securityType": "etf"
     },
