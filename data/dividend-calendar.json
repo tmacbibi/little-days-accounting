@@ -1,6 +1,6 @@
 {
   "schemaVersion": 2,
-  "generatedAt": "2026-10-30T15:51:24.462Z",
+  "generatedAt": "2026-10-31T15:17:21.005Z",
   "sourcePolicy": "official-only",
   "coverage": {
     "etf": "ex-date + record-date + expected payment date + per-unit distribution",
@@ -17,7 +17,7 @@
       "id": "TWSE_OPENAPI_TWT48U_ALL",
       "url": "https://openapi.twse.com.tw/v1/exchangeReport/TWT48U_ALL",
       "status": "ok",
-      "rows": 12
+      "rows": 10
     }
   ],
   "warnings": [],
@@ -5099,30 +5099,6 @@
       "sourceUrl": "https://www.twse.com.tw/zh/ETFortune/dividendList"
     },
     {
-      "symbol": "2028",
-      "name": "威致",
-      "market": "TWSE",
-      "securityType": "stock",
-      "exDate": "2026-10-23",
-      "recordDate": "",
-      "expectedPayDate": "",
-      "perShare": 0.2,
-      "source": "TWSE_OPENAPI_TWT48U_ALL",
-      "sourceUrl": "https://openapi.twse.com.tw/v1/exchangeReport/TWT48U_ALL"
-    },
-    {
-      "symbol": "6931",
-      "name": "青松健康",
-      "market": "TWSE",
-      "securityType": "stock",
-      "exDate": "2026-10-23",
-      "recordDate": "",
-      "expectedPayDate": "",
-      "perShare": 0.12,
-      "source": "TWSE_OPENAPI_TWT48U_ALL",
-      "sourceUrl": "https://openapi.twse.com.tw/v1/exchangeReport/TWT48U_ALL"
-    },
-    {
       "symbol": "00907",
       "name": "永豐優息存股",
       "market": "TWSE",
@@ -5133,18 +5109,6 @@
       "perShare": 0.268,
       "source": "TWSE_ETFORTUNE",
       "sourceUrl": "https://www.twse.com.tw/zh/ETFortune/dividendList"
-    },
-    {
-      "symbol": "4552",
-      "name": "力達-KY",
-      "market": "TWSE",
-      "securityType": "stock",
-      "exDate": "2026-10-28",
-      "recordDate": "",
-      "expectedPayDate": "",
-      "perShare": 0.6,
-      "source": "TWSE_OPENAPI_TWT48U_ALL",
-      "sourceUrl": "https://openapi.twse.com.tw/v1/exchangeReport/TWT48U_ALL"
     },
     {
       "symbol": "2762",
