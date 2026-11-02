@@ -1,6 +1,6 @@
 {
   "schemaVersion": 1,
-  "generatedAt": "2026-11-02T18:51:16.430Z",
+  "generatedAt": "2026-11-02T19:46:34.834Z",
   "sourceStatus": {
     "TWSE": "stale: twse.com.tw MI_INDEX 2026-11-02 < expected 2026-11-03",
     "TPEx": "stale: tpex.org.tw mainboard_quotes 2026-11-02 < expected 2026-11-03"
