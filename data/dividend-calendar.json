@@ -1,6 +1,6 @@
 {
   "schemaVersion": 2,
-  "generatedAt": "2026-11-04T17:10:23.240Z",
+  "generatedAt": "2026-11-05T17:20:24.416Z",
   "sourcePolicy": "official-only",
   "coverage": {
     "etf": "ex-date + record-date + expected payment date + per-unit distribution",
@@ -17,7 +17,7 @@
       "id": "TWSE_OPENAPI_TWT48U_ALL",
       "url": "https://openapi.twse.com.tw/v1/exchangeReport/TWT48U_ALL",
       "status": "ok",
-      "rows": 10
+      "rows": 11
     }
   ],
   "warnings": [],
@@ -5111,18 +5111,6 @@
       "sourceUrl": "https://www.twse.com.tw/zh/ETFortune/dividendList"
     },
     {
-      "symbol": "6165",
-      "name": "浪凡",
-      "market": "TWSE",
-      "securityType": "stock",
-      "exDate": "2026-11-02",
-      "recordDate": "",
-      "expectedPayDate": "",
-      "perShare": 5,
-      "source": "TWSE_OPENAPI_TWT48U_ALL",
-      "sourceUrl": "https://openapi.twse.com.tw/v1/exchangeReport/TWT48U_ALL"
-    },
-    {
       "symbol": "00406A",
       "name": "主動中信台灣收益",
       "market": "TWSE",
@@ -5649,6 +5637,18 @@
       "perShare": null,
       "source": "TWSE_ETFORTUNE",
       "sourceUrl": "https://www.twse.com.tw/zh/ETFortune/dividendList"
+    },
+    {
+      "symbol": "2344",
+      "name": "華邦電",
+      "market": "TWSE",
+      "securityType": "stock",
+      "exDate": "2026-11-18",
+      "recordDate": "",
+      "expectedPayDate": "",
+      "perShare": 2,
+      "source": "TWSE_OPENAPI_TWT48U_ALL",
+      "sourceUrl": "https://openapi.twse.com.tw/v1/exchangeReport/TWT48U_ALL"
     },
     {
       "symbol": "01007T",
