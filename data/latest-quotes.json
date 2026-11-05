@@ -1,11 +1,11 @@
 {
   "schemaVersion": 1,
-  "generatedAt": "2026-11-05T16:50:16.028Z",
+  "generatedAt": "2026-11-05T16:52:30.478Z",
   "quality": "partial",
   "expectedTradeDate": "2026-11-06",
   "sourceStatus": {
     "TWSE": "stale: twse.com.tw MI_INDEX 2026-11-05 < expected 2026-11-06",
-    "TPEx": "stale: tpex.org.tw mainboard_quotes 2026-11-05 < expected 2026-11-06"
+    "TPEx": "stale: mainboard_quotes: failed after 3 attempts: HTTP 403 Forbidden | daily_close: failed after 3 attempts: HTTP 403 Forbidden"
   },
   "marketTradeDates": {
     "TWSE": "2026-11-05",
@@ -25,7 +25,7 @@
       "value": 321.47,
       "change": -22.03,
       "changePct": -6.413391557496362,
-      "isStale": false
+      "isStale": true
     },
     {
       "code": "TAIEX",
