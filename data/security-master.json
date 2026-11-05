@@ -1,9 +1,9 @@
 {
   "schemaVersion": 1,
-  "generatedAt": "2026-11-05T16:52:30.478Z",
+  "generatedAt": "2026-11-05T17:38:19.660Z",
   "sourceStatus": {
     "TWSE": "stale: twse.com.tw MI_INDEX 2026-11-05 < expected 2026-11-06",
-    "TPEx": "stale: mainboard_quotes: failed after 3 attempts: HTTP 403 Forbidden | daily_close: failed after 3 attempts: HTTP 403 Forbidden"
+    "TPEx": "stale: tpex.org.tw mainboard_quotes 2026-11-05 < expected 2026-11-06"
   },
   "marketTradeDates": {
     "TWSE": "2026-11-05",
