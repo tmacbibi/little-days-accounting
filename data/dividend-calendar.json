@@ -1,6 +1,6 @@
 {
   "schemaVersion": 2,
-  "generatedAt": "2026-11-10T16:59:20.925Z",
+  "generatedAt": "2026-11-11T17:03:50.741Z",
   "sourcePolicy": "official-only",
   "coverage": {
     "etf": "ex-date + record-date + expected payment date + per-unit distribution",
@@ -11,13 +11,13 @@
       "id": "TWSE_ETFORTUNE",
       "url": "https://www.twse.com.tw/zh/ETFortune/dividendList",
       "status": "ok",
-      "rows": 473
+      "rows": 474
     },
     {
       "id": "TWSE_OPENAPI_TWT48U_ALL",
       "url": "https://openapi.twse.com.tw/v1/exchangeReport/TWT48U_ALL",
       "status": "ok",
-      "rows": 5
+      "rows": 8
     }
   ],
   "warnings": [],
@@ -5214,7 +5214,7 @@
       "exDate": "2026-11-13",
       "recordDate": "2026-11-21",
       "expectedPayDate": "2026-12-04",
-      "perShare": null,
+      "perShare": 0.138,
       "source": "TWSE_ETFORTUNE",
       "sourceUrl": "https://www.twse.com.tw/zh/ETFortune/dividendList"
     },
@@ -5706,6 +5706,30 @@
       "exDate": "2026-11-24",
       "recordDate": "2026-11-30",
       "expectedPayDate": "2026-12-18",
+      "perShare": null,
+      "source": "TWSE_ETFORTUNE",
+      "sourceUrl": "https://www.twse.com.tw/zh/ETFortune/dividendList"
+    },
+    {
+      "symbol": "6655",
+      "name": "科定",
+      "market": "TWSE",
+      "securityType": "stock",
+      "exDate": "2026-11-24",
+      "recordDate": "",
+      "expectedPayDate": "",
+      "perShare": 2.6,
+      "source": "TWSE_OPENAPI_TWT48U_ALL",
+      "sourceUrl": "https://openapi.twse.com.tw/v1/exchangeReport/TWT48U_ALL"
+    },
+    {
+      "symbol": "009817",
+      "name": "國泰日本不動產",
+      "market": "TWSE",
+      "securityType": "etf",
+      "exDate": "2026-11-26",
+      "recordDate": "2026-12-02",
+      "expectedPayDate": "2026-12-22",
       "perShare": null,
       "source": "TWSE_ETFORTUNE",
       "sourceUrl": "https://www.twse.com.tw/zh/ETFortune/dividendList"
