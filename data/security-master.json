@@ -1,17 +1,17 @@
 {
   "schemaVersion": 1,
-  "generatedAt": "2026-11-10T17:18:03.727Z",
+  "generatedAt": "2026-11-11T15:38:04.337Z",
   "sourceStatus": {
-    "TWSE": "stale: twse.com.tw MI_INDEX 2026-11-10 < expected 2026-11-11",
-    "TPEx": "stale: tpex.org.tw mainboard_quotes 2026-11-10 < expected 2026-11-11"
+    "TWSE": "ok: twse.com.tw MI_INDEX",
+    "TPEx": "ok: tpex.org.tw mainboard_quotes"
   },
   "marketTradeDates": {
-    "TWSE": "2026-11-10",
-    "TPEx": "2026-11-10"
+    "TWSE": "2026-11-11",
+    "TPEx": "2026-11-11"
   },
   "marketFreshness": {
-    "TWSE": "stale",
-    "TPEx": "stale"
+    "TWSE": "fresh",
+    "TPEx": "fresh"
   },
   "items": [
     {
@@ -93,6 +93,12 @@
       "securityType": "etf"
     },
     {
+      "symbol": "00413A",
+      "name": "主動玉山關鍵科技",
+      "market": "TWSE",
+      "securityType": "etf"
+    },
+    {
       "symbol": "00415A",
       "name": "主動群益核心50",
       "market": "TWSE",
@@ -101,6 +107,12 @@
     {
       "symbol": "00416A",
       "name": "主動台新臺灣中小",
+      "market": "TWSE",
+      "securityType": "etf"
+    },
+    {
+      "symbol": "00418A",
+      "name": "主動復華台灣新星",
       "market": "TWSE",
       "securityType": "etf"
     },
