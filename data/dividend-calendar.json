@@ -1,6 +1,6 @@
 {
   "schemaVersion": 2,
-  "generatedAt": "2026-11-11T17:03:50.741Z",
+  "generatedAt": "2026-11-12T17:31:59.339Z",
   "sourcePolicy": "official-only",
   "coverage": {
     "etf": "ex-date + record-date + expected payment date + per-unit distribution",
@@ -17,7 +17,7 @@
       "id": "TWSE_OPENAPI_TWT48U_ALL",
       "url": "https://openapi.twse.com.tw/v1/exchangeReport/TWT48U_ALL",
       "status": "ok",
-      "rows": 8
+      "rows": 11
     }
   ],
   "warnings": [],
@@ -5226,7 +5226,7 @@
       "exDate": "2026-11-16",
       "recordDate": "2026-11-22",
       "expectedPayDate": "2026-12-04",
-      "perShare": null,
+      "perShare": 0.35,
       "source": "TWSE_ETFORTUNE",
       "sourceUrl": "https://www.twse.com.tw/zh/ETFortune/dividendList"
     },
@@ -5238,7 +5238,7 @@
       "exDate": "2026-11-16",
       "recordDate": "2026-11-22",
       "expectedPayDate": "2026-12-04",
-      "perShare": null,
+      "perShare": 0.16,
       "source": "TWSE_ETFORTUNE",
       "sourceUrl": "https://www.twse.com.tw/zh/ETFortune/dividendList"
     },
@@ -5250,7 +5250,7 @@
       "exDate": "2026-11-16",
       "recordDate": "2026-11-22",
       "expectedPayDate": "2026-12-04",
-      "perShare": null,
+      "perShare": 2,
       "source": "TWSE_ETFORTUNE",
       "sourceUrl": "https://www.twse.com.tw/zh/ETFortune/dividendList"
     },
@@ -5262,7 +5262,7 @@
       "exDate": "2026-11-16",
       "recordDate": "2026-11-22",
       "expectedPayDate": "2026-12-04",
-      "perShare": null,
+      "perShare": 0.08,
       "source": "TWSE_ETFORTUNE",
       "sourceUrl": "https://www.twse.com.tw/zh/ETFortune/dividendList"
     },
@@ -5322,7 +5322,7 @@
       "exDate": "2026-11-17",
       "recordDate": "2026-11-23",
       "expectedPayDate": "2026-12-11",
-      "perShare": null,
+      "perShare": 1.25,
       "source": "TWSE_ETFORTUNE",
       "sourceUrl": "https://www.twse.com.tw/zh/ETFortune/dividendList"
     },
@@ -5733,6 +5733,30 @@
       "perShare": null,
       "source": "TWSE_ETFORTUNE",
       "sourceUrl": "https://www.twse.com.tw/zh/ETFortune/dividendList"
+    },
+    {
+      "symbol": "1437",
+      "name": "勤益控",
+      "market": "TWSE",
+      "securityType": "stock",
+      "exDate": "2026-12-03",
+      "recordDate": "",
+      "expectedPayDate": "",
+      "perShare": 0.624652,
+      "source": "TWSE_OPENAPI_TWT48U_ALL",
+      "sourceUrl": "https://openapi.twse.com.tw/v1/exchangeReport/TWT48U_ALL"
+    },
+    {
+      "symbol": "7780",
+      "name": "大研生醫*",
+      "market": "TWSE",
+      "securityType": "stock",
+      "exDate": "2026-12-04",
+      "recordDate": "",
+      "expectedPayDate": "",
+      "perShare": 0.141372,
+      "source": "TWSE_OPENAPI_TWT48U_ALL",
+      "sourceUrl": "https://openapi.twse.com.tw/v1/exchangeReport/TWT48U_ALL"
     },
     {
       "symbol": "1707",
