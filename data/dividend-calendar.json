@@ -1,6 +1,6 @@
 {
   "schemaVersion": 2,
-  "generatedAt": "2026-11-13T17:09:16.648Z",
+  "generatedAt": "2026-11-14T15:45:16.754Z",
   "sourcePolicy": "official-only",
   "coverage": {
     "etf": "ex-date + record-date + expected payment date + per-unit distribution",
@@ -17,7 +17,7 @@
       "id": "TWSE_OPENAPI_TWT48U_ALL",
       "url": "https://openapi.twse.com.tw/v1/exchangeReport/TWT48U_ALL",
       "status": "ok",
-      "rows": 15
+      "rows": 37
     }
   ],
   "warnings": [],
@@ -5733,6 +5733,18 @@
       "perShare": null,
       "source": "TWSE_ETFORTUNE",
       "sourceUrl": "https://www.twse.com.tw/zh/ETFortune/dividendList"
+    },
+    {
+      "symbol": "2543",
+      "name": "皇昌",
+      "market": "TWSE",
+      "securityType": "stock",
+      "exDate": "2026-11-30",
+      "recordDate": "",
+      "expectedPayDate": "",
+      "perShare": 0.5,
+      "source": "TWSE_OPENAPI_TWT48U_ALL",
+      "sourceUrl": "https://openapi.twse.com.tw/v1/exchangeReport/TWT48U_ALL"
     },
     {
       "symbol": "1437",
