@@ -1,7 +1,7 @@
 'use strict';
 
 const $ = id => document.getElementById(id);
-const APP_VERSION = '1.5.14';
+const APP_VERSION = '1.5.15';
 const DIVIDEND_WATCH_SYMBOLS = ['00919','00878','0056','0050','00406A','00981A'];
 const DATA_VERSION = 13;
 const VAULT_KEY = 'little_days_bookkeeping_vault_v2';
@@ -70,6 +70,7 @@ let availableVersion = null;
 let recognition = null;
 let voiceSessionActive = false;
 let voiceSessionGeneration = 0;
+let voiceEmptyRestarts = 0;
 let voiceRestartTimer = null;
 let voiceStartTimer = null;
 let voiceAccumulated = '';
@@ -472,7 +473,7 @@ function spendForBudgetKey(key,d=viewMonth){
   return 0;
 }
 
-function renderAll(){ if(!unlocked||!vaultLoaded)return; reconcileRealizedIncome(); renderHome(); renderBudget(); renderAnalysis(); renderInvestment(); renderCategoryManager(); renderRecurringCount(); renderBackupStatus(); }
+function renderAll(){ if(!unlocked||!vaultLoaded)return; reconcileRealizedIncome(); renderIncomeCategoryOptions(); renderHome(); renderBudget(); renderAnalysis(); renderInvestment(); renderCategoryManager(); renderRecurringCount(); renderBackupStatus(); }
 function daysInMonthOf(d){ return new Date(d.getFullYear(),d.getMonth()+1,0).getDate(); }
 function averageBaseDays(d=viewMonth){
   const now=new Date();
@@ -617,7 +618,7 @@ function insightCompositionRows(state){
   const groups=new Map();
   for(const t of state.items||[]){
     const key=state.groupBy==='expense-category'?(t.categoryId||'other'):state.groupBy==='expense-sub'?(t.subcategory||'未分類'):state.groupBy==='income-category'?(t.incomeCategory||'其他收入'):(t.investmentSymbol||t.subcategory||t.title||'未分類');
-    if(!groups.has(key))groups.set(key,{key,label:state.groupBy==='expense-category'?categoryById(key).name:key,icon:state.groupBy==='expense-category'?categoryById(key).icon:state.icon,amount:0,items:[]});
+    if(!groups.has(key))groups.set(key,{key,label:state.groupBy==='expense-category'?categoryById(key).name:state.groupBy==='income-category'?incomeCategoryLabel(key):key,icon:state.groupBy==='expense-category'?categoryById(key).icon:state.icon,amount:0,items:[]});
     const row=groups.get(key);row.items.push(t);if(!t.pendingAmount)row.amount+=Number(t.amount||0);
   }
   return [...groups.values()].sort((a,b)=>b.amount-a.amount);
@@ -644,7 +645,7 @@ function detailMetaByTxn(t){
   const dateLabel=String(t.date||'').replace(/-/g,'/');
   if(t.type==='expense')return `${dateLabel} · ${categoryNameByTxn(t)} · ${t.subcategory||'未分類'} · ${t.payment==='cash'?'現金':'信用卡'}`;
   if(t.annualSummary)return `${String(t.date||'').slice(0,4)} 年 · 年度摘要（不建立日現金流）`;
-  if(t.type==='income')return `${dateLabel} · ${t.incomeCategory||'其他收入'}`;
+  if(t.type==='income')return `${dateLabel} · ${incomeCategoryLabel(t.incomeCategory||'其他收入')}`;
   return `${dateLabel} · ${t.investmentCategory||'股票／ETF'} · 投資`;
 }
 function detailIconByTxn(t){
@@ -687,7 +688,7 @@ function renderInsightDetail(){
       const row=document.createElement('button');row.type='button';row.className='analysis-row is-clickable';
       const pct=total?r.amount/total*100:0;
       row.innerHTML=`<div class="txn-icon">${escapeHtml(r.icon||'•')}</div><div class="analysis-main"><div class="topline"><strong>${escapeHtml(r.label)}</strong><span>${pct.toFixed(1)}%</span></div><div class="bar-track"><div class="bar-fill" style="width:${pct}%;background:var(--accent)"></div></div><small>${r.items.length} 筆${state.groupBy==='dividend-symbol'?` · 今年 ${money(r.year)} · 累計 ${money(r.cumulative)}`:r.items.some(t=>t.pendingAmount)?' · 含待填金額':''}</small></div><div class="analysis-amount">${money(r.amount)}</div><span class="row-chevron">›</span>`;
-      row.onclick=()=>{if(state.groupBy==='dividend-symbol'){openDividendSecurityIncome(r,state.periodLabel,state);return;}if(state.groupBy==='income-category'&&r.label==='股息'){openDividendIncomeDetail(state.periodLabel,state);return;}openInsightDetail({title:r.label,icon:r.icon,lead:r.label,periodLabel:state.periodLabel,items:r.items,baseDays:state.baseDays,parent:state,groupBy:state.groupBy==='expense-category'?'expense-sub':state.groupBy==='income-category'?'income-source':null,desc:'先看組成與比例，再點選查看逐筆紀錄。'});};
+      row.onclick=()=>{if(state.groupBy==='dividend-symbol'){openDividendSecurityIncome(r,state.periodLabel,state);return;}if(state.groupBy==='income-category'&&r.key==='股息'){openDividendIncomeDetail(state.periodLabel,state);return;}openInsightDetail({title:r.label,icon:r.icon,lead:r.label,periodLabel:state.periodLabel,items:r.items,baseDays:state.baseDays,parent:state,groupBy:state.groupBy==='expense-category'?'expense-sub':state.groupBy==='income-category'?'income-source':null,desc:'先看組成與比例，再點選查看逐筆紀錄。'});};
       list.appendChild(row);
     }
     return;
@@ -717,7 +718,7 @@ function openIncomeDetailByCategory(name,periodLabel=formatMonth(viewMonth),item
   const icons={'薪資':'💼','獎金':'🎁','股息':'💹','老婆分紅':'👩‍❤️‍👨','退款':'↩️','其他收入':'💰'};
   if(name==='股息'){openDividendIncomeDetail(periodLabel);return;}
   const list=items||incomesOfMonth().filter(t=>!isHistoricalSummary(t)&&((t.incomeCategory||'其他收入')===name));
-  openInsightDetail({title:name,icon:icons[name]||'💰',lead:name,periodLabel,items:list,baseDays,groupBy:'income-source',desc:`查看 ${name} 的每一筆收入紀錄；點一下可再編輯。`});
+  openInsightDetail({title:incomeCategoryLabel(name),icon:icons[name]||'💰',lead:incomeCategoryLabel(name),periodLabel,items:list,baseDays,groupBy:'income-source',desc:`查看 ${name} 的每一筆收入紀錄；點一下可再編輯。`});
 }
 function openInvestmentDetailByKey(name,periodLabel=formatMonth(viewMonth),items=null){
   const list=items||investmentsOfMonth().filter(t=>!isHistoricalSummary(t)&&((t.title||t.investmentCategory||'投資')===name));
@@ -742,15 +743,15 @@ function renderHomeInsight(ex,inc,inv,balance){
   const baseDays=averageBaseDays(viewMonth);
   if(homeInsightMode==='income'){
     title.textContent='本月收入來源'; sub.textContent='快速看出錢從哪裡進來';
-    const rows=topRowsBy(inc,t=>t.incomeCategory||'其他收入',(t,key)=>({label:key,icon:{'薪資':'💼','獎金':'🎁','股息':'💹','退款':'↩️','其他收入':'💰'}[key]||'💰'}));
+    const rows=topRowsBy(inc,t=>t.incomeCategory||'其他收入',(t,key)=>({label:incomeCategoryLabel(key),categoryKey:key,icon:{'薪資':'💼','獎金':'🎁','股息':'💹','退款':'↩️','其他收入':'💰'}[key]||'💰'}));
     const total=sum(inc), top=rows[0];
     renderHomeHeroStats([
       {label:'收入筆數',value:`${inc.length} 筆`,note:'本月已記錄'},
       {label:'最大來源',value:top?top.label:'尚無',note:top?money(top.amount):'—'},
       {label:'平均每日收入',value:baseDays?money(total/baseDays):'—',note:baseDays?`以本月目前 ${baseDays} 天平均`:'未到該月'}
     ]);
-    renderHomeQuickCards(rows.slice(0,6).map(r=>({icon:r.icon,label:r.label,value:money(r.amount),meta:`${r.count} 筆 · ${Math.round((r.amount/(total||1))*100)}%`,action:()=>openIncomeDetailByCategory(r.label,formatMonth(viewMonth),inc.filter(t=>!isHistoricalSummary(t)&&(t.incomeCategory||'其他收入')===r.label),baseDays)})));
-    renderInsightBars('homeInsightBars','homeInsightEmpty',rows.map(r=>({...r,action:()=>openIncomeDetailByCategory(r.label,formatMonth(viewMonth),inc.filter(t=>!isHistoricalSummary(t)&&(t.incomeCategory||'其他收入')===r.label),baseDays)})),total,'var(--income)');
+    renderHomeQuickCards(rows.slice(0,6).map(r=>({icon:r.icon,label:r.label,value:money(r.amount),meta:`${r.count} 筆 · ${Math.round((r.amount/(total||1))*100)}%`,action:()=>openIncomeDetailByCategory(r.categoryKey,formatMonth(viewMonth),inc.filter(t=>!isHistoricalSummary(t)&&(t.incomeCategory||'其他收入')===r.categoryKey),baseDays)})));
+    renderInsightBars('homeInsightBars','homeInsightEmpty',rows.map(r=>({...r,action:()=>openIncomeDetailByCategory(r.categoryKey,formatMonth(viewMonth),inc.filter(t=>!isHistoricalSummary(t)&&(t.incomeCategory||'其他收入')===r.categoryKey),baseDays)})),total,'var(--income)');
     return;
   }
   if(homeInsightMode==='investment'){
@@ -895,7 +896,7 @@ function analysisPeriodTxns(){
   return txns.filter(t=>String(t.date||'').slice(0,7)===mk);
 }
 function incomeCategoryTotals(list){ const m=new Map(); for(const t of list){ const k=t.incomeCategory||'其他收入'; m.set(k,(m.get(k)||0)+Number(t.amount||0)); } return [...m.entries()].sort((a,b)=>b[1]-a[1]); }
-function renderIncomeRanking(list,onRowClick=null){ const box=$('incomeRanking'); box.innerHTML=''; const rows=incomeCategoryTotals(list); $('incomeRankingEmpty').classList.toggle('hidden',rows.length>0); if(!rows.length)return; const total=sum(list)||1,max=rows[0][1]||1; const icons={'薪資':'💼','獎金':'🎁','股息':'💹','老婆分紅':'👩‍❤️‍👨','退款':'↩️','其他收入':'💰'}; for(const [name,val] of rows){ const row=document.createElement(onRowClick?'button':'div'); row.className='analysis-row'+(onRowClick?' is-clickable':''); if(onRowClick)row.type='button'; row.innerHTML=`<div class="income-rank-icon">${icons[name]||'💰'}</div><div class="analysis-main"><div class="topline"><strong>${escapeHtml(name)}</strong><span>${Math.round(val/total*100)}%</span></div><div class="bar-track"><div class="bar-fill" style="width:${Math.max(2,val/max*100)}%"></div></div></div><div class="analysis-amount">${money(val)}</div>${onRowClick?'<span class="row-chevron">›</span>':''}`; if(onRowClick)row.onclick=()=>onRowClick(name,val); box.appendChild(row); } }
+function renderIncomeRanking(list,onRowClick=null){ const box=$('incomeRanking'); box.innerHTML=''; const rows=incomeCategoryTotals(list); $('incomeRankingEmpty').classList.toggle('hidden',rows.length>0); if(!rows.length)return; const total=sum(list)||1,max=rows[0][1]||1; const icons={'薪資':'💼','獎金':'🎁','股息':'💹','老婆分紅':'👩‍❤️‍👨','退款':'↩️','其他收入':'💰'}; for(const [name,val] of rows){ const row=document.createElement(onRowClick?'button':'div'); row.className='analysis-row'+(onRowClick?' is-clickable':''); if(onRowClick)row.type='button'; row.innerHTML=`<div class="income-rank-icon">${icons[name]||'💰'}</div><div class="analysis-main"><div class="topline"><strong>${escapeHtml(incomeCategoryLabel(name))}</strong><span>${Math.round(val/total*100)}%</span></div><div class="bar-track"><div class="bar-fill" style="width:${Math.max(2,val/max*100)}%"></div></div></div><div class="analysis-amount">${money(val)}</div>${onRowClick?'<span class="row-chevron">›</span>':''}`; if(onRowClick)row.onclick=()=>onRowClick(name,val); box.appendChild(row); } }
 function analysisPeriodDateRange(){
   if(analysisMode==='year')return {start:`${analysisYear}-01-01`,end:`${analysisYear}-12-31`};
   const mm=String(analysisMonth+1).padStart(2,'0'),days=new Date(analysisYear,analysisMonth+1,0).getDate();
@@ -1168,23 +1169,26 @@ function extractVoiceAmount(segment){
   const nums=[...s.matchAll(/\d+(?:\.\d+)?/g)].map(x=>Number(x[0])).filter(Number.isFinite); return nums.length?nums[nums.length-1]:0;
 }
 function splitVoiceSegments(text){
-  let s=String(text||'').trim();
+  let s=String(text||'').normalize('NFKC').replace(/(\d),(?=\d{3}(?:\D|$))/g,'$1').trim();
   s=s.replace(/(加上|再加|外加|還有|以及|然後|另外)/g,'，');
+  // A spoken amount ends one item even when dictation supplies no punctuation.
+  s=s.replace(/((?:NT\$|NTD|\$)\s*\d+(?:\.\d+)?|\d+(?:\.\d+)?\s*(?:塊錢|元|塊)|[零〇一二兩三四五六七八九十百千萬]+\s*(?:塊錢|元|塊))\s*(?=[^\s，,、；;。\n\d])/gi,'$1，');
+  s=s.replace(/(\d+(?:\.\d+)?)\s+(?=[\u4e00-\u9fff]+\s*(?:\$|\d))/g,'$1，');
   s=s.replace(/(\d+(?:\.\d+)?\s*(?:元|塊|塊錢)?)\s*加(?!碼|油)(?=[^，。；;]{0,12}\d)/g,'$1，');
   return s.split(/[，,、；;。\n]+/).map(x=>x.trim()).filter(Boolean);
 }
 function inferVoiceItemType(segment,fullText){
   const seg=segment.toLowerCase(),full=fullText.toLowerCase();
   if(/投資|買進|加碼|股票|etf|基金|債券|0050|009\d+|台積電|藥華藥/.test(seg)&&!/股息|配息/.test(seg))return 'investment';
-  if(/收入|薪水|薪資|獎金|股息|配息|退款|退費|入帳/.test(seg)&&!/支出|花|買|吃|停車/.test(seg))return 'income';
+  if(/老婆分紅|太太分紅|收入|薪水|薪資|獎金|股息|配息|退款|退費|入帳/.test(seg)&&!/支出|花|買|吃|停車/.test(seg))return 'income';
   const obviousExpense=/午餐|早餐|晚餐|飲料|咖啡|吃|餐|停車|加油|充電|買衣|購物|電費|水費|瓦斯|保險|看診|計程車|捷運|公車/.test(seg);
   if(obviousExpense)return 'expense';
   const fullInvestment=/投資|定期定額|買進|股票|etf|基金|債券/.test(full)&&!/股息|配息/.test(full);
-  const fullIncome=/收入|薪水|薪資|獎金|股息|配息|退款|退費/.test(full)&&!/支出|午餐|停車|吃/.test(full);
+  const fullIncome=/老婆分紅|太太分紅|收入|薪水|薪資|獎金|股息|配息|退款|退費/.test(full)&&!/支出|午餐|停車|吃/.test(full);
   if(fullInvestment)return 'investment'; if(fullIncome)return 'income'; return 'expense';
 }
 function cleanVoiceItemTitle(segment,amount,type){
-  let t=inferTitle(segment,amount).replace(/^(投資|收入|支出|買進|買了|加碼)\s*/,'').trim();
+  let t=inferTitle(segment,amount).replace(/NT\$|NTD|\$/gi,'').replace(/^(投資|收入|支出|買進|買了|加碼)\s*/,'').trim();
   if(type==='expense')t=t.replace(/^(花了|花)\s*/,'').trim();
   return t||'未命名';
 }
@@ -1192,32 +1196,25 @@ function parseVoiceItems(text){
   const date=relativeDate(text),globalPayment=/現金/.test(text)?'cash':'card'; const raw=[];
   for(const segment of splitVoiceSegments(text)){
     const amount=extractVoiceAmount(segment); if(!(amount>0))continue;
+    const date=relativeDate(/今天|昨天|前天|昨日|\d{1,2}月/.test(segment)?segment:text);
     const type=inferVoiceItemType(segment,text),title=cleanVoiceItemTitle(segment,amount,type);
     if(type==='investment'){
       let investmentCategory='股票／ETF'; if(/基金/.test(segment))investmentCategory='基金'; else if(/債券/.test(segment))investmentCategory='債券';
       raw.push({type,amount,date,title,investmentCategory,components:[{title,amount}]}); continue;
     }
     if(type==='income'){
-      let incomeCategory='其他收入'; if(/薪水|薪資/.test(segment))incomeCategory='薪資'; else if(/獎金/.test(segment))incomeCategory='獎金'; else if(/股息|配息/.test(segment))incomeCategory='股息'; else if(/退款|退費/.test(segment))incomeCategory='退款';
+      let incomeCategory='其他收入'; if(/老婆分紅|太太分紅/.test(segment))incomeCategory='老婆分紅'; else if(/薪水|薪資/.test(segment))incomeCategory='薪資'; else if(/獎金/.test(segment))incomeCategory='獎金'; else if(/股息|配息/.test(segment))incomeCategory='股息'; else if(/退款|退費/.test(segment))incomeCategory='退款';
       raw.push({type,amount,date,title,incomeCategory,components:[{title,amount}]}); continue;
     }
-    const inferred=inferExpenseCategory(segment,date); raw.push({type:'expense',amount,date,title,payment:globalPayment,...inferred,components:[{title,amount}]});
+    const inferred=inferExpenseCategory(segment,date); raw.push({type:'expense',amount,date,title,payment:/現金/.test(segment)?'cash':/刷卡|信用卡|pay/i.test(segment)?'card':globalPayment,...inferred,components:[{title,amount}]});
   }
-  if(!raw.length){ const fallback=parseVoiceTextLegacy(text); return fallback.amount?[fallback]:[]; }
-  const grouped=[]; const map=new Map();
-  for(const item of raw){
-    const key=item.type==='expense'?`expense|${item.date}|${item.categoryId}|${item.subcategory}|${item.payment}`:item.type==='income'?`income|${item.date}|${item.incomeCategory}`:`investment|${item.date}|${item.title}|${grouped.length}`;
-    if(item.type==='investment'||!map.has(key)){ const copy={...item,components:[...(item.components||[])]}; grouped.push(copy); if(item.type!=='investment')map.set(key,copy); }
-    else{
-      const g=map.get(key); g.amount+=item.amount; g.components.push(...(item.components||[])); const titles=[...new Set(g.components.map(c=>c.title).filter(x=>x&&x!=='未命名'))]; g.title=titles.length?titles.join('＋'):g.title;
-    }
-  }
-  return grouped;
+  return raw;
+
 }
 function parseVoiceTextLegacy(text){
   const date=relativeDate(text),amount=extractAmount(text); const isInvestment=/投資|買進|加碼|股票|etf|基金|債券|0050|009\d+|台積電|藥華藥/.test(text.toLowerCase())&&!/股息|配息/.test(text.toLowerCase());
   if(isInvestment){ let investmentCategory='股票／ETF'; if(/基金/.test(text))investmentCategory='基金'; else if(/債券/.test(text))investmentCategory='債券'; return {type:'investment',amount,date,title:inferTitle(text,amount),investmentCategory,components:[{title:inferTitle(text,amount),amount}]}; }
-  const income=/收入|薪水|薪資|獎金|股息|配息|退款|退費|入帳/.test(text)&&!/支出|花|買|吃|停車/.test(text); if(income){ let incomeCategory='其他收入'; if(/薪水|薪資/.test(text))incomeCategory='薪資'; else if(/獎金/.test(text))incomeCategory='獎金'; else if(/股息|配息/.test(text))incomeCategory='股息'; else if(/退款|退費/.test(text))incomeCategory='退款'; return {type:'income',amount,date,title:inferTitle(text,amount),incomeCategory,components:[{title:inferTitle(text,amount),amount}]}; }
+  const income=/老婆分紅|太太分紅|收入|薪水|薪資|獎金|股息|配息|退款|退費|入帳/.test(text)&&!/支出|花|買|吃|停車/.test(text); if(income){ let incomeCategory='其他收入'; if(/老婆分紅|太太分紅/.test(text))incomeCategory='老婆分紅'; else if(/薪水|薪資/.test(text))incomeCategory='薪資'; else if(/獎金/.test(text))incomeCategory='獎金'; else if(/股息|配息/.test(text))incomeCategory='股息'; else if(/退款|退費/.test(text))incomeCategory='退款'; return {type:'income',amount,date,title:inferTitle(text,amount),incomeCategory,components:[{title:inferTitle(text,amount),amount}]}; }
   const inferred=inferExpenseCategory(text,date),payment=/現金/.test(text)?'cash':'card',title=inferTitle(text,amount); return {type:'expense',amount,date,title,payment,...inferred,components:[{title,amount}]};
 }
 function componentExpression(item){ const parts=(item.components||[]).map(c=>Number(c.amount||0)).filter(n=>n>0); return parts.length>1?parts.join(' + '):''; }
@@ -1227,7 +1224,7 @@ function applyParsedVoice(parsed,transcript){
   if(parsed.type==='expense'){selectedCategoryId=parsed.categoryId;ensureSelectedCategory();renderCategoryPicker();renderSubcategories(parsed.subcategory);$('subcategoryInput').value=parsed.subcategory;setPayment(parsed.payment);} else if(parsed.type==='income')$('incomeCategoryInput').value=parsed.incomeCategory||'其他收入'; else $('investmentCategoryInput').value=parsed.investmentCategory||'股票／ETF'; if(!parsed.amount)toast('我沒抓到金額，請補一下',2600);
 }
 function voiceDraftMeta(item){
-  if(item.type==='income')return `收入 · ${item.incomeCategory||'其他收入'}`; if(item.type==='investment')return `投資 · ${item.investmentCategory||'股票／ETF'}`; const c=categoryById(item.categoryId); return `${c?.icon||'📌'} ${c?.name||'其他'} · ${item.subcategory||'其他'} · ${item.payment==='cash'?'現金':'信用卡'}`;
+  if(item.type==='income')return `收入 · ${incomeCategoryLabel(item.incomeCategory||'其他收入')}`; if(item.type==='investment')return `投資 · ${item.investmentCategory||'股票／ETF'}`; const c=categoryById(item.categoryId); return `${c?.icon||'📌'} ${c?.name||'其他'} · ${item.subcategory||'其他'} · ${item.payment==='cash'?'現金':'信用卡'}`;
 }
 function renderVoiceDrafts(){
   const box=$('voiceDraftList'); box.innerHTML=''; $('voiceDraftCount').textContent=`${voiceDraftItems.length} 筆`; $('voiceDraftTotal').textContent=`合計 ${money(sum(voiceDraftItems))}`;
@@ -1250,7 +1247,12 @@ async function saveVoiceDrafts(){
 }
 
 function speechSupported(){ return !!(window.SpeechRecognition||window.webkitSpeechRecognition); }
+function retryVoiceSession(){
+  const draft=$('voiceFallbackInput').value.trim();if(draft)voiceAccumulated=draft;
+  voiceInterim='';$('voiceFallbackInput').value='';hide($('voiceFallbackInput'));hide($('voiceRetryBtn'));startVoiceSession();
+}
 function openVoiceSheet(){
+  hide($('voiceRetryBtn'));
   show($('voiceSheet')); const base=parseDateKey(selectedDate); $('voiceBaseDateText').textContent=`未指定日期時，會記在 ${base.getMonth()+1}/${base.getDate()}。`;  voiceAccumulated='';voiceInterim=''; $('liveTranscript').textContent='尚未收到語音…'; $('voiceFallbackInput').value=''; hide($('voiceFallbackInput')); hide($('voiceFallbackBtn')); $('voiceStatus').textContent='正在聽你說'; $('voiceHint').textContent='你可以慢慢說；在你按「完成」之前，不會新增任何紀錄。';
   if(speechSupported())startVoiceSession(); else{ $('voiceStatus').textContent='請用 iPhone 鍵盤麥克風'; $('voiceHint').textContent='這個環境不能直接持續收音，點下面輸入框後用鍵盤麥克風說完，再按完成。'; show($('voiceFallbackInput')); $('voiceFallbackInput').focus(); }
 }
@@ -1265,12 +1267,12 @@ function useVoiceFallback(message='語音暫時無法啟動，請用鍵盤麥克
   stopVoiceSession();
   if(!$('voiceFallbackInput').value.trim())$('voiceFallbackInput').value=`${voiceAccumulated} ${voiceInterim}`.trim();
   $('voiceStatus').textContent='改用鍵盤麥克風';$('voiceHint').textContent=message;
-  show($('voiceFallbackInput'));show($('voiceFallbackBtn'));$('voiceFallbackInput').focus();
+  show($('voiceFallbackInput'));show($('voiceFallbackBtn'));show($('voiceRetryBtn'));$('voiceFallbackInput').focus();
 }
 function startVoiceSession(){
   stopVoiceSession();
   if(!speechSupported()){useVoiceFallback();return;}
-  voiceSessionActive=true;startVoiceRecognition(voiceSessionGeneration);
+  voiceEmptyRestarts=0;voiceSessionActive=true;startVoiceRecognition(voiceSessionGeneration);
 }
 function startVoiceRecognition(generation){
   if(!voiceSessionActive||generation!==voiceSessionGeneration)return;
@@ -1278,13 +1280,13 @@ function startVoiceRecognition(generation){
   let rec;
   try{rec=new SR();}catch{useVoiceFallback();return;}
   recognition=rec;
-  rec.lang='zh-TW';rec.interimResults=true;rec.continuous=true;rec.maxAlternatives=1;
+  rec.lang='zh-TW';rec.interimResults=true;rec.continuous=!(/iPad|iPhone|iPod/.test(navigator.userAgent||'')||(navigator.platform==='MacIntel'&&navigator.maxTouchPoints>1));rec.maxAlternatives=1;
   const current=()=>voiceSessionActive&&generation===voiceSessionGeneration&&recognition===rec;
-  const started=()=>{clearTimeout(voiceStartTimer);voiceStartTimer=null;$('voiceOrb').classList.add('listening');$('voiceStatus').textContent='正在聽你說';};
+  const started=()=>{$('voiceOrb').classList.add('listening');$('voiceStatus').textContent='正在聽你說';};
   rec.onstart=()=>{if(current())started();};
   rec.onresult=e=>{
-    if(!current())return;started();
-    let finalChunk='';voiceInterim='';
+    if(!current())return;if(!rec.finishing){clearTimeout(voiceStartTimer);voiceStartTimer=null;started();}
+    voiceEmptyRestarts=0;let finalChunk='';voiceInterim='';
     for(let i=e.resultIndex;i<e.results.length;i++){const text=e.results[i][0].transcript;if(e.results[i].isFinal)finalChunk+=text;else voiceInterim+=text;}
     if(finalChunk.trim())voiceAccumulated+=(voiceAccumulated?' ':'')+finalChunk.trim();
     $('liveTranscript').textContent=(voiceAccumulated+(voiceInterim?' '+voiceInterim:'')).trim()||'尚未收到語音…';
@@ -1297,6 +1299,7 @@ function startVoiceRecognition(generation){
   };
   rec.onend=()=>{
     if(!current())return;
+    if(++voiceEmptyRestarts>2){useVoiceFallback('麥克風連續沒有回傳內容；可按重新啟動語音，或使用鍵盤麥克風。');return;}
     clearVoiceTimers();detachVoiceRecognition(rec);recognition=null;$('voiceOrb').classList.remove('listening');
     // Preserve an interim phrase before a browser-initiated disconnect.
     if(voiceInterim.trim()){voiceAccumulated+=(voiceAccumulated?' ':'')+voiceInterim.trim();voiceInterim='';}
@@ -1319,6 +1322,19 @@ function stopVoiceSession(){
 }
 function closeVoiceSheet(clear=true){ stopVoiceSession(); hide($('voiceSheet')); if(clear){voiceAccumulated='';voiceInterim='';} }
 function finishVoice(){
+  const rec=recognition;
+  if(rec&&typeof rec.stop==='function'&&voiceSessionActive){
+    // Give Safari a chance to deliver its final words before aborting the engine.
+    if(rec.finishing)return;rec.finishing=true;clearVoiceTimers();
+    $('voiceStatus').textContent='正在整理最後一句…';
+    const generation=voiceSessionGeneration;
+    const complete=()=>{if(generation!==voiceSessionGeneration)return;commitVoiceTranscript();};
+    rec.onend=complete;voiceStartTimer=setTimeout(complete,1200);
+    try{rec.stop();}catch{complete();}return;
+  }
+  commitVoiceTranscript();
+}
+function commitVoiceTranscript(){
   stopVoiceSession(); const typed=$('voiceFallbackInput').value.trim(); const text=(typed||`${voiceAccumulated} ${voiceInterim}`).trim(); if(!text){useVoiceFallback('還沒有收到內容，請用鍵盤麥克風或輸入文字，再按完成。');toast('還沒有收到內容');return;} const items=parseVoiceItems(text); if(!items.length){useVoiceFallback('已保留辨識內容，請補上金額，再按完成。');toast('我沒抓到金額，請補上金額',2800);return;} if(items.length===1)applyParsedVoice(items[0],text); else openVoiceDrafts(items);
 }
 
@@ -1429,7 +1445,7 @@ async function saveRecurring(){
 
 function renderQuickTemplateManager(){
   const box=$('quickTemplateManagerList'); if(!box)return; box.innerHTML='';
-  quickTemplates.forEach((q,i)=>{const row=document.createElement('div');row.className='quick-template-manage-row';const meta=q.type==='expense'?`${categoryById(q.categoryId).name} · ${q.subcategory||'其他'} · ${q.payment==='cash'?'現金':'信用卡'}`:q.type==='income'?`收入 · ${q.incomeCategory||'其他收入'}`:`投資 · ${q.investmentCategory||'股票／ETF'}`;row.innerHTML=`<div class="quick-template-manage-icon">${escapeHtml(q.icon||'⚡')}</div><div class="quick-template-manage-main"><strong>${escapeHtml(q.name)}</strong><span>${escapeHtml(meta)}${Number(q.amount)>0?` · ${money(q.amount)}`:' · 每次補金額'}</span></div><div class="category-actions"><button data-up title="往上">↑</button><button data-down title="往下">↓</button><button data-edit title="編輯">✎</button><button data-delete title="刪除">×</button></div>`;row.querySelector('[data-up]').disabled=i===0;row.querySelector('[data-down]').disabled=i===quickTemplates.length-1;row.querySelector('[data-up]').onclick=()=>moveQuickTemplate(i,-1);row.querySelector('[data-down]').onclick=()=>moveQuickTemplate(i,1);row.querySelector('[data-edit]').onclick=()=>openQuickTemplateEditor(q.id);row.querySelector('[data-delete]').onclick=()=>deleteQuickTemplate(q.id);box.appendChild(row);});
+  quickTemplates.forEach((q,i)=>{const row=document.createElement('div');row.className='quick-template-manage-row';const meta=q.type==='expense'?`${categoryById(q.categoryId).name} · ${q.subcategory||'其他'} · ${q.payment==='cash'?'現金':'信用卡'}`:q.type==='income'?`收入 · ${incomeCategoryLabel(q.incomeCategory||'其他收入')}`:`投資 · ${q.investmentCategory||'股票／ETF'}`;row.innerHTML=`<div class="quick-template-manage-icon">${escapeHtml(q.icon||'⚡')}</div><div class="quick-template-manage-main"><strong>${escapeHtml(q.name)}</strong><span>${escapeHtml(meta)}${Number(q.amount)>0?` · ${money(q.amount)}`:' · 每次補金額'}</span></div><div class="category-actions"><button data-up title="往上">↑</button><button data-down title="往下">↓</button><button data-edit title="編輯">✎</button><button data-delete title="刪除">×</button></div>`;row.querySelector('[data-up]').disabled=i===0;row.querySelector('[data-down]').disabled=i===quickTemplates.length-1;row.querySelector('[data-up]').onclick=()=>moveQuickTemplate(i,-1);row.querySelector('[data-down]').onclick=()=>moveQuickTemplate(i,1);row.querySelector('[data-edit]').onclick=()=>openQuickTemplateEditor(q.id);row.querySelector('[data-delete]').onclick=()=>deleteQuickTemplate(q.id);box.appendChild(row);});
   if(!quickTemplates.length)box.innerHTML='<div class="empty-mini">尚未建立快速模板。</div>';
 }
 async function moveQuickTemplate(i,delta){const j=i+delta;if(j<0||j>=quickTemplates.length)return;[quickTemplates[i],quickTemplates[j]]=[quickTemplates[j],quickTemplates[i]];await persistState();renderQuickTemplateManager();renderQuickTemplateStrip();}
@@ -1445,6 +1461,32 @@ function renderCategoryManager(){
   const list=$('categoryManagerList'); if(!list)return; list.innerHTML=''; categories.forEach((c,i)=>{const row=document.createElement('div'); row.className='category-manage-row'+(c.hidden?' is-hidden':''); row.innerHTML=`<div class="category-manage-icon">${escapeHtml(c.icon)}</div><div class="category-manage-main"><strong>${c.favorite?'⭐ ':''}${escapeHtml(c.name)}${c.hidden?'（已隱藏）':''}</strong><span>${escapeHtml((c.subs||[]).join('、')||'無細分類')}</span></div><div class="category-actions"><button data-up title="往上">↑</button><button data-down title="往下">↓</button><button data-edit title="編輯">✎</button></div>`; row.querySelector('[data-up]').disabled=i===0;row.querySelector('[data-down]').disabled=i===categories.length-1;row.querySelector('[data-up]').onclick=()=>moveCategory(i,-1);row.querySelector('[data-down]').onclick=()=>moveCategory(i,1);row.querySelector('[data-edit]').onclick=()=>openCategoryEditor(c.id);list.appendChild(row);});
 }
 async function moveCategory(i,delta){ const j=i+delta;if(j<0||j>=categories.length)return;[categories[i],categories[j]]=[categories[j],categories[i]];await persistState();renderCategoryManager();renderCategoryPicker();renderBudget(); }
+const DEFAULT_INCOME_CATEGORIES=['薪資','獎金','技師執業','股息','老婆分紅','退款','其他收入','股票已實現獲利'];
+function incomeCategoryNames(){
+  return [...new Set([...DEFAULT_INCOME_CATEGORIES,...(settings.incomeCategories||[]),...[...txns,...recurring,...quickTemplates].filter(t=>t.type==='income').map(t=>t.incomeCategory).filter(Boolean)])];
+}
+function incomeCategoryLabel(name){return settings.incomeCategoryLabels?.[name]||name;}
+function renderIncomeCategoryOptions(){
+  for(const id of ['incomeCategoryInput','voiceDraftEditIncomeCategory','recurringIncomeCategoryInput','quickTemplateIncomeCategoryInput']){
+    const el=$(id);if(!el)continue;const value=el.value;
+    el.innerHTML=incomeCategoryNames().map(n=>'<option value="'+escapeHtml(n)+'">'+escapeHtml(incomeCategoryLabel(n))+'</option>').join('');
+    if(incomeCategoryNames().includes(value))el.value=value;
+  }
+}
+async function saveIncomeCategoryName(key,name){
+  name=String(name||'').trim();if(!name||name.length>40)throw new Error('請輸入 1～40 字的名稱');
+  if(incomeCategoryNames().some(n=>n!==key&&(n===name||incomeCategoryLabel(n)===name)))throw new Error('已有同名的收入類別');
+  if(key){settings.incomeCategoryLabels={...(settings.incomeCategoryLabels||{}),[key]:name};}
+  else settings.incomeCategories=[...(settings.incomeCategories||[]),name];
+  await persistState();renderIncomeCategoryOptions();renderIncomeCategoryManager();renderAll();
+}
+function renderIncomeCategoryManager(){
+  const box=$('incomeCategoryManagerList');if(!box)return;
+  box.innerHTML=incomeCategoryNames().map((n,i)=>'<button type="button" class="settings-row" data-income-edit="'+i+'">'+escapeHtml(incomeCategoryLabel(n))+'　✎</button>').join('');
+  box.querySelectorAll('[data-income-edit]').forEach(b=>b.onclick=async()=>{const key=incomeCategoryNames()[Number(b.dataset.incomeEdit)],name=prompt('修改收入類別名稱（原有紀錄會一起顯示新名稱）',incomeCategoryLabel(key));if(name===null)return;try{await saveIncomeCategoryName(key,name);}catch(e){toast(e.message);}});
+}
+function openIncomeCategoryManager(){renderIncomeCategoryManager();show($('incomeCategoryManagerScreen'));}
+async function addIncomeCategory(){const name=prompt('新增收入類別名稱');if(name===null)return;try{await saveIncomeCategoryName(null,name);}catch(e){toast(e.message);}}
 function openCategoryManager(){ renderCategoryManager(); show($('categoryManagerScreen')); }
 function openCategoryEditor(id=null){ categoryEditingId=id; const c=id?categoryById(id):null; $('categoryEditorTitle').textContent=c?'編輯類別':'新增類別'; $('categoryIconInput').value=c?.icon||'📌'; $('categoryNameInput').value=c?.name||''; $('categorySubsInput').value=(c?.subs||[]).join('\n'); $('categoryFavoriteInput').checked=!!c?.favorite; $('categoryHiddenInput').checked=!!c?.hidden; show($('categoryEditorScreen')); setTimeout(()=>$('categoryNameInput').focus(),120); }
 async function saveCategory(){
@@ -1498,7 +1540,7 @@ async function unlockWithFace(){
 async function completeUnlock(){ unlocked=true; try{await loadVault(); unlockAppUi();}catch(e){console.error(e);unlocked=false;$('unlockMessage').textContent='資料解鎖失敗，請重新整理再試';} }
 function unlockAppUi(){ document.body.classList.remove('locked'); hide($('lockScreen')); $('app').setAttribute('aria-hidden','false'); $('pinUnlockInput').value=''; updatePinUnlockState(); $('unlockMessage').textContent=''; renderCategoryPicker(); renderSubcategories(); renderAll(); refreshSecurityUi(); showPostUpdateNotice(); setTimeout(()=>syncOfficialDividendCalendar({silent:true}),0); }
 function lockApp(reason='background'){
-  if(!unlocked)return; collapseVoiceFab(); stopVoiceSession(); const inInvestmentSub=['investmentHoldingsScreen','investmentIncomeAnalysisScreen','investmentActivityScreen'].some(id=>$(id)&&!$(id).classList.contains('hidden')); if(inInvestmentSub){['investmentHoldingsScreen','investmentIncomeAnalysisScreen','investmentActivityScreen'].forEach(id=>hide($(id)));show($('investmentScreen'));} ['editorScreen','calculatorScreen','voiceSheet','voiceDraftScreen','voiceDraftEditScreen','txnMenuScreen','budgetEditorScreen','investmentTxnEditorScreen','investmentPendingScreen','investmentQuoteEditorScreen','investmentMarketOverviewScreen','dividendEventEditorScreen','annualSummaryEditorScreen','investmentSecurityDetailScreen','investmentRealizedScreen','investmentHoldingsScreen','investmentIncomeAnalysisScreen','investmentActivityScreen','settingsScreen','securityScreen','quickTemplateManagerScreen','quickTemplateEditorScreen','insightDetailScreen','categoryManagerScreen','categoryEditorScreen','recurringManagerScreen','recurringEditorScreen','recurringDeleteScreen'].forEach(id=>hide($(id))); unlocked=false;vaultLoaded=false;txns=[];budgets={};categories=clone(DEFAULT_CATEGORIES);quickTemplates=clone(DEFAULT_QUICK_TEMPLATES);settings={};recurring=[];investmentLedger=[];investmentQuotes=[];dividendEvents=[];annualIncomeSummaries=[];dividendEventEditingId=null;annualSummaryEditingYear=null;investmentDetailSymbol=null;investmentValuesVisible=false; document.body.classList.add('locked'); show($('lockScreen')); show($('unlockPanel')); hide($('setupPanel')); $('app').setAttribute('aria-hidden','true'); updatePinUnlockState(); refreshLockFaceUi();
+  if(!unlocked)return; collapseVoiceFab(); stopVoiceSession(); const inInvestmentSub=['investmentHoldingsScreen','investmentIncomeAnalysisScreen','investmentActivityScreen'].some(id=>$(id)&&!$(id).classList.contains('hidden')); if(inInvestmentSub){['investmentHoldingsScreen','investmentIncomeAnalysisScreen','investmentActivityScreen'].forEach(id=>hide($(id)));show($('investmentScreen'));} ['editorScreen','calculatorScreen','voiceSheet','voiceDraftScreen','voiceDraftEditScreen','txnMenuScreen','budgetEditorScreen','investmentTxnEditorScreen','investmentPendingScreen','investmentQuoteEditorScreen','investmentMarketOverviewScreen','dividendEventEditorScreen','annualSummaryEditorScreen','investmentSecurityDetailScreen','investmentRealizedScreen','investmentHoldingsScreen','investmentIncomeAnalysisScreen','investmentActivityScreen','settingsScreen','securityScreen','quickTemplateManagerScreen','quickTemplateEditorScreen','insightDetailScreen','categoryManagerScreen','incomeCategoryManagerScreen','categoryEditorScreen','recurringManagerScreen','recurringEditorScreen','recurringDeleteScreen'].forEach(id=>hide($(id))); unlocked=false;vaultLoaded=false;txns=[];budgets={};categories=clone(DEFAULT_CATEGORIES);quickTemplates=clone(DEFAULT_QUICK_TEMPLATES);settings={};recurring=[];investmentLedger=[];investmentQuotes=[];dividendEvents=[];annualIncomeSummaries=[];dividendEventEditingId=null;annualSummaryEditingYear=null;investmentDetailSymbol=null;investmentValuesVisible=false; document.body.classList.add('locked'); show($('lockScreen')); show($('unlockPanel')); hide($('setupPanel')); $('app').setAttribute('aria-hidden','true'); updatePinUnlockState(); refreshLockFaceUi();
 }
 async function refreshLockFaceUi(){ const yes=!!authConfig.faceEnabled&&!!authConfig.faceCredentialId&&await isFaceAvailable(); $('faceUnlockBtn').classList.toggle('hidden',!yes); $('faceDivider').classList.toggle('hidden',!yes); }
 async function refreshSecurityUi(){ if(!$('faceStatusText'))return; const avail=await isFaceAvailable(); if(authConfig.faceEnabled&&authConfig.faceCredentialId){$('faceStatusText').textContent='已啟用。離開 App 後，回來可用 Face ID 重新解鎖。';$('toggleFaceBtn').textContent='重新設定 Face ID';}else{$('faceStatusText').textContent=avail?'尚未啟用。':'此裝置／瀏覽器目前無法使用平台生物辨識。';$('toggleFaceBtn').textContent='啟用 Face ID';$('toggleFaceBtn').disabled=!avail;} }
@@ -3141,6 +3183,7 @@ function bindEvents(){
   $('openSettingsBtn').onclick=()=>{renderBackupStatus();show($('settingsScreen'));}; $('closeSettingsBtn').onclick=returnHomeFromSettings; $('manageBudgetBtn').onclick=()=>{hide($('settingsScreen'));setPage('budget');}; $('settingsHomeBtn').onclick=returnHomeFromSettings; $('updateHomeBtn').onclick=returnHomeFromSettings; $('checkUpdateBtn').onclick=checkForUpdate; $('updateNowBtn').onclick=updateNow; $('exportBtn').onclick=exportBackup; $('importBtn').onclick=()=>$('importFileInput').click(); $('importFileInput').onchange=e=>{const f=e.target.files?.[0];if(f)importBackupFile(f);e.target.value='';};
   $('manageQuickTemplatesBtn').onclick=openQuickTemplateManager; $('manageQuickTemplatesHomeBtn').onclick=openQuickTemplateManager; $('closeQuickTemplateManagerBtn').onclick=()=>hide($('quickTemplateManagerScreen')); $('addQuickTemplateBtn').onclick=()=>openQuickTemplateEditor(); $('cancelQuickTemplateEditBtn').onclick=()=>hide($('quickTemplateEditorScreen')); $('saveQuickTemplateBtn').onclick=saveQuickTemplate; $('quickTemplateTypeInput').onchange=syncQuickTemplateTypeFields; $('quickTemplateCategoryInput').onchange=()=>renderQuickTemplateSubcategories();
   $('wipeBtn').onclick=async()=>{if(confirm('確定要清除全部記帳資料、預算、自訂類別與投資帳本？安全密碼與 Face ID 設定會保留。')){txns=[];budgets={};categories=clone(DEFAULT_CATEGORIES);quickTemplates=clone(DEFAULT_QUICK_TEMPLATES);settings={};recurring=[];investmentLedger=[];investmentQuotes=[];dividendEvents=[];annualIncomeSummaries=[];await persistState();hide($('settingsScreen'));renderAll();toast('已清除');}};
+  $('manageIncomeCategoriesBtn').onclick=openIncomeCategoryManager; $('manageIncomeCategoriesInlineBtn').onclick=openIncomeCategoryManager; $('closeIncomeCategoriesBtn').onclick=()=>hide($('incomeCategoryManagerScreen')); $('addIncomeCategoryBtn').onclick=addIncomeCategory; $('voiceRetryBtn').onclick=retryVoiceSession;
   $('manageCategoriesBtn').onclick=openCategoryManager; $('manageCategoriesInlineBtn').onclick=openCategoryManager; $('closeCategoryManagerBtn').onclick=()=>hide($('categoryManagerScreen')); $('addCategoryBtn').onclick=()=>openCategoryEditor(); $('cancelCategoryEditBtn').onclick=()=>hide($('categoryEditorScreen')); $('saveCategoryBtn').onclick=saveCategory;
   $('dateInput').addEventListener('change',updateEditorDateContext); $('editorRecurringInput').onchange=toggleEditorRecurringFields; $('editorRecurringFrequency').onchange=updateEditorRecurringHint; $('editorAddMonthlyDayBtn').onclick=addEditorMonthlyDay; $('editorRecurringMonthlyDayInput').addEventListener('keydown',e=>{if(e.key==='Enter'){e.preventDefault();addEditorMonthlyDay();}});
   for(let m=0;m<12;m++){const o=document.createElement('option');o.value=String(m);o.textContent=`${m+1} 月`;$('analysisMonthSelect').appendChild(o);}
@@ -3171,4 +3214,5 @@ function registerServiceWorker(){ if('serviceWorker' in navigator)window.addEven
 
 async function init(){ bindEvents();installPrivacyLock();registerServiceWorker();await bootAuth(); }
 document.addEventListener('DOMContentLoaded',init);
+
 

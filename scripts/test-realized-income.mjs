@@ -70,8 +70,9 @@ assert.equal(run("txns.length"),0,'oversell must not create income');
 run("investmentLedger[1].quantity=500;reconcileInvestmentLinks();openInvestmentTxnEditor=id=>globalThis.opened=id;openTxnMenu(txns[0].id)");
 assert.equal(sandbox.opened,'sell2','income navigation edits source sale');
 const index=fs.readFileSync(new URL('../index.html',import.meta.url),'utf8');
-assert.match(index,/app-version" content="1.5.14"/);
+assert.ok(index.includes('app-version" content="'+run('APP_VERSION')+'"'));
 assert.match(index,/個股股息分析版/);
 assert.match(index,/id="realizedIncomeSummary"/);
 console.log('realized income: FIFO fees/tax, partial sales, historical backfill, idempotence, cost edits, losses, pending costs, deletion, future/voided/oversold trades, restore, linked deduplication, navigation and version passed');
+
 

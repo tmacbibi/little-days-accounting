@@ -4,13 +4,13 @@
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover" />
   <meta name="theme-color" content="#5f7fbc" />
-  <meta name="app-version" content="1.5.14" />
+  <meta name="app-version" content="1.5.15" />
   <meta name="apple-mobile-web-app-capable" content="yes" />
   <meta name="apple-mobile-web-app-status-bar-style" content="default" />
   <meta name="apple-mobile-web-app-title" content="小日子記帳" />
-  <link rel="apple-touch-icon" href="apple-touch-icon.png?v=1.5.14" />
-  <link rel="manifest" href="manifest.json?v=1.5.14" />
-  <link rel="stylesheet" href="styles.css?v=1.5.14" />
+  <link rel="apple-touch-icon" href="apple-touch-icon.png?v=1.5.15" />
+  <link rel="manifest" href="manifest.json?v=1.5.15" />
+  <link rel="stylesheet" href="styles.css?v=1.5.15" />
   <title>小日子記帳</title>
 </head>
 <body class="locked">
@@ -60,7 +60,7 @@
           <div>
             <div class="eyebrow">小日子</div>
             <h1>每日記帳</h1>
-            <p class="version-line">V1.5.14 · 個股股息分析版</p>
+            <p class="version-line">V1.5.15 · 個股股息分析版</p>
           </div>
           <button id="openSettingsBtn" class="icon-btn" aria-label="設定">⚙️</button>
         </header>
@@ -333,7 +333,7 @@
             <label>細分類</label><button id="subcategoryPickerBtn" type="button" class="subcategory-picker-btn"><span id="subcategoryPickerValue">請選擇</span><b>⌄</b></button><select id="subcategoryInput" class="hidden-accessible" aria-hidden="true" tabindex="-1"></select>
             <label>付款方式</label><div class="payment-toggle"><button type="button" data-payment="card" class="active">💳 信用卡</button><button type="button" data-payment="cash">💵 現金</button></div>
           </div>
-          <div id="incomeFields" class="hidden"><label>收入分類</label><select id="incomeCategoryInput"><option>薪資</option><option>獎金</option><option>技師執業</option><option>股息</option><option>退款</option><option>其他收入</option></select></div>
+          <button type="button" id="manageIncomeCategoriesInlineBtn" class="text-btn">管理收入類別</button><div id="incomeFields" class="hidden"><label>收入分類</label><select id="incomeCategoryInput"><option>薪資</option><option>獎金</option><option>技師執業</option><option>股息</option><option>老婆分紅</option><option>退款</option><option>其他收入</option></select></div>
           <div id="investmentFields" class="hidden"><label>投資類型</label><select id="investmentCategoryInput"><option>股票／ETF</option><option>基金</option><option>債券</option><option>其他投資</option></select><label>投資標的代號</label><input id="bookkeepingInvestmentSymbolInput" type="text" maxlength="16" placeholder="例如：0050、00981A（內容有代號時會自動辨識）" autocapitalize="characters" /><p id="bookkeepingInvestmentMetaStatus" class="field-hint">輸入代號後會自動顯示中文名稱。</p><p class="field-hint">這筆會同步到「投資帳本」。一般記帳只有日期與投入金額，不會猜股數或成交價；之後可到投資頁補齊。</p></div>
           <details><summary>備註</summary><div class="details-body"><textarea id="noteInput" rows="3" placeholder="選填"></textarea></div></details>
         </div>
@@ -391,7 +391,7 @@
           <div id="voiceBaseDateText" class="voice-base-date">未指定日期時，會記在目前選取日期。</div>
           <div id="liveTranscript" class="live-transcript">尚未收到語音…</div>
           <textarea id="voiceFallbackInput" class="hidden" rows="5" placeholder="若瀏覽器不能直接收音，可點這裡後用 iPhone 鍵盤麥克風說完，再按完成。"></textarea>
-          <button id="voiceFallbackBtn" class="secondary full hidden">改用 iPhone 鍵盤麥克風</button>
+          <button id="voiceRetryBtn" class="secondary full hidden">重新啟動語音（保留內容）</button><button id="voiceFallbackBtn" class="secondary full hidden">改用 iPhone 鍵盤麥克風</button>
           <button id="finishVoiceBtn" class="primary full">完成並產生草稿</button>
           <p class="privacy-note">完成後會先整理同類項目並產生草稿；不同用途會拆成多筆，確認後才入帳。</p>
         </div>
@@ -590,12 +590,12 @@
         <div class="sheet-head"><button id="closeSettingsBtn" class="text-btn">完成</button><h2>設定</h2><span></span></div>
         <div class="settings-list">
           <div class="setting-card"><h3>🔐 隱私與安全</h3><p>離開 App 就立即上鎖；回來必須重新解鎖。</p><button id="manageSecurityBtn" class="secondary full">管理密碼與 Face ID</button></div>
-          <div class="setting-card"><h3>🗂️ 支出類別</h3><p>新增、修改、排序或隱藏自己的用途分類。</p><button id="manageCategoriesBtn" class="secondary full">管理類別</button></div>
+          <div class="setting-card"><h3>💰 收入類別</h3><p>新增或修改收入分類名稱。</p><button id="manageIncomeCategoriesBtn" class="secondary full">管理收入類別</button></div><div class="setting-card"><h3>🗂️ 支出類別</h3><p>新增、修改、排序或隱藏自己的用途分類。</p><button id="manageCategoriesBtn" class="secondary full">管理類別</button></div>
           <div class="setting-card"><h3>◎ 預算管理</h3><p>設定本月總預算與各用途預算。預算移到這裡後，底部導覽更精簡。</p><button id="manageBudgetBtn" class="secondary full">開啟預算</button></div>
           <div class="setting-card"><h3>⚡ 快速輸入</h3><p>建立常用模板，例如午餐、停車、家庭餐飲或定期投資。</p><button id="manageQuickTemplatesBtn" class="secondary full">管理快速模板</button></div>
           <div class="setting-card"><h3>🔁 週期紀錄</h3><p>支援固定收入、固定支出與定期投資；現在也可從某一筆開始修改後續週期，過去紀錄不受影響。</p><div id="recurringCountText" class="status-pill">0 個啟用中</div><button id="manageRecurringBtn" class="secondary full">管理週期紀錄</button></div>
           <div class="setting-card"><h3>投資交易成本</h3><p>定期定額手續費：1 元／筆<br>一般買賣手續費：牌告 0.1425% × 2.8 折，最低 20 元<br>證交稅：賣出時依股票／ETF／債券 ETF 類型自動判斷</p></div>
-          <div class="setting-card"><h3>版本</h3><p>目前版本 V1.5.14 · 資料結構 V13</p><div id="updateStatus" class="update-status">尚未檢查</div><button id="checkUpdateBtn" class="secondary full">檢查新版本</button><button id="updateNowBtn" class="primary full hidden">立即更新</button><button id="updateHomeBtn" class="secondary full update-home-btn">← 回到首頁</button></div>
+          <div class="setting-card"><h3>版本</h3><p>目前版本 V1.5.15 · 資料結構 V13</p><div id="updateStatus" class="update-status">尚未檢查</div><button id="checkUpdateBtn" class="secondary full">檢查新版本</button><button id="updateNowBtn" class="primary full hidden">立即更新</button><button id="updateHomeBtn" class="secondary full update-home-btn">← 回到首頁</button></div>
           <div class="setting-card backup-card"><h3>🛟 備份與還原</h3><p>備份包含記帳、預算、自訂類別、快速模板、週期設定，以及股票買賣／股息／市價資料。更新前建議先備份。</p><div id="backupStatusText" class="backup-status">尚未建立備份</div><div class="action-list"><button id="exportBtn" class="secondary full">立即匯出 JSON 備份</button><button id="importBtn" class="secondary full">匯入備份還原</button><input id="importFileInput" type="file" accept="application/json" class="hidden" /></div></div>
           <div class="setting-card danger-card"><h3>清除資料</h3><p>清除記帳、預算、自訂類別、快速模板與投資帳本；安全設定保留。</p><button id="wipeBtn" class="danger full">清除所有記帳資料</button></div>
           <button id="settingsHomeBtn" class="settings-home-fixed">⌂ 回到首頁</button>
@@ -697,7 +697,7 @@
       </div>
     </section>
 
-    <section id="categoryManagerScreen" class="sheet hidden" aria-modal="true">
+    <section id="incomeCategoryManagerScreen" class="sheet hidden" aria-modal="true"><div class="sheet-card"><div class="sheet-head"><button id="closeIncomeCategoriesBtn" class="text-btn">完成</button><h2>收入類別</h2><button id="addIncomeCategoryBtn" class="text-btn">＋新增</button></div><p class="sheet-note">修改名稱後，舊紀錄會顯示新名稱；股息與老婆分紅仍保留原有統計功能。</p><div id="incomeCategoryManagerList"></div></div></section><section id="categoryManagerScreen" class="sheet hidden" aria-modal="true">
       <div class="sheet-card"><div class="sheet-head"><button id="closeCategoryManagerBtn" class="text-btn">完成</button><h2>支出類別</h2><button id="addCategoryBtn" class="text-btn strong">＋新增</button></div><p class="sheet-note">已使用過的類別建議用「隱藏」取代刪除，舊帳不會消失。</p><div id="categoryManagerList" class="category-manager-list"></div></div>
     </section>
 
@@ -709,7 +709,8 @@
   </div>
 
   <div id="toast" class="toast hidden"></div>
-  <script src="app.js?v=1.5.14"></script>
+  <script src="app.js?v=1.5.15"></script>
 </body>
 </html>
+
 

@@ -38,3 +38,27 @@ Recognition.fail=true;run('openVoiceSheet()');assert.equal(run('recognition'),nu
 run('openVoiceSheet();finishVoice()');assert.equal(run('voiceSessionActive'),false);assert.equal(getNode('voiceFallbackInput').classList.contains('hidden'),false);
 Recognition.silent=true;run('openVoiceSheet()');const watchdog=[...timers.entries()].find(([,t])=>t.ms===7000);timers.delete(watchdog[0]);watchdog[1].fn();assert.equal(run('voiceSessionActive'),false);assert.equal(run('recognition'),null);assert.equal(getNode('voiceFallbackInput').classList.contains('hidden'),false);Recognition.silent=false;
 console.log('voice lifecycle tests passed: three entries, stale events/timers, reconnect, cancel/reopen, failure recovery, fallback');
+// Safari can announce onstart yet never deliver a result: the watchdog must remain.
+run('openVoiceSheet()');
+const stalled=[...timers.entries()].find(([,t])=>t.ms===7000);
+assert.ok(stalled);timers.delete(stalled[0]);stalled[1].fn();
+assert.equal(run('voiceSessionActive'),false);
+getNode('voiceFallbackInput').value='午餐100元';run('retryVoiceSession()');
+assert.equal(run('voiceAccumulated'),'午餐100元');
+instances.at(-1).result('充電20元');
+run('closeVoiceSheet()');
+// Finishing waits for final words, rather than aborting and losing the second amount.
+run('openVoiceSheet()');const finalRec=instances.at(-1);
+finalRec.result('午餐100元',false);
+finalRec.stop=function(){this.result('午餐120元');this.onend();};
+run('finishVoice()');assert.equal(run('parsed.at(-1).item.amount'),120);
+assert.equal(timers.size,0);
+// A late final result without onend still completes through the bounded flush timer.
+run('openVoiceSheet()');instances.at(-1).stop=function(){this.result('充電30元');};
+run('finishVoice()');const flush=[...timers.entries()].find(([,t])=>t.ms===1200);
+assert.ok(flush);timers.delete(flush[0]);flush[1].fn();
+assert.equal(run('parsed.at(-1).item.amount'),30);
+run("navigator.userAgent='iPhone';openVoiceSheet()");assert.equal(instances.at(-1).continuous,false);
+run('closeVoiceSheet()');
+console.log('Safari start-without-results, retry preservation, final result flush and iPhone single-session mode passed');
+
