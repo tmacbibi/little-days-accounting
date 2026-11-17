@@ -1,6 +1,6 @@
 {
   "schemaVersion": 2,
-  "generatedAt": "2026-11-16T19:31:35.838Z",
+  "generatedAt": "2026-11-17T18:29:58.550Z",
   "sourcePolicy": "official-only",
   "coverage": {
     "etf": "ex-date + record-date + expected payment date + per-unit distribution",
@@ -11,13 +11,13 @@
       "id": "TWSE_ETFORTUNE",
       "url": "https://www.twse.com.tw/zh/ETFortune/dividendList",
       "status": "ok",
-      "rows": 477
+      "rows": 478
     },
     {
       "id": "TWSE_OPENAPI_TWT48U_ALL",
       "url": "https://openapi.twse.com.tw/v1/exchangeReport/TWT48U_ALL",
       "status": "ok",
-      "rows": 37
+      "rows": 42
     }
   ],
   "warnings": [],
@@ -5781,6 +5781,30 @@
       "perShare": null,
       "source": "TWSE_ETFORTUNE",
       "sourceUrl": "https://www.twse.com.tw/zh/ETFortune/dividendList"
+    },
+    {
+      "symbol": "00946",
+      "name": "群益科技高息成長",
+      "market": "TWSE",
+      "securityType": "etf",
+      "exDate": "2026-12-03",
+      "recordDate": "2026-12-09",
+      "expectedPayDate": "2026-12-30",
+      "perShare": null,
+      "source": "TWSE_ETFORTUNE",
+      "sourceUrl": "https://www.twse.com.tw/zh/ETFortune/dividendList"
+    },
+    {
+      "symbol": "020038",
+      "name": "元大ESG配息N",
+      "market": "TWSE",
+      "securityType": "stock",
+      "exDate": "2026-12-03",
+      "recordDate": "",
+      "expectedPayDate": "",
+      "perShare": 0.491,
+      "source": "TWSE_OPENAPI_TWT48U_ALL",
+      "sourceUrl": "https://openapi.twse.com.tw/v1/exchangeReport/TWT48U_ALL"
     },
     {
       "symbol": "1437",
