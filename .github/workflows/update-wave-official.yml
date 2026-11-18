@@ -4,23 +4,43 @@ on:
   schedule:
     - cron: '23 9,10 * * 1-5'
   push:
+    branches: [main]
     paths:
       - wave-data/collect_official.py
+      - wave-data/collector_io.py
+      - wave-data/test_collect_official.py
+      - .github/workflows/update-wave-official.yml
+  pull_request:
+    paths:
+      - wave-data/**
       - .github/workflows/update-wave-official.yml
 permissions:
-  contents: write
+  contents: read
 concurrency:
-  group: wave-official-data
+  group: wave-official-data-${{ github.ref }}
   cancel-in-progress: false
 jobs:
   collect:
     runs-on: ubuntu-latest
     timeout-minutes: 12
+    permissions:
+      contents: write
     steps:
       - uses: actions/checkout@v4
+      - name: Test collector failure and recovery paths
+        run: python3 -m unittest discover -s wave-data -p 'test_*.py' -v
       - name: Collect and validate official TPEx data
+        if: github.ref == 'refs/heads/main' && (github.event_name == 'schedule' || github.event_name == 'workflow_dispatch')
         run: python3 wave-data/collect_official.py
+      - name: Preserve collection diagnostics
+        if: always() && github.ref == 'refs/heads/main' && (github.event_name == 'schedule' || github.event_name == 'workflow_dispatch')
+        uses: actions/upload-artifact@v4
+        with:
+          name: wave-official-status-${{ github.run_id }}
+          path: wave-data/collection-status.json
+          retention-days: 30
       - name: Commit verified data only
+        if: success() && github.ref == 'refs/heads/main' && (github.event_name == 'schedule' || github.event_name == 'workflow_dispatch')
         run: |
           git config user.name 'github-actions[bot]'
           git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
@@ -29,3 +49,4 @@ jobs:
           git commit -m "Update verified wave official data"
           git pull --rebase origin main
           git push origin HEAD:main
+
