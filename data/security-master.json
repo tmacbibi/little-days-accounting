@@ -1,13 +1,13 @@
 {
   "schemaVersion": 1,
-  "generatedAt": "2026-11-18T18:24:16.540Z",
+  "generatedAt": "2026-11-19T16:48:46.988Z",
   "sourceStatus": {
-    "TWSE": "stale: twse.com.tw MI_INDEX 2026-11-18 < expected 2026-11-19",
-    "TPEx": "stale: tpex.org.tw mainboard_quotes 2026-11-18 < expected 2026-11-19"
+    "TWSE": "stale: twse.com.tw MI_INDEX 2026-11-19 < expected 2026-11-20",
+    "TPEx": "stale: tpex.org.tw mainboard_quotes 2026-11-19 < expected 2026-11-20"
   },
   "marketTradeDates": {
-    "TWSE": "2026-11-18",
-    "TPEx": "2026-11-18"
+    "TWSE": "2026-11-19",
+    "TPEx": "2026-11-19"
   },
   "marketFreshness": {
     "TWSE": "stale",
@@ -113,6 +113,12 @@
     {
       "symbol": "00418A",
       "name": "主動復華台灣新星",
+      "market": "TWSE",
+      "securityType": "etf"
+    },
+    {
+      "symbol": "00420A",
+      "name": "主動野村亞洲科技",
       "market": "TWSE",
       "securityType": "etf"
     },
@@ -2021,6 +2027,12 @@
     {
       "symbol": "009832",
       "name": "兆豐美國黃金",
+      "market": "TWSE",
+      "securityType": "etf"
+    },
+    {
+      "symbol": "009833",
+      "name": "野村韓國科技30",
       "market": "TWSE",
       "securityType": "etf"
     },
