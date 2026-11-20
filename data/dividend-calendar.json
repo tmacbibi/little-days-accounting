@@ -1,6 +1,6 @@
 {
   "schemaVersion": 2,
-  "generatedAt": "2026-11-19T18:12:21.661Z",
+  "generatedAt": "2026-11-20T17:44:36.722Z",
   "sourcePolicy": "official-only",
   "coverage": {
     "etf": "ex-date + record-date + expected payment date + per-unit distribution",
@@ -11,13 +11,13 @@
       "id": "TWSE_ETFORTUNE",
       "url": "https://www.twse.com.tw/zh/ETFortune/dividendList",
       "status": "ok",
-      "rows": 480
+      "rows": 481
     },
     {
       "id": "TWSE_OPENAPI_TWT48U_ALL",
       "url": "https://openapi.twse.com.tw/v1/exchangeReport/TWT48U_ALL",
       "status": "ok",
-      "rows": 43
+      "rows": 18
     }
   ],
   "warnings": [],
@@ -5694,7 +5694,7 @@
       "exDate": "2026-11-24",
       "recordDate": "2026-11-30",
       "expectedPayDate": "2026-12-18",
-      "perShare": null,
+      "perShare": 7,
       "source": "TWSE_ETFORTUNE",
       "sourceUrl": "https://www.twse.com.tw/zh/ETFortune/dividendList"
     },
@@ -5706,7 +5706,7 @@
       "exDate": "2026-11-24",
       "recordDate": "2026-11-30",
       "expectedPayDate": "2026-12-18",
-      "perShare": null,
+      "perShare": 0.75,
       "source": "TWSE_ETFORTUNE",
       "sourceUrl": "https://www.twse.com.tw/zh/ETFortune/dividendList"
     },
@@ -5865,6 +5865,18 @@
       "perShare": 0.141372,
       "source": "TWSE_OPENAPI_TWT48U_ALL",
       "sourceUrl": "https://openapi.twse.com.tw/v1/exchangeReport/TWT48U_ALL"
+    },
+    {
+      "symbol": "00400A",
+      "name": "主動國泰動能高息",
+      "market": "TWSE",
+      "securityType": "etf",
+      "exDate": "2026-12-08",
+      "recordDate": "2026-12-14",
+      "expectedPayDate": "2027-01-05",
+      "perShare": null,
+      "source": "TWSE_ETFORTUNE",
+      "sourceUrl": "https://www.twse.com.tw/zh/ETFortune/dividendList"
     },
     {
       "symbol": "1817",
