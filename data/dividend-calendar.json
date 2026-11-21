@@ -1,6 +1,6 @@
 {
   "schemaVersion": 2,
-  "generatedAt": "2026-11-20T17:44:36.722Z",
+  "generatedAt": "2026-11-21T16:44:34.183Z",
   "sourcePolicy": "official-only",
   "coverage": {
     "etf": "ex-date + record-date + expected payment date + per-unit distribution",
@@ -17,7 +17,7 @@
       "id": "TWSE_OPENAPI_TWT48U_ALL",
       "url": "https://openapi.twse.com.tw/v1/exchangeReport/TWT48U_ALL",
       "status": "ok",
-      "rows": 18
+      "rows": 15
     }
   ],
   "warnings": [],
@@ -5613,18 +5613,6 @@
       "perShare": 0.073,
       "source": "TWSE_ETFORTUNE",
       "sourceUrl": "https://www.twse.com.tw/zh/ETFortune/dividendList"
-    },
-    {
-      "symbol": "2344",
-      "name": "華邦電",
-      "market": "TWSE",
-      "securityType": "stock",
-      "exDate": "2026-11-18",
-      "recordDate": "",
-      "expectedPayDate": "",
-      "perShare": 2,
-      "source": "TWSE_OPENAPI_TWT48U_ALL",
-      "sourceUrl": "https://openapi.twse.com.tw/v1/exchangeReport/TWT48U_ALL"
     },
     {
       "symbol": "01007T",
