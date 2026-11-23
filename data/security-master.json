@@ -1,17 +1,17 @@
 {
   "schemaVersion": 1,
-  "generatedAt": "2026-11-20T18:01:43.043Z",
+  "generatedAt": "2026-11-23T19:29:50.691Z",
   "sourceStatus": {
-    "TWSE": "ok: twse.com.tw MI_INDEX",
-    "TPEx": "ok: tpex.org.tw mainboard_quotes"
+    "TWSE": "stale: twse.com.tw MI_INDEX 2026-11-23 < expected 2026-11-24",
+    "TPEx": "stale: tpex.org.tw mainboard_quotes 2026-11-23 < expected 2026-11-24"
   },
   "marketTradeDates": {
-    "TWSE": "2026-11-20",
-    "TPEx": "2026-11-20"
+    "TWSE": "2026-11-23",
+    "TPEx": "2026-11-23"
   },
   "marketFreshness": {
-    "TWSE": "fresh",
-    "TPEx": "fresh"
+    "TWSE": "stale",
+    "TPEx": "stale"
   },
   "items": [
     {
