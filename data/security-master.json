@@ -1,13 +1,13 @@
 {
   "schemaVersion": 1,
-  "generatedAt": "2026-11-23T21:41:30.682Z",
+  "generatedAt": "2026-11-24T19:05:58.223Z",
   "sourceStatus": {
-    "TWSE": "stale: twse.com.tw MI_INDEX 2026-11-23 < expected 2026-11-24",
-    "TPEx": "stale: tpex.org.tw mainboard_quotes 2026-11-23 < expected 2026-11-24"
+    "TWSE": "stale: twse.com.tw MI_INDEX 2026-11-24 < expected 2026-11-25",
+    "TPEx": "stale: tpex.org.tw mainboard_quotes 2026-11-24 < expected 2026-11-25"
   },
   "marketTradeDates": {
-    "TWSE": "2026-11-23",
-    "TPEx": "2026-11-23"
+    "TWSE": "2026-11-24",
+    "TPEx": "2026-11-24"
   },
   "marketFreshness": {
     "TWSE": "stale",
@@ -12586,7 +12586,7 @@
     },
     {
       "symbol": "6949",
-      "name": "沛爾生醫*-創",
+      "name": "沛爾*-創",
       "market": "TWSE",
       "securityType": "stock"
     },
