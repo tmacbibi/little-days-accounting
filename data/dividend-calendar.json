@@ -1,6 +1,6 @@
 {
   "schemaVersion": 2,
-  "generatedAt": "2026-11-23T21:15:23.235Z",
+  "generatedAt": "2026-11-24T20:06:19.610Z",
   "sourcePolicy": "official-only",
   "coverage": {
     "etf": "ex-date + record-date + expected payment date + per-unit distribution",
@@ -17,7 +17,7 @@
       "id": "TWSE_OPENAPI_TWT48U_ALL",
       "url": "https://openapi.twse.com.tw/v1/exchangeReport/TWT48U_ALL",
       "status": "ok",
-      "rows": 15
+      "rows": 16
     }
   ],
   "warnings": [],
@@ -5615,18 +5615,6 @@
       "sourceUrl": "https://www.twse.com.tw/zh/ETFortune/dividendList"
     },
     {
-      "symbol": "01007T",
-      "name": "兆豐國泰R2",
-      "market": "TWSE",
-      "securityType": "stock",
-      "exDate": "2026-11-19",
-      "recordDate": "",
-      "expectedPayDate": "",
-      "perShare": 0.215313,
-      "source": "TWSE_OPENAPI_TWT48U_ALL",
-      "sourceUrl": "https://openapi.twse.com.tw/v1/exchangeReport/TWT48U_ALL"
-    },
-    {
       "symbol": "0051",
       "name": "元大中型100",
       "market": "TWSE",
@@ -5718,7 +5706,7 @@
       "exDate": "2026-11-26",
       "recordDate": "2026-12-02",
       "expectedPayDate": "2026-12-22",
-      "perShare": null,
+      "perShare": 0.33,
       "source": "TWSE_ETFORTUNE",
       "sourceUrl": "https://www.twse.com.tw/zh/ETFortune/dividendList"
     },
@@ -5865,6 +5853,30 @@
       "perShare": null,
       "source": "TWSE_ETFORTUNE",
       "sourceUrl": "https://www.twse.com.tw/zh/ETFortune/dividendList"
+    },
+    {
+      "symbol": "4414",
+      "name": "如興",
+      "market": "TWSE",
+      "securityType": "stock",
+      "exDate": "2026-12-08",
+      "recordDate": "",
+      "expectedPayDate": "",
+      "perShare": 0.00915,
+      "source": "TWSE_OPENAPI_TWT48U_ALL",
+      "sourceUrl": "https://openapi.twse.com.tw/v1/exchangeReport/TWT48U_ALL"
+    },
+    {
+      "symbol": "6277",
+      "name": "宏正",
+      "market": "TWSE",
+      "securityType": "stock",
+      "exDate": "2026-12-08",
+      "recordDate": "",
+      "expectedPayDate": "",
+      "perShare": 2.3,
+      "source": "TWSE_OPENAPI_TWT48U_ALL",
+      "sourceUrl": "https://openapi.twse.com.tw/v1/exchangeReport/TWT48U_ALL"
     },
     {
       "symbol": "1817",
