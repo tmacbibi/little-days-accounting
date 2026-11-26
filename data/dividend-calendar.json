@@ -1,6 +1,6 @@
 {
   "schemaVersion": 2,
-  "generatedAt": "2026-11-25T19:11:15.808Z",
+  "generatedAt": "2026-11-26T18:57:40.491Z",
   "sourcePolicy": "official-only",
   "coverage": {
     "etf": "ex-date + record-date + expected payment date + per-unit distribution",
@@ -17,7 +17,7 @@
       "id": "TWSE_OPENAPI_TWT48U_ALL",
       "url": "https://openapi.twse.com.tw/v1/exchangeReport/TWT48U_ALL",
       "status": "ok",
-      "rows": 13
+      "rows": 15
     }
   ],
   "warnings": [],
@@ -5867,6 +5867,18 @@
       "sourceUrl": "https://openapi.twse.com.tw/v1/exchangeReport/TWT48U_ALL"
     },
     {
+      "symbol": "4912",
+      "name": "聯德控股-KY",
+      "market": "TWSE",
+      "securityType": "stock",
+      "exDate": "2026-12-08",
+      "recordDate": "",
+      "expectedPayDate": "",
+      "perShare": 1,
+      "source": "TWSE_OPENAPI_TWT48U_ALL",
+      "sourceUrl": "https://openapi.twse.com.tw/v1/exchangeReport/TWT48U_ALL"
+    },
+    {
       "symbol": "6277",
       "name": "宏正",
       "market": "TWSE",
@@ -5889,6 +5901,18 @@
       "perShare": null,
       "source": "TWSE_ETFORTUNE",
       "sourceUrl": "https://www.twse.com.tw/zh/ETFortune/dividendList"
+    },
+    {
+      "symbol": "6438",
+      "name": "迅得",
+      "market": "TWSE",
+      "securityType": "stock",
+      "exDate": "2026-12-10",
+      "recordDate": "",
+      "expectedPayDate": "",
+      "perShare": 3,
+      "source": "TWSE_OPENAPI_TWT48U_ALL",
+      "sourceUrl": "https://openapi.twse.com.tw/v1/exchangeReport/TWT48U_ALL"
     },
     {
       "symbol": "1817",
