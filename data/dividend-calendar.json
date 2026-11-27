@@ -1,6 +1,6 @@
 {
   "schemaVersion": 2,
-  "generatedAt": "2026-11-26T18:57:40.491Z",
+  "generatedAt": "2026-11-27T18:54:03.795Z",
   "sourcePolicy": "official-only",
   "coverage": {
     "etf": "ex-date + record-date + expected payment date + per-unit distribution",
@@ -17,7 +17,7 @@
       "id": "TWSE_OPENAPI_TWT48U_ALL",
       "url": "https://openapi.twse.com.tw/v1/exchangeReport/TWT48U_ALL",
       "status": "ok",
-      "rows": 15
+      "rows": 14
     }
   ],
   "warnings": [],
@@ -5687,18 +5687,6 @@
       "sourceUrl": "https://www.twse.com.tw/zh/ETFortune/dividendList"
     },
     {
-      "symbol": "6655",
-      "name": "科定",
-      "market": "TWSE",
-      "securityType": "stock",
-      "exDate": "2026-11-24",
-      "recordDate": "",
-      "expectedPayDate": "",
-      "perShare": 2.6,
-      "source": "TWSE_OPENAPI_TWT48U_ALL",
-      "sourceUrl": "https://openapi.twse.com.tw/v1/exchangeReport/TWT48U_ALL"
-    },
-    {
       "symbol": "009817",
       "name": "國泰日本不動產",
       "market": "TWSE",
@@ -5730,7 +5718,7 @@
       "exDate": "2026-12-01",
       "recordDate": "2026-12-07",
       "expectedPayDate": "2026-12-23",
-      "perShare": null,
+      "perShare": 0.15,
       "source": "TWSE_ETFORTUNE",
       "sourceUrl": "https://www.twse.com.tw/zh/ETFortune/dividendList"
     },
@@ -5742,7 +5730,7 @@
       "exDate": "2026-12-01",
       "recordDate": "2026-12-07",
       "expectedPayDate": "2026-12-23",
-      "perShare": null,
+      "perShare": 0.085,
       "source": "TWSE_ETFORTUNE",
       "sourceUrl": "https://www.twse.com.tw/zh/ETFortune/dividendList"
     },
@@ -5903,6 +5891,18 @@
       "sourceUrl": "https://www.twse.com.tw/zh/ETFortune/dividendList"
     },
     {
+      "symbol": "2330",
+      "name": "台積電",
+      "market": "TWSE",
+      "securityType": "stock",
+      "exDate": "2026-12-10",
+      "recordDate": "",
+      "expectedPayDate": "",
+      "perShare": 7.000001,
+      "source": "TWSE_OPENAPI_TWT48U_ALL",
+      "sourceUrl": "https://openapi.twse.com.tw/v1/exchangeReport/TWT48U_ALL"
+    },
+    {
       "symbol": "6438",
       "name": "迅得",
       "market": "TWSE",
@@ -5911,6 +5911,18 @@
       "recordDate": "",
       "expectedPayDate": "",
       "perShare": 3,
+      "source": "TWSE_OPENAPI_TWT48U_ALL",
+      "sourceUrl": "https://openapi.twse.com.tw/v1/exchangeReport/TWT48U_ALL"
+    },
+    {
+      "symbol": "6994",
+      "name": "富威電力",
+      "market": "TWSE",
+      "securityType": "stock",
+      "exDate": "2026-12-11",
+      "recordDate": "",
+      "expectedPayDate": "",
+      "perShare": 0.6067,
       "source": "TWSE_OPENAPI_TWT48U_ALL",
       "sourceUrl": "https://openapi.twse.com.tw/v1/exchangeReport/TWT48U_ALL"
     },
